@@ -611,3 +611,4 @@ cython_debug/
 
 data
 logs
+!graph_coder/data
