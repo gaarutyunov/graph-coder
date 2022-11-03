@@ -17,7 +17,9 @@ from graph_coder.data.features import data_to_text
 refactor = RefactoringTool(fixer_names=get_fixers_from_package("lib2to3.fixes"))
 
 
-def pre_transform(data: str) -> typing.Union[typing.Tuple[None, None, None], typing.Tuple[Data, Vocabulary, str]]:
+def pre_transform(
+    data: str,
+) -> typing.Union[typing.Tuple[None, None, None], typing.Tuple[Data, Vocabulary, str]]:
     ctx = code_to_graph(data)
     if ctx.g.number_of_nodes() == 0:
         return None, None, None

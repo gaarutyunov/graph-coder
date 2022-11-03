@@ -41,8 +41,8 @@ class GraphFeatureTokenizer(nn.Module):
 
         self.encoder_embed_dim = hidden_dim
 
-        self.atom_encoder = nn.Embedding(num_atoms, hidden_dim, padding_idx=0)
-        self.edge_encoder = nn.Embedding(num_edges, hidden_dim, padding_idx=0)
+        self.atom_encoder = nn.Linear(num_atoms, hidden_dim)
+        self.edge_encoder = nn.Linear(num_edges, hidden_dim)
         self.graph_token = nn.Embedding(1, hidden_dim)
         self.null_token = nn.Embedding(1, hidden_dim)  # this is optional
 

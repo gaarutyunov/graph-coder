@@ -1,3 +1,4 @@
+from functools import partial
 from typing import Optional
 
 from torch.utils.data import DataLoader
@@ -27,8 +28,10 @@ class GraphCoderLightningDataset(LightningDataset):
         root: str,
         test_size: float = 0.1,
         val_size: float = 0.05,
-        batch_size: int = 1,
+        batch_size: int = 16,
         num_workers: int = 0,
+        num_nodes: int = 512,
+        num_edges: int = 2048,
         seed: int = None,
         **kwargs,
     ):
@@ -38,6 +41,8 @@ class GraphCoderLightningDataset(LightningDataset):
         train, test, val = train_test_val_split(
             dataset, num_data, test_size, val_size, seed
         )
+        self.num_nodes = num_nodes
+        self.num_edges = num_edges
         super().__init__(
             train,
             test,
@@ -48,4 +53,11 @@ class GraphCoderLightningDataset(LightningDataset):
         )
 
     def dataloader(self, dataset: Dataset, shuffle: bool = False):
-        return DataLoader(dataset, shuffle=shuffle, collate_fn=collator, **self.kwargs)
+        return DataLoader(
+            dataset,
+            shuffle=shuffle,
+            collate_fn=partial(
+                collator, num_nodes=self.num_nodes, num_edges=self.num_edges
+            ),
+            **self.kwargs,
+        )

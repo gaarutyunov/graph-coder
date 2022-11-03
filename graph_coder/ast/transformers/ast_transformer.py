@@ -20,7 +20,7 @@ def parse_type(body: ast.AST, slice: typing.Iterable[ast.AST] = None) -> str:
     if isinstance(body, ast.Name):
         res += body.id
     if isinstance(body, ast.Subscript):
-        if hasattr(body.slice, 'eilts'):
+        if hasattr(body.slice, "eilts"):
             res += parse_type(ast.Name(id="List"), body.slice.eilts)
         else:
             res += parse_type(body.slice)
@@ -67,7 +67,7 @@ __simple_nodes__ = (
     ast.LtE,
     ast.Lt,
     ast.Gt,
-    ast.GtE
+    ast.GtE,
 )
 __skip_nodes__ = (ast.Load, ast.Store, ast.Del)
 __edges__ = "__edges__"
@@ -93,14 +93,16 @@ class ASTransformer(ast.NodeTransformer):
         return visitor(node)
 
     def visit_SetComp(self, node: ast.SetComp) -> typing.Any:
-        edges = [Edge(source_right=gen, relation="generator") for gen in node.generators]
+        edges = [
+            Edge(source_right=gen, relation="generator") for gen in node.generators
+        ]
 
         del node.generators
 
         return self.post_hook(
             node,
             node=Node.from_ast_body(self.ctx.id, node.elt, self.ctx.depth),
-            edges=edges
+            edges=edges,
         )
 
     def visit_Starred(self, node: ast.Starred) -> typing.Any:
@@ -525,9 +527,7 @@ class ASTransformer(ast.NodeTransformer):
 
         return self.post_hook(
             body,
-            node=Node.from_ast_body(
-                self.ctx.id, body, self.ctx.depth, attr
-            ),
+            node=Node.from_ast_body(self.ctx.id, body, self.ctx.depth, attr),
             edges=edges,
         )
 

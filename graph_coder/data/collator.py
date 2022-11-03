@@ -64,17 +64,9 @@ def pad_3d_unsqueeze(x, padlen1, padlen2, padlen3):
 @torch.no_grad()
 def collator(
     items,
-    max_node=512,
-    max_edge=2048,
+    num_nodes=512,
+    num_edges=2048,
 ):
-    items = [
-        item
-        for item in items
-        if item is not None
-        and item.x.size(0) <= max_node
-        and item.edge_attr.size(0) <= max_edge
-    ]
-
     (
         idxs,
         edge_index,

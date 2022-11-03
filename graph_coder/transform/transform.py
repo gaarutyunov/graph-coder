@@ -11,15 +11,17 @@ from graph_coder.embedding.graph_coder_embedder import GraphCoderEmbedder
 
 def setup_parser(parser: ArgumentParser):
     parser.add_argument("--data", type=pathlib.Path, default="~/git-py")
-    parser.add_argument("--embedder", type=pathlib.Path, default="~/git-py/embedder.bin")
-    parser.add_argument("--embed_dim", type=int, default=8)
+    parser.add_argument(
+        "--embedder", type=pathlib.Path, default="~/git-py/embedder.bin"
+    )
+    parser.add_argument("--embed_dim", type=int, default=1024)
 
 
 def transform(args):
     embedder = GraphCoderEmbedder.from_pretrained(args.embedder)
     dataset = GraphCoderDatasetBase(args.data)
 
-    for idx in trange(dataset.len(), desc='Transforming dataset'):
+    for idx in trange(dataset.len(), desc="Transforming dataset"):
         data = dataset.get(idx)
         vocab = dataset.vocab(idx)
         embeddings = np.zeros((len(vocab) - 1, args.embed_dim))

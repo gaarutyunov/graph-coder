@@ -3,8 +3,8 @@ import typing
 from torch import nn
 
 activations = {
-    "gelu": nn.GELU,
-    "relu": nn.ReLU,
+    "gelu": nn.GELU(),
+    "relu": nn.ReLU(),
 }
 
 

@@ -19,8 +19,8 @@ def setup_parser(parser: ArgumentParser):
         default="postnorm",
         choices=["prenorm", "postnorm"],
     )
-    parser.add_argument("--num-nodes", type=int, default=64 * 9)
-    parser.add_argument("--num-edges", type=int, default=64 * 3)
+    parser.add_argument("--num-nodes", type=int, default=64 * 16)
+    parser.add_argument("--num-edges", type=int, default=64 * 16)
     parser.add_argument("--num-in-degree", type=int, default=64)
     parser.add_argument("--num-out-degree", type=int, default=64)
     parser.add_argument("--num-spatial", type=int, default=64)
@@ -78,8 +78,6 @@ def setup_parser(parser: ArgumentParser):
         help="share encoder input and output embeddings",
         default=False,
     )
-
-
 
     parser.add_argument(
         "--decoder-ffn-embed-dim",
@@ -140,7 +138,7 @@ def setup_parser(parser: ArgumentParser):
         "--lap-node-id",
         action="store_true",
         help="use Laplacian eigenvector node identifiers",
-        default=False,
+        default=True,
     )
     parser.add_argument(
         "--lap-node-id-k",
@@ -268,13 +266,42 @@ def setup_parser(parser: ArgumentParser):
         default="single_device",
         choices=StrategyRegistry.available_strategies(),
     )
+    parser.add_argument(
+        "--batch-size",
+        help="batch size",
+        default=1,
+        type=int,
+    )
+    parser.add_argument(
+        "--num-workers",
+        help="number of workers",
+        default=4,
+    )
+    parser.add_argument(
+        "--test-size",
+        help="test size",
+        default=0.1,
+    )
+    parser.add_argument(
+        "--val-size",
+        help="val size",
+        default=0.05,
+    )
 
 
 def train(args: Namespace):
     model = GraphCoder(args)
     logger = TensorBoardLogger("logs", name="graphcoder")
     trainer: Trainer = Trainer.from_argparse_args(args, logger=logger)
-    dm = GraphCoderLightningDataset(args.data)
+    dm = GraphCoderLightningDataset(
+        args.data,
+        num_nodes=args.num_nodes,
+        num_edges=args.num_edges,
+        batch_size=args.batch_size,
+        test_size=args.test_size,
+        val_size=args.val_size,
+        num_workers=args.num_workers,
+    )
 
     trainer.fit(model, dm)
 
