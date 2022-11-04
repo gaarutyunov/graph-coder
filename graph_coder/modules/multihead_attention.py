@@ -62,7 +62,7 @@ class MultiheadAttention(nn.Module):
         self.fast_attention = FastAttention(
             self.head_dim,
             performer_nb_features,
-            causal=False,
+            causal=True,
             generalized_attention=performer_generalized_attention,
             kernel_fn=nn.ReLU(),
             no_projection=False,

@@ -148,9 +148,9 @@ class GraphCoder(pl.LightningModule):
             x = x + self.lm_output_learned_bias
 
         if self.hparams.return_attention:
-            return x, attn_dict
+            return x[:, 0, :], attn_dict
         else:
-            return x
+            return x[:, 0, :]
 
     def performer_finetune_setup(self):
         self.graph_encoder.performer_finetune_setup()
@@ -177,14 +177,11 @@ class GraphCoder(pl.LightningModule):
 
     def _calculate_loss(self, batch, mode="train"):
         preds = self.forward(batch)
-        (
-            padded_feature,
-            _,
-            _,
-        ) = self.graph_encoder.graph_feature(batch)
+
+        labels = batch['y']
 
         loss = F.cross_entropy(
-            preds[:, :-1].contiguous(), padded_feature[:, 1:].contiguous()
+            preds[:, :-1].contiguous(), labels[:, 1:].contiguous()
         )
 
         self.log("%s_loss" % mode, loss)

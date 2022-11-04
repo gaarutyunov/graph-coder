@@ -76,6 +76,7 @@ def collator(
         out_degree,
         lap_eigvec,
         lap_eigval,
+        ys
     ) = zip(
         *[
             (
@@ -87,6 +88,7 @@ def collator(
                 item.out_degree,
                 item.lap_eigvec,
                 item.lap_eigval,
+                item.y
             )
             for item in items
         ]
@@ -98,17 +100,17 @@ def collator(
 
     edge_index = torch.cat(edge_index, dim=1)  # [2, sum(edge_num)]
     edge_data = (
-        torch.cat(edge_data) + 1
-    )  # [sum(edge_num), De], +1 for nn.Embedding with pad_index=0
+        torch.cat(edge_data)
+    )  # [sum(edge_num), De]
     node_data = (
-        torch.cat(node_data) + 1
-    )  # [sum(node_num), Dn], +1 for nn.Embedding with pad_index=0
+        torch.cat(node_data)
+    )  # [sum(node_num), Dn]
     in_degree = (
-        torch.cat(in_degree) + 1
-    )  # [sum(node_num),], +1 for nn.Embedding with pad_index=0
+        torch.cat(in_degree)
+    )  # [sum(node_num),]
     out_degree = (
-        torch.cat(out_degree) + 1
-    )  # [sum(node_num),], +1 for nn.Embedding with pad_index=0
+        torch.cat(out_degree)
+    )  # [sum(node_num),]
 
     # [sum(node_num), Dl] = [sum(node_num), max_n]
     lap_eigvec = torch.cat(
@@ -117,6 +119,7 @@ def collator(
     lap_eigval = torch.cat(
         [F.pad(i, (0, max_n - i.size(1)), value=float("0")) for i in lap_eigval]
     )
+    ys = torch.cat(ys)
 
     result = dict(
         idx=torch.LongTensor(idxs),
@@ -129,6 +132,7 @@ def collator(
         lap_eigval=lap_eigval,
         node_num=node_num,
         edge_num=edge_num,
+        y=ys
     )
 
     return result

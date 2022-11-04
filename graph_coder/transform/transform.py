@@ -24,6 +24,7 @@ def transform(args):
     for idx in trange(dataset.len(), desc="Transforming dataset"):
         data = dataset.get(idx)
         vocab = dataset.vocab(idx)
+        source = dataset.source(idx)
         embeddings = np.zeros((len(vocab) - 1, args.embed_dim))
 
         i = 0
@@ -56,6 +57,7 @@ def transform(args):
 
         data.x = x
         data.edge_attr = edge_attr
+        data.y = embedder.get_sentence_vector(source)
 
         dataset.save_transformed(idx, data)
 

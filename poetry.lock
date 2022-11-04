@@ -477,6 +477,18 @@ docs = ["furo (>=2022.6.21)", "sphinx (>=5.1.1)", "sphinx-autodoc-typehints (>=1
 testing = ["covdefaults (>=2.2)", "coverage (>=6.4.2)", "pytest (>=7.1.2)", "pytest-cov (>=3)", "pytest-timeout (>=2.1)"]
 
 [[package]]
+name = "fire"
+version = "0.4.0"
+description = "A library for automatically generating command line interfaces."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+six = "*"
+termcolor = "*"
+
+[[package]]
 name = "fonttools"
 version = "4.38.0"
 description = "Tools to manipulate font files"
@@ -911,43 +923,58 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "lightning-lite"
+version = "1.8.0.post1"
+description = ""
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+fsspec = {version = ">2021.06.0", extras = ["http"]}
+lightning-utilities = ">=0.3.0,<0.4.0"
+numpy = ">=1.17.2"
+packaging = ">=17.0"
+torch = ">=1.9"
+typing-extensions = ">=4.0.0"
+
+[package.extras]
+all = ["codecov (==2.1.12)", "coverage (==6.4.2)", "deepspeed (>=0.6.0)", "fairscale (>=0.4.5)", "pre-commit (==2.20.0)", "pytest (==7.1.3)", "pytest-cov (==3.0.0)"]
+deepspeed = ["deepspeed (>=0.6.0)"]
+dev = ["codecov (==2.1.12)", "coverage (==6.4.2)", "pre-commit (==2.20.0)", "pytest (==7.1.3)", "pytest-cov (==3.0.0)"]
+fairscale = ["fairscale (>=0.4.5)"]
+strategies = ["deepspeed (>=0.6.0)", "fairscale (>=0.4.5)"]
+test = ["codecov (==2.1.12)", "coverage (==6.4.2)", "pre-commit (==2.20.0)", "pytest (==7.1.3)", "pytest-cov (==3.0.0)"]
+
+[[package]]
 name = "lightning-transformers"
-version = "0.2.3"
-description = "PyTorch Lightning Transformers."
+version = "0.2.4"
+description = "Lightning Transformers."
 category = "main"
 optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
 datasets = "*"
-lightning-utilities = ">=0.3.0"
-numpy = "*"
 Pillow = "*"
 pytorch-lightning = ">=1.7.0"
 sentencepiece = "*"
-torch = ">=1.10.0"
-torchmetrics = [
-    {version = "*", extras = ["text"]},
-    {version = ">=0.7.0"},
-]
-tqdm = "*"
+torchmetrics = {version = "*", extras = ["text"]}
 transformers = ">=4.21.0"
 
 [package.extras]
-extra = ["accelerate (>=0.11.0)", "deepspeed (>=0.5.0)", "lightning-bolts (>=0.5.0)"]
+extra = ["accelerate (>=0.11.0)", "deepspeed (>=0.6.0)", "lightning-bolts (>=0.6.0)"]
 
 [[package]]
 name = "lightning-utilities"
-version = "0.4.1"
+version = "0.3.0"
 description = "PyTorch Lightning Sample project."
 category = "main"
 optional = false
 python-versions = ">=3.7"
 
-[package.extras]
-cli = ["fire"]
-docs = ["sphinx (>=4.0,<5.0)"]
-test = ["coverage (==6.5.0)"]
+[package.dependencies]
+fire = "*"
 
 [[package]]
 name = "local-attention"
@@ -1547,14 +1574,6 @@ dotenv = ["python-dotenv (>=0.10.4)"]
 email = ["email-validator (>=1.0.3)"]
 
 [[package]]
-name = "pydeprecate"
-version = "0.3.2"
-description = "Deprecation tooling"
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[[package]]
 name = "pydot"
 version = "1.4.2"
 description = "Python interface to Graphviz's Dot"
@@ -1630,17 +1649,18 @@ six = ">=1.5"
 
 [[package]]
 name = "pytorch-lightning"
-version = "1.7.7"
+version = "1.8.0.post1"
 description = "PyTorch Lightning is the lightweight PyTorch wrapper for ML researchers. Scale your models. Write less boilerplate."
 category = "main"
 optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
-fsspec = {version = ">=2021.05.0,<2021.06.0 || >2021.06.0", extras = ["http"]}
+fsspec = {version = ">2021.06.0", extras = ["http"]}
+lightning-lite = "1.8.0.post1"
+lightning-utilities = ">=0.3.0,<0.4.0"
 numpy = ">=1.17.2"
 packaging = ">=17.0"
-pyDeprecate = ">=0.3.1"
 PyYAML = ">=5.4"
 tensorboard = ">=2.9.1"
 torch = ">=1.9"
@@ -1649,17 +1669,17 @@ tqdm = ">=4.57.0"
 typing-extensions = ">=4.0.0"
 
 [package.extras]
-all = ["cloudpickle (>=1.3)", "codecov (>=2.1)", "comet-ml (>=3.1.12)", "coverage (>=6.4)", "deepspeed (>=0.6.0)", "fairscale (>=0.4.5)", "fastapi", "gcsfs (>=2021.5.0)", "gym[classic-control] (>=0.17.0)", "hivemind (>=1.0.1)", "horovod (>=0.21.2,!=0.24.0)", "hydra-core (>=1.0.5)", "ipython[all]", "jsonargparse[signatures] (>=4.12.0)", "matplotlib (>3.1)", "mlflow (>=1.0.0)", "mypy (==0.971)", "neptune-client (>=0.10.0)", "omegaconf (>=2.0.5)", "onnxruntime", "pandas (>1.0)", "pre-commit (>=1.0)", "protobuf (<=3.20.1)", "psutil", "pytest (>=7.0)", "pytest-cov", "pytest-forked", "pytest-rerunfailures (>=10.2)", "rich (>=10.14.0,!=10.15.0.a)", "scikit-learn (>0.22.1)", "torchtext (>=0.10)", "torchvision (>=0.10)", "uvicorn", "wandb (>=0.10.22)"]
+all = ["cloudpickle (>=1.3)", "codecov (==2.1.12)", "colossalai (>=0.1.10)", "coverage (==6.4.2)", "deepspeed (>=0.6.0)", "fairscale (>=0.4.5)", "fastapi", "gym[classic-control] (>=0.17.0)", "hivemind (>=1.0.1)", "horovod (>=0.21.2,!=0.24.0)", "hydra-core (>=1.0.5)", "ipython[all]", "jsonargparse[signatures] (>=4.15.2)", "matplotlib (>3.1)", "omegaconf (>=2.0.5)", "onnxruntime", "pandas (>1.0)", "pre-commit (==2.20.0)", "protobuf (<=3.20.1)", "psutil", "pytest (==7.1.3)", "pytest-cov (==3.0.0)", "pytest-forked (==1.4.0)", "pytest-rerunfailures (==10.2)", "rich (>=10.14.0,!=10.15.0.a)", "scikit-learn (>0.22.1)", "torchvision (>=0.10)", "uvicorn"]
+colossalai = ["colossalai (>=0.1.10)"]
 deepspeed = ["deepspeed (>=0.6.0)"]
-dev = ["cloudpickle (>=1.3)", "codecov (>=2.1)", "comet-ml (>=3.1.12)", "coverage (>=6.4)", "fastapi", "gcsfs (>=2021.5.0)", "hydra-core (>=1.0.5)", "jsonargparse[signatures] (>=4.12.0)", "matplotlib (>3.1)", "mlflow (>=1.0.0)", "mypy (==0.971)", "neptune-client (>=0.10.0)", "omegaconf (>=2.0.5)", "onnxruntime", "pandas (>1.0)", "pre-commit (>=1.0)", "protobuf (<=3.20.1)", "psutil", "pytest (>=7.0)", "pytest-cov", "pytest-forked", "pytest-rerunfailures (>=10.2)", "rich (>=10.14.0,!=10.15.0.a)", "scikit-learn (>0.22.1)", "torchtext (>=0.10)", "uvicorn", "wandb (>=0.10.22)"]
+dev = ["cloudpickle (>=1.3)", "codecov (==2.1.12)", "coverage (==6.4.2)", "fastapi", "hydra-core (>=1.0.5)", "jsonargparse[signatures] (>=4.15.2)", "matplotlib (>3.1)", "omegaconf (>=2.0.5)", "onnxruntime", "pandas (>1.0)", "pre-commit (==2.20.0)", "protobuf (<=3.20.1)", "psutil", "pytest (==7.1.3)", "pytest-cov (==3.0.0)", "pytest-forked (==1.4.0)", "pytest-rerunfailures (==10.2)", "rich (>=10.14.0,!=10.15.0.a)", "scikit-learn (>0.22.1)", "uvicorn"]
 examples = ["gym[classic-control] (>=0.17.0)", "ipython[all]", "torchvision (>=0.10)"]
-extra = ["gcsfs (>=2021.5.0)", "hydra-core (>=1.0.5)", "jsonargparse[signatures] (>=4.12.0)", "matplotlib (>3.1)", "omegaconf (>=2.0.5)", "protobuf (<=3.20.1)", "rich (>=10.14.0,!=10.15.0.a)", "torchtext (>=0.10)"]
+extra = ["hydra-core (>=1.0.5)", "jsonargparse[signatures] (>=4.15.2)", "matplotlib (>3.1)", "omegaconf (>=2.0.5)", "protobuf (<=3.20.1)", "rich (>=10.14.0,!=10.15.0.a)"]
 fairscale = ["fairscale (>=0.4.5)"]
 hivemind = ["hivemind (>=1.0.1)"]
 horovod = ["horovod (>=0.21.2,!=0.24.0)"]
-loggers = ["comet-ml (>=3.1.12)", "mlflow (>=1.0.0)", "neptune-client (>=0.10.0)", "wandb (>=0.10.22)"]
-strategies = ["deepspeed (>=0.6.0)", "fairscale (>=0.4.5)", "hivemind (>=1.0.1)", "horovod (>=0.21.2,!=0.24.0)"]
-test = ["cloudpickle (>=1.3)", "codecov (>=2.1)", "coverage (>=6.4)", "fastapi", "mypy (==0.971)", "onnxruntime", "pandas (>1.0)", "pre-commit (>=1.0)", "psutil", "pytest (>=7.0)", "pytest-cov", "pytest-forked", "pytest-rerunfailures (>=10.2)", "scikit-learn (>0.22.1)", "uvicorn"]
+strategies = ["colossalai (>=0.1.10)", "deepspeed (>=0.6.0)", "fairscale (>=0.4.5)", "hivemind (>=1.0.1)", "horovod (>=0.21.2,!=0.24.0)"]
+test = ["cloudpickle (>=1.3)", "codecov (==2.1.12)", "coverage (==6.4.2)", "fastapi", "onnxruntime", "pandas (>1.0)", "pre-commit (==2.20.0)", "psutil", "pytest (==7.1.3)", "pytest-cov (==3.0.0)", "pytest-forked (==1.4.0)", "pytest-rerunfailures (==10.2)", "scikit-learn (>0.22.1)", "uvicorn"]
 
 [[package]]
 name = "pytz"
@@ -1976,6 +1996,17 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "termcolor"
+version = "2.1.0"
+description = "ANSI color formatting for output in terminal"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+tests = ["pytest", "pytest-cov"]
+
+[[package]]
 name = "terminado"
 version = "0.17.0"
 description = "Tornado websocket backend for the Xterm.js Javascript terminal emulator library."
@@ -2054,6 +2085,21 @@ python-versions = ">=3.7.0"
 
 [package.dependencies]
 typing-extensions = "*"
+
+[[package]]
+name = "torch"
+version = "1.12.0+cu113"
+description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
+category = "main"
+optional = false
+python-versions = ">=3.7.0"
+
+[package.dependencies]
+typing-extensions = "*"
+
+[package.source]
+type = "file"
+url = ".torch/torch-1.12.0%2Bcu113-cp39-cp39-linux_x86_64.whl"
 
 [[package]]
 name = "torch-cluster"
@@ -2209,6 +2255,21 @@ python-versions = "*"
 torch = "*"
 
 [[package]]
+name = "torchaudio"
+version = "0.12.0+cu113"
+description = "An audio package for PyTorch"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+torch = "1.12.0"
+
+[package.source]
+type = "file"
+url = ".torch/torchaudio-0.12.0%2Bcu113-cp39-cp39-linux_x86_64.whl"
+
+[[package]]
 name = "torchmetrics"
 version = "0.10.0"
 description = "PyTorch native Metrics"
@@ -2265,6 +2326,28 @@ typing-extensions = "*"
 
 [package.extras]
 scipy = ["scipy"]
+
+[[package]]
+name = "torchvision"
+version = "0.13.0+cu113"
+description = "image and video datasets and models for torch deep learning"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+numpy = "*"
+pillow = ">=5.3.0,<8.3.0 || >=8.4.0"
+requests = "*"
+torch = "1.12.0"
+typing-extensions = "*"
+
+[package.extras]
+scipy = ["scipy"]
+
+[package.source]
+type = "file"
+url = ".torch/torchvision-0.13.0%2Bcu113-cp39-cp39-linux_x86_64.whl"
 
 [[package]]
 name = "tornado"
@@ -2403,7 +2486,7 @@ python-versions = "*"
 
 [[package]]
 name = "websocket-client"
-version = "1.4.1"
+version = "1.4.2"
 description = "WebSocket client for Python with low level API options"
 category = "dev"
 optional = false
@@ -2430,14 +2513,14 @@ watchdog = ["watchdog"]
 
 [[package]]
 name = "wheel"
-version = "0.37.1"
+version = "0.38.1"
 description = "A built-package format for Python"
 category = "main"
 optional = false
-python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
+python-versions = ">=3.7"
 
 [package.extras]
-test = ["pytest (>=3.0.0)", "pytest-cov"]
+test = ["pytest (>=3.0.0)"]
 
 [[package]]
 name = "widgetsnbextension"
@@ -2482,7 +2565,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "22139333470a4d8af80d940456eed989ccb219a7007a3ecb89c22f7e2d2165e4"
+content-hash = "70859d468cd58b9fc6ad6fdc5a61be5c337aa0c4bd328fdd88ea5db24857bb7b"
 
 [metadata.files]
 absl-py = [
@@ -2933,6 +3016,9 @@ filelock = [
     {file = "filelock-3.8.0-py3-none-any.whl", hash = "sha256:617eb4e5eedc82fc5f47b6d61e4d11cb837c56cb4544e39081099fa17ad109d4"},
     {file = "filelock-3.8.0.tar.gz", hash = "sha256:55447caa666f2198c5b6b13a26d2084d26fa5b115c00d065664b2124680c4edc"},
 ]
+fire = [
+    {file = "fire-0.4.0.tar.gz", hash = "sha256:c5e2b8763699d1142393a46d0e3e790c5eb2f0706082df8f647878842c216a62"},
+]
 fonttools = [
     {file = "fonttools-4.38.0-py3-none-any.whl", hash = "sha256:820466f43c8be8c3009aef8b87e785014133508f0de64ec469e4efb643ae54fb"},
     {file = "fonttools-4.38.0.zip", hash = "sha256:2bb244009f9bf3fa100fc3ead6aeb99febe5985fa20afbfbaa2f8946c2fbdaf1"},
@@ -3204,13 +3290,17 @@ kiwisolver = [
     {file = "kiwisolver-1.4.4-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:36dafec3d6d6088d34e2de6b85f9d8e2324eb734162fba59d2ba9ed7a2043d5b"},
     {file = "kiwisolver-1.4.4.tar.gz", hash = "sha256:d41997519fcba4a1e46eb4a2fe31bc12f0ff957b2b81bac28db24744f333e955"},
 ]
+lightning-lite = [
+    {file = "lightning-lite-1.8.0.post1.tar.gz", hash = "sha256:fb197b63432ed26c05d2516d8b414f827ca858be8ec50af2d62c5881ee2248f3"},
+    {file = "lightning_lite-1.8.0.post1-py3-none-any.whl", hash = "sha256:bd379deec916253648d346b8891f1570f8ea564595f5421b4d34d7d4305255ff"},
+]
 lightning-transformers = [
-    {file = "lightning-transformers-0.2.3.tar.gz", hash = "sha256:a7bb1d61e5ccbfa0683f1f406b43363cf71676ac4b72b50bb444a203ad564a67"},
-    {file = "lightning_transformers-0.2.3-py3-none-any.whl", hash = "sha256:a1e17945373fc5e3b2abeb7838f647c5608ac3a42f639a36631fec07b336972f"},
+    {file = "lightning-transformers-0.2.4.tar.gz", hash = "sha256:e5b2b9e5452f0c756692ffc8d959cf8f37dd188bce347699b0bba692dcf4d71f"},
+    {file = "lightning_transformers-0.2.4-py3-none-any.whl", hash = "sha256:0428c9e0539b01041977e206557e6884adeefe1b249260d21d4fe549368a6a66"},
 ]
 lightning-utilities = [
-    {file = "lightning-utilities-0.4.1.tar.gz", hash = "sha256:969697b0debffd808d4cf3b74af4952f82bf6726f4ce561119037871547690a5"},
-    {file = "lightning_utilities-0.4.1-py3-none-any.whl", hash = "sha256:880bbdff34ff7d3ca042b7d6ff0cc4bda1f9079a648752db654beefb6e754b03"},
+    {file = "lightning-utilities-0.3.0.tar.gz", hash = "sha256:d769ab9b76ebdee3243d1051d509aafee57d7947734ddc22977deef8a6427f2f"},
+    {file = "lightning_utilities-0.3.0-py3-none-any.whl", hash = "sha256:1ae9bdd8f1be3c81b1ac4820f6eeddcbafcc2505c57a5940054466f4763bc22d"},
 ]
 local-attention = [
     {file = "local-attention-1.4.4.tar.gz", hash = "sha256:e6d27a0af622caf3b05cc1d644f16c3f65b0893d299e3100d0785b528985317c"},
@@ -3778,10 +3868,6 @@ pydantic = [
     {file = "pydantic-1.10.2-py3-none-any.whl", hash = "sha256:1b6ee725bd6e83ec78b1aa32c5b1fa67a3a65badddde3976bca5fe4568f27709"},
     {file = "pydantic-1.10.2.tar.gz", hash = "sha256:91b8e218852ef6007c2b98cd861601c6a09f1aa32bbbb74fab5b1c33d4a1e410"},
 ]
-pydeprecate = [
-    {file = "pyDeprecate-0.3.2-py3-none-any.whl", hash = "sha256:ed86b68ed837e6465245904a3de2f59bf9eef78ac7a2502ee280533d04802457"},
-    {file = "pyDeprecate-0.3.2.tar.gz", hash = "sha256:d481116cc5d7f6c473e7c4be820efdd9b90a16b594b350276e9e66a6cb5bdd29"},
-]
 pydot = [
     {file = "pydot-1.4.2-py2.py3-none-any.whl", hash = "sha256:66c98190c65b8d2e2382a441b4c0edfdb4f4c025ef9cb9874de478fb0793a451"},
     {file = "pydot-1.4.2.tar.gz", hash = "sha256:248081a39bcb56784deb018977e428605c1c758f10897a339fce1dd728ff007d"},
@@ -3827,8 +3913,8 @@ python-dateutil = [
     {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
 ]
 pytorch-lightning = [
-    {file = "pytorch-lightning-1.7.7.tar.gz", hash = "sha256:27c2dd01a18db2415168e3fa3775ccb5a1fa1e2961a50439ad9365507fe9d4ae"},
-    {file = "pytorch_lightning-1.7.7-py3-none-any.whl", hash = "sha256:4438b8284d7f7fdb06cf3566a7b5b6f102ac8971cf7bb6d3f1b1de64628241f3"},
+    {file = "pytorch-lightning-1.8.0.post1.tar.gz", hash = "sha256:61032ff73941f787f5b00b3335161368b091a8e27065cfc8be0e59c2c49d25fb"},
+    {file = "pytorch_lightning-1.8.0.post1-py3-none-any.whl", hash = "sha256:6930bebaa79f31fbfd17ffe52fdef496ab48f0c390242fc9540fdcdc98db0ef1"},
 ]
 pytz = [
     {file = "pytz-2022.6-py2.py3-none-any.whl", hash = "sha256:222439474e9c98fced559f1709d89e6c9cbf8d79c794ff3eb9f8800064291427"},
@@ -4214,6 +4300,10 @@ tensorboard-data-server = [
 tensorboard-plugin-wit = [
     {file = "tensorboard_plugin_wit-1.8.1-py3-none-any.whl", hash = "sha256:ff26bdd583d155aa951ee3b152b3d0cffae8005dc697f72b44a8e8c2a77a8cbe"},
 ]
+termcolor = [
+    {file = "termcolor-2.1.0-py3-none-any.whl", hash = "sha256:91dd04fdf661b89d7169cefd35f609b19ca931eb033687eaa647cef1ff177c49"},
+    {file = "termcolor-2.1.0.tar.gz", hash = "sha256:b80df54667ce4f48c03fe35df194f052dc27a541ebbf2544e4d6b47b5d6949c4"},
+]
 terminado = [
     {file = "terminado-0.17.0-py3-none-any.whl", hash = "sha256:bf6fe52accd06d0661d7611cc73202121ec6ee51e46d8185d489ac074ca457c2"},
     {file = "terminado-0.17.0.tar.gz", hash = "sha256:520feaa3aeab8ad64a69ca779be54be9234edb2d0d6567e76c93c2c9a4e6e43f"},
@@ -4288,6 +4378,7 @@ torch = [
     {file = "torch-1.12.0-cp39-cp39-win_amd64.whl", hash = "sha256:201abf43a99bb4980cc827dd4b38ac28f35e4dddac7832718be3d5479cafd2c1"},
     {file = "torch-1.12.0-cp39-none-macosx_10_9_x86_64.whl", hash = "sha256:c0313438bc36448ffd209f5fb4e5f325b3af158cdf61c8829b8ddaf128c57816"},
     {file = "torch-1.12.0-cp39-none-macosx_11_0_arm64.whl", hash = "sha256:5ed69d5af232c5c3287d44cef998880dadcc9721cd020e9ae02f42e56b79c2e4"},
+    {file = "torch-1.12.0%2Bcu113-cp39-cp39-linux_x86_64.whl", hash = "sha256:566fbf0a8acc897f98f35992fc5d856d1b238652c2e6baf42a7e3f26c8e94ee4"},
 ]
 torch-cluster = []
 torch-geometric = [
@@ -4316,6 +4407,7 @@ torchaudio = [
     {file = "torchaudio-0.12.0-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:193248b517e8b9aae725bc08215efaf332e7778ea1cffe9b128971d50990b296"},
     {file = "torchaudio-0.12.0-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:c0a404248dc9b2012ccc64759aaa9a72194f369b6bcc95ab81974ad56602b315"},
     {file = "torchaudio-0.12.0-cp39-cp39-win_amd64.whl", hash = "sha256:f1e4c7fecf328ba35c42901c3898fb81d38b73ac57920f21acf6763cb82a636f"},
+    {file = "torchaudio-0.12.0%2Bcu113-cp39-cp39-linux_x86_64.whl", hash = "sha256:43f7aa10591d38b29f8a0511e9abc47479d66060a31202dd8164de83c0c73a0c"},
 ]
 torchmetrics = [
     {file = "torchmetrics-0.10.0-py3-none-any.whl", hash = "sha256:1e99ee7379f8ff7e383383513ae0594bc5424de83b43e36c6ce12d464f1635b9"},
@@ -4362,6 +4454,7 @@ torchvision = [
     {file = "torchvision-0.13.0-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:0e28740bd5695076f7c449af650fc474d6566722d446461c2ceebf9c9599b37f"},
     {file = "torchvision-0.13.0-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:b620a43df4131ad09f5761c415a016a9ea95aaf8ec8c91d030fb59bad591094a"},
     {file = "torchvision-0.13.0-cp39-cp39-win_amd64.whl", hash = "sha256:b7a2c9aebc7ef265777fe7e82577364288d98cf6b8cf0a63bb2621df78a7af1a"},
+    {file = "torchvision-0.13.0%2Bcu113-cp39-cp39-linux_x86_64.whl", hash = "sha256:dd38886d817de311105fbde6a380c845521c87c67ef3aa92a5d246eee6430100"},
 ]
 tornado = [
     {file = "tornado-6.2-cp37-abi3-macosx_10_9_universal2.whl", hash = "sha256:20f638fd8cc85f3cbae3c732326e96addff0a15e22d80f049e00121651e82e72"},
@@ -4405,16 +4498,16 @@ webencodings = [
     {file = "webencodings-0.5.1.tar.gz", hash = "sha256:b36a1c245f2d304965eb4e0a82848379241dc04b865afcc4aab16748587e1923"},
 ]
 websocket-client = [
-    {file = "websocket-client-1.4.1.tar.gz", hash = "sha256:f9611eb65c8241a67fb373bef040b3cf8ad377a9f6546a12b620b6511e8ea9ef"},
-    {file = "websocket_client-1.4.1-py3-none-any.whl", hash = "sha256:398909eb7e261f44b8f4bd474785b6ec5f5b499d4953342fe9755e01ef624090"},
+    {file = "websocket-client-1.4.2.tar.gz", hash = "sha256:d6e8f90ca8e2dd4e8027c4561adeb9456b54044312dba655e7cae652ceb9ae59"},
+    {file = "websocket_client-1.4.2-py3-none-any.whl", hash = "sha256:d6b06432f184438d99ac1f456eaf22fe1ade524c3dd16e661142dc54e9cba574"},
 ]
 werkzeug = [
     {file = "Werkzeug-2.2.2-py3-none-any.whl", hash = "sha256:f979ab81f58d7318e064e99c4506445d60135ac5cd2e177a2de0089bfd4c9bd5"},
     {file = "Werkzeug-2.2.2.tar.gz", hash = "sha256:7ea2d48322cc7c0f8b3a215ed73eabd7b5d75d0b50e31ab006286ccff9e00b8f"},
 ]
 wheel = [
-    {file = "wheel-0.37.1-py2.py3-none-any.whl", hash = "sha256:4bdcd7d840138086126cd09254dc6195fb4fc6f01c050a1d7236f2630db1d22a"},
-    {file = "wheel-0.37.1.tar.gz", hash = "sha256:e9a504e793efbca1b8e0e9cb979a249cf4a0a7b5b8c9e8b65a5e39d49529c1c4"},
+    {file = "wheel-0.38.1-py3-none-any.whl", hash = "sha256:7a95f9a8dc0924ef318bd55b616112c70903192f524d120acc614f59547a9e1f"},
+    {file = "wheel-0.38.1.tar.gz", hash = "sha256:ea041edf63f4ccba53ad6e035427997b3bb10ee88a4cd014ae82aeb9eea77bb9"},
 ]
 widgetsnbextension = [
     {file = "widgetsnbextension-4.0.3-py3-none-any.whl", hash = "sha256:7f3b0de8fda692d31ef03743b598620e31c2668b835edbd3962d080ccecf31eb"},
