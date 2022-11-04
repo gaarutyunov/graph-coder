@@ -1,3 +1,7 @@
+"""
+Modified from https://github.com/jw9730/tokengt
+"""
+
 import torch
 import numpy as np
 import pyximport
