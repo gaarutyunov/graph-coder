@@ -1,3 +1,7 @@
+"""
+Modified from https://github.com/jw9730/tokengt
+"""
+
 import cython
 from cython.parallel cimport prange, parallel
 cimport numpy

@@ -1,3 +1,7 @@
+"""
+Modified from https://github.com/jw9730/tokengt
+"""
+
 import torch.nn as nn
 from torch.nn import Dropout
 
