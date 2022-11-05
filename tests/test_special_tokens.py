@@ -6,7 +6,10 @@ def test_special_tokens():
 
     src = replace_special_tokens(src)
 
-    assert src == "def f(x):[NET]if x > 0:[NET][TAB]x = 1[NET]else:[NET][TAB]x = 2[NET]return x[NEW]"
+    assert (
+        src
+        == "def f(x):[NET]if x > 0:[NET][TAB]x = 1[NET]else:[NET][TAB]x = 2[NET]return x[NEW]"
+    )
 
     src = replace_special_tokens(src)
 

@@ -1210,7 +1210,7 @@ test = ["codecov (>=2.1)", "pytest (>=7.1)", "pytest-cov (>=3.0)"]
 
 [[package]]
 name = "ninja"
-version = "1.10.2.4"
+version = "1.11.1"
 description = "Ninja is a small build system with a focus on speed"
 category = "main"
 optional = false
@@ -2144,12 +2144,13 @@ type = "url"
 url = "https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_cluster-1.6.0-cp39-cp39-linux_x86_64.whl"
 
 [[package]]
-name = "torch-geometric"
+name = "torch_geometric"
 version = "2.1.0"
-description = "Graph Neural Network Library for PyTorch"
+description = ""
 category = "main"
 optional = false
 python-versions = ">=3.7"
+develop = false
 
 [package.dependencies]
 jinja2 = "*"
@@ -2162,10 +2163,14 @@ tqdm = "*"
 
 [package.extras]
 benchmark = ["protobuf (<4.21)", "wandb"]
-dev = ["pre-commit", "pytest", "pytest-cov"]
-full = ["captum", "h5py", "hydra-core", "matplotlib", "networkx", "numba", "pandas", "protobuf (<4.21)", "pytorch-lightning", "pytorch-memlab", "rdflib", "scikit-image", "sympy", "tabulate", "torchmetrics (>=0.7)", "trimesh", "yacs"]
 graphgym = ["hydra-core", "protobuf (<4.21)", "pytorch-lightning", "yacs"]
-test = ["pytest", "pytest-cov"]
+test = ["onnx", "onnxruntime", "pytest", "pytest-cov"]
+
+[package.source]
+type = "git"
+url = "https://github.com/gaarutyunov/pytorch_geometric.git"
+reference = "HEAD"
+resolved_reference = "f6d441f3b5da27dcd89fca6102bbc4665d2ffc8e"
 
 [[package]]
 name = "torch-scatter"
@@ -2504,7 +2509,7 @@ watchdog = ["watchdog"]
 
 [[package]]
 name = "wheel"
-version = "0.38.1"
+version = "0.38.2"
 description = "A built-package format for Python"
 category = "main"
 optional = false
@@ -3511,20 +3516,20 @@ networkx = [
     {file = "networkx-2.8.7.tar.gz", hash = "sha256:815383fd52ece0a7024b5fd8408cc13a389ea350cd912178b82eed8b96f82cd3"},
 ]
 ninja = [
-    {file = "ninja-1.10.2.4-py2.py3-none-macosx_10_9_universal2.macosx_10_9_x86_64.macosx_11_0_arm64.macosx_11_0_universal2.whl", hash = "sha256:b0350784b37c5080223ec1bedc507153cc714b502c17dd5a64552e930b0dca25"},
-    {file = "ninja-1.10.2.4-py2.py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b86a4e4ba2ed999d8b10f2b3f2ed56d7457ff647268f4098dd0b63dd145ede32"},
-    {file = "ninja-1.10.2.4-py2.py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:b12cfed6382e510a597b3d08d7eec96664f7c8b8ee436eef645736c453d1c135"},
-    {file = "ninja-1.10.2.4-py2.py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:24e3bc4713667a9a1d15484ad2bb77bbaedb1e6d45254cb03f7964b8b497231a"},
-    {file = "ninja-1.10.2.4-py2.py3-none-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:3fa6e69838613815c80abcaca34681c5b7cf15bf921543e518f5c918d7098bb7"},
-    {file = "ninja-1.10.2.4-py2.py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:327c319176c5a4af21908b727b776e9f5caf275680403da632821ba071fd6296"},
-    {file = "ninja-1.10.2.4-py2.py3-none-musllinux_1_1_aarch64.whl", hash = "sha256:251fb21cd6691accd0d95e28721ad8a50a6ec0ace97f9a8de3976f39301686f6"},
-    {file = "ninja-1.10.2.4-py2.py3-none-musllinux_1_1_i686.whl", hash = "sha256:685daebd1bc21480256351000a01dfb520636832fa65efc9f121474ff640e3df"},
-    {file = "ninja-1.10.2.4-py2.py3-none-musllinux_1_1_ppc64le.whl", hash = "sha256:34c8e44f6e2e35ff9444994bfc7bf451c8d4bf15e31ad1e3ef7b06f78647b35b"},
-    {file = "ninja-1.10.2.4-py2.py3-none-musllinux_1_1_s390x.whl", hash = "sha256:b264085e409533aecb57040c5e90fbfb64db91a61575c7e637411780446412fa"},
-    {file = "ninja-1.10.2.4-py2.py3-none-musllinux_1_1_x86_64.whl", hash = "sha256:3300f3f37d62dcc7bdd19284dff9eaed7d629f4ed2725019a6ce3291c655fb83"},
-    {file = "ninja-1.10.2.4-py2.py3-none-win32.whl", hash = "sha256:5b973b1ce7075e9091db290adbbf93ba9066a94f97c369d0ff631251c633e81b"},
-    {file = "ninja-1.10.2.4-py2.py3-none-win_amd64.whl", hash = "sha256:ea245943a9849e5b1ebd74c1a4c1edd2c9801b62c0386165c7ac47623e353627"},
-    {file = "ninja-1.10.2.4.tar.gz", hash = "sha256:da7a6d9b2ed2018165fbf90068e2c64da08f2568c700fdb8abea07a245dc4664"},
+    {file = "ninja-1.11.1-py2.py3-none-macosx_10_9_universal2.macosx_10_9_x86_64.macosx_11_0_arm64.macosx_11_0_universal2.whl", hash = "sha256:f48c3c6eea204062f6bbf089dfc63e1ad41a08640e1da46ef2b30fa426f7ce23"},
+    {file = "ninja-1.11.1-py2.py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:df11b8afea0501883e33faeb1c43d2ef67f466d5f4bd85f9c376e9a93a43a277"},
+    {file = "ninja-1.11.1-py2.py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:a7a564fe755ddfbdbccb07b0b758e3f8460e5f8ba1adaab40a5eaa2f8c01ce68"},
+    {file = "ninja-1.11.1-py2.py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:1c474326e11fba3f8c2582715d79216292e327d3335367c0e87e9647a002cc4a"},
+    {file = "ninja-1.11.1-py2.py3-none-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:6f6465a7efe6473a2a34edab83633594de19d59406a727316e1367ebcc528908"},
+    {file = "ninja-1.11.1-py2.py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:642cb64d859276998f14972724850e0c5b7febbc1bce3d2065b7e0cb7d3a0b79"},
+    {file = "ninja-1.11.1-py2.py3-none-musllinux_1_1_aarch64.whl", hash = "sha256:60179bb4f22c88279c53a5402bb5fe81c97c627a28d93c737d1fa067d892115d"},
+    {file = "ninja-1.11.1-py2.py3-none-musllinux_1_1_i686.whl", hash = "sha256:34753459493543782d87267e4cad63dd4639b07f8394ffe6d4417e9eda05c8a8"},
+    {file = "ninja-1.11.1-py2.py3-none-musllinux_1_1_ppc64le.whl", hash = "sha256:779f228e407c54a8b6e4cbf8f835489998dd250f67bf1b9bd7b8a8ab6bdcdc7b"},
+    {file = "ninja-1.11.1-py2.py3-none-musllinux_1_1_s390x.whl", hash = "sha256:ba50a32424912e5f3ee40d791b506a160dc0eeda7de5ad8faebe7aa8006244dc"},
+    {file = "ninja-1.11.1-py2.py3-none-musllinux_1_1_x86_64.whl", hash = "sha256:3b28b595ed580752240ade7821b6cb7a5a4c6a604c865dc474bd38f06e2eb7f5"},
+    {file = "ninja-1.11.1-py2.py3-none-win32.whl", hash = "sha256:3329b4b7c1694730772522a3ba0ba40fd15c012476ed3e1c9f0fd9e76190394e"},
+    {file = "ninja-1.11.1-py2.py3-none-win_amd64.whl", hash = "sha256:4e547bc759c570773d83d110c41fd5ca9a94c0a9a8388f5a3ea37bdf97d002b0"},
+    {file = "ninja-1.11.1.tar.gz", hash = "sha256:c833a47d39b2d1eee3f9ca886fa1581efd5be6068b82734ac229961ee8748f90"},
 ]
 nltk = [
     {file = "nltk-3.7-py3-none-any.whl", hash = "sha256:ba3de02490308b248f9b94c8bc1ac0683e9aa2ec49ee78536d8667afb5e3eec8"},
@@ -4360,9 +4365,7 @@ torch = [
     {file = "torch-1.12.0%2Bcu113-cp39-cp39-linux_x86_64.whl", hash = "sha256:566fbf0a8acc897f98f35992fc5d856d1b238652c2e6baf42a7e3f26c8e94ee4"},
 ]
 torch-cluster = []
-torch-geometric = [
-    {file = "torch_geometric-2.1.0.tar.gz", hash = "sha256:72653deca925885e4d613eb5c72268bb9710325d9c717516922499fbe1197079"},
-]
+torch_geometric = []
 torch-scatter = []
 torch-sparse = []
 torch-spline-conv = []
@@ -4447,8 +4450,8 @@ werkzeug = [
     {file = "Werkzeug-2.2.2.tar.gz", hash = "sha256:7ea2d48322cc7c0f8b3a215ed73eabd7b5d75d0b50e31ab006286ccff9e00b8f"},
 ]
 wheel = [
-    {file = "wheel-0.38.1-py3-none-any.whl", hash = "sha256:7a95f9a8dc0924ef318bd55b616112c70903192f524d120acc614f59547a9e1f"},
-    {file = "wheel-0.38.1.tar.gz", hash = "sha256:ea041edf63f4ccba53ad6e035427997b3bb10ee88a4cd014ae82aeb9eea77bb9"},
+    {file = "wheel-0.38.2-py3-none-any.whl", hash = "sha256:7a5a3095dceca97a3cac869b8fef4e89b83fafde21b6688f47b6fda7600eb441"},
+    {file = "wheel-0.38.2.tar.gz", hash = "sha256:3d492ef22379a156ec923d2a77051cedfd4df4b667864e9e41ba83f0b70b7149"},
 ]
 widgetsnbextension = [
     {file = "widgetsnbextension-4.0.3-py3-none-any.whl", hash = "sha256:7f3b0de8fda692d31ef03743b598620e31c2668b835edbd3962d080ccecf31eb"},

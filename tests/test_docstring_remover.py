@@ -3,7 +3,7 @@ import ast
 from graph_coder.ast.transformers.docstring_remover import DocstringRemover
 
 
-def test_docstring_transformer():
+def test_docstring_remover():
     """Test that docstrings are removed from the AST."""
     source = '''def f():
     """This is a docstring."""

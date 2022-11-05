@@ -7,20 +7,18 @@ from functools import lru_cache
 from lib2to3.refactor import RefactoringTool, get_fixers_from_package
 from typing import Callable, Optional, Union, List, Tuple
 
-import networkx as nx
 import torch
 from torch_geometric.data import Data, Dataset
 from torch_geometric.utils import from_networkx
 from tqdm.auto import tqdm
 
-from graph_coder.ast import Context
-from graph_coder.ast.parse import code_to_graph
+from graph_coder.ast import Context, code_to_graph, Vocabulary
 from graph_coder.ast.transformers.docstring_remover import DocstringRemover
-from graph_coder.ast.vocabulary import Vocabulary
 from graph_coder.data.features import data_to_text
 
 refactor = RefactoringTool(fixer_names=get_fixers_from_package("lib2to3.fixes"))
 docstring_remover = DocstringRemover()
+
 
 def pre_transform(
     data: str,
@@ -66,7 +64,7 @@ class GraphCoderDatasetBase(Dataset):
         p_bar = tqdm(self.raw_paths)
 
         for path in p_bar:
-            p_bar.set_description(desc.format('?', '?'))
+            p_bar.set_description(desc.format("?", "?"))
 
             file_stat = pathlib.Path(path).stat()
             if file_stat.st_size == 0:

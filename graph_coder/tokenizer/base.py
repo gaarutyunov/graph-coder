@@ -3,7 +3,7 @@ from abc import ABC
 from tokenizers import Tokenizer
 
 
-class AbstractTokenizer(ABC):
+class TokenizerBase(ABC):
     """
     A :obj:`Tokenizer` works as a pipeline. It processes some raw text as input
     and outputs an :class:`~tokenizers.Encoding`.

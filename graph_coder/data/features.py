@@ -17,7 +17,7 @@ __special_tokens__ = {
     "[TAB]": "\t",
 }
 
-__pattern__ = '|'.join(map(re.escape, __special_tokens__.keys()))
+__pattern__ = "|".join(map(re.escape, __special_tokens__.keys()))
 
 
 def data_to_node_edge_features(

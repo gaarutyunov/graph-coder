@@ -34,7 +34,17 @@ def train(args: Namespace):
             AddedToken(
                 token, single_word=True, rstrip=False, lstrip=False, normalized=True
             )
-            for token in ["[PAD]", "[EMP]", "[UNK]", "[CLS]", "[SEP]", "[MASK]", "[NEW]", "[TAB]", "[NET]"]
+            for token in [
+                "[PAD]",
+                "[EMP]",
+                "[UNK]",
+                "[CLS]",
+                "[SEP]",
+                "[MASK]",
+                "[NEW]",
+                "[TAB]",
+                "[NET]",
+            ]
         ],
     )
 

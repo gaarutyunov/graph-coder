@@ -1,10 +1,10 @@
 from tokenizers import Tokenizer, processors, pre_tokenizers, decoders, normalizers
 from tokenizers.models import BPE
 
-from graph_coder.tokenizer.base import AbstractTokenizer
+from graph_coder.tokenizer.base import TokenizerBase
 
 
-class GraphCoderTokenizer(AbstractTokenizer):
+class GraphCoderTokenizer(TokenizerBase):
     def __init__(self, tokenizer: Tokenizer = Tokenizer(BPE(unk_token="[UNK]"))):
         super().__init__(tokenizer)
         self.pre_tokenizer = pre_tokenizers.ByteLevel(add_prefix_space=False)

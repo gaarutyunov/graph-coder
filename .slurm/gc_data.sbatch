@@ -16,8 +16,6 @@
 module restore default
 
 # Executable
-poetry shell
-
-poe dataset_process
-poe tokenizer_train
-poe tokenizer_transform
+poetry run python graph_coder/datasets/process.py
+poetry run python graph_coder/tokenizer/train.py
+poetry run python graph_coder/tokenizer/transform.py

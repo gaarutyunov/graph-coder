@@ -40,7 +40,7 @@ torch-cluster = [
     { url = "https://data.pyg.org/whl/torch-1.12.0%2Bcpu/torch_cluster-1.6.0-cp39-cp39-macosx_10_15_x86_64.whl", markers = "sys_platform == 'darwin'" },
     { url = "https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_cluster-1.6.0-cp39-cp39-linux_x86_64.whl", markers = "sys_platform == 'linux'" }
 ]
-torch-geometric = "2.1.0"
+torch-geometric = {git = "https://github.com/gaarutyunov/pytorch_geometric.git"}
 performer-pytorch = "1.1.4"
 datasets = "2.6.1"
 transformers = "4.23.1"
@@ -78,3 +78,4 @@ embedding_transform = { script = "graph_coder.embedding.transform:main" }
 tokenizer_train = { script = "graph_coder.tokenizer.train:main" }
 tokenizer_transform = { script = "graph_coder.tokenizer.transform:main" }
 train = { script = "graph_coder.train:main" }
+setup_jupyter = { cmd = "poetry run ipython kernel install --user --name=graph-coder" }
