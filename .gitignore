@@ -614,3 +614,5 @@ logs
 !graph_coder/data
 
 .torch
+
+.slurm/.out
