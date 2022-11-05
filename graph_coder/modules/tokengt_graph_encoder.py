@@ -2,15 +2,12 @@
 Modified from https://github.com/jw9730/tokengt
 """
 
-from typing import Optional
-
 import torch
 import torch.nn as nn
 
 from performer_pytorch import ProjectionUpdater
 from torch.nn import Dropout, LayerNorm
 
-from .multihead_attention import MultiheadAttention
 from .tokenizer import GraphFeatureTokenizer
 from .tokengt_graph_encoder_layer import TokenGTGraphEncoderLayer
 
@@ -18,12 +15,7 @@ from .tokengt_graph_encoder_layer import TokenGTGraphEncoderLayer
 class TokenGTGraphEncoder(nn.Module):
     def __init__(
         self,
-        num_nodes: int,
-        num_edges: int,
-        rand_node_id: bool = False,
-        rand_node_id_dim: int = 64,
-        orf_node_id: bool = False,
-        orf_node_id_dim: int = 64,
+        vocab_size: int,
         lap_node_id: bool = False,
         lap_node_id_k: int = 8,
         lap_node_id_sign_flip: bool = False,
@@ -61,12 +53,7 @@ class TokenGTGraphEncoder(nn.Module):
         self.performer_finetune = performer_finetune
 
         self.graph_feature = GraphFeatureTokenizer(
-            num_atoms=num_nodes,
-            num_edges=num_edges,
-            rand_node_id=rand_node_id,
-            rand_node_id_dim=rand_node_id_dim,
-            orf_node_id=orf_node_id,
-            orf_node_id_dim=orf_node_id_dim,
+            vocab_size=vocab_size,
             lap_node_id=lap_node_id,
             lap_node_id_k=lap_node_id_k,
             lap_node_id_sign_flip=lap_node_id_sign_flip,
@@ -213,7 +200,7 @@ class TokenGTGraphEncoder(nn.Module):
         self,
         batched_data,
         perturb=None,
-        last_state_only: bool = False,
+        last_state_only: bool = True,
     ):
         if self.performer and self.performer_auto_check_redraw:
             self.performer_proj_updater.redraw_projections()

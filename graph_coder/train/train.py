@@ -19,8 +19,7 @@ def setup_parser(parser: ArgumentParser):
         default="postnorm",
         choices=["prenorm", "postnorm"],
     )
-    parser.add_argument("--num-nodes", type=int, default=64 * 16)
-    parser.add_argument("--num-edges", type=int, default=64 * 16)
+    parser.add_argument("--vocab-size", type=int, default=16000)
     parser.add_argument("--num-in-degree", type=int, default=64)
     parser.add_argument("--num-out-degree", type=int, default=64)
     parser.add_argument("--num-spatial", type=int, default=64)
@@ -79,61 +78,6 @@ def setup_parser(parser: ArgumentParser):
         default=False,
     )
 
-    parser.add_argument(
-        "--decoder-ffn-embed-dim",
-        type=int,
-        metavar="N",
-        help="decoder embedding dim for FFN",
-        default=4096,
-    )
-    parser.add_argument(
-        "--decoder-layers",
-        type=int,
-        metavar="N",
-        help="num decoder layers",
-        default=6,
-    )
-    parser.add_argument(
-        "--decoder-attention-heads",
-        type=int,
-        metavar="N",
-        help="num decoder attention heads",
-        default=8,
-    )
-    parser.add_argument(
-        "--decoder-embed-dim",
-        type=int,
-        metavar="N",
-        help="decoder embedding dimension",
-        default=1024,
-    )
-
-    parser.add_argument(
-        "--rand-node-id",
-        action="store_true",
-        help="use random feature node identifiers",
-        default=False,
-    )
-    parser.add_argument(
-        "--rand-node-id-dim",
-        type=int,
-        metavar="N",
-        help="dim of random node identifiers",
-        default=64,
-    )
-    parser.add_argument(
-        "--orf-node-id",
-        action="store_true",
-        help="use orthogonal random feature node identifiers",
-        default=False,
-    )
-    parser.add_argument(
-        "--orf-node-id-dim",
-        type=int,
-        metavar="N",
-        help="dim of orthogonal random node identifier",
-        default=64,
-    )
     parser.add_argument(
         "--lap-node-id",
         action="store_true",
@@ -306,10 +250,18 @@ def train(args: Namespace):
     trainer.fit(model, dm)
 
 
-if __name__ == "__main__":
+def main(**kwargs):
     parser = ArgumentParser()
     setup_parser(parser)
     parser = Trainer.add_argparse_args(parser)
 
     args = parser.parse_args()
+
+    for k, v in kwargs.items():
+        setattr(args, k, v)
+
     train(args)
+
+
+if __name__ == "__main__":
+    main()

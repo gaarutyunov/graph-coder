@@ -1,3 +1,4 @@
+import ast
 import json
 import pathlib
 import typing
@@ -6,24 +7,25 @@ from functools import lru_cache
 from lib2to3.refactor import RefactoringTool, get_fixers_from_package
 from typing import Callable, Optional, Union, List, Tuple
 
+import networkx as nx
 import torch
 from torch_geometric.data import Data, Dataset
 from torch_geometric.utils import from_networkx
+from tqdm.auto import tqdm
 
+from graph_coder.ast import Context
 from graph_coder.ast.parse import code_to_graph
+from graph_coder.ast.transformers.docstring_remover import DocstringRemover
 from graph_coder.ast.vocabulary import Vocabulary
 from graph_coder.data.features import data_to_text
 
 refactor = RefactoringTool(fixer_names=get_fixers_from_package("lib2to3.fixes"))
-
+docstring_remover = DocstringRemover()
 
 def pre_transform(
     data: str,
-) -> typing.Union[typing.Tuple[None, None, None], typing.Tuple[Data, Vocabulary, str]]:
-    ctx = code_to_graph(data)
-    if ctx.g.number_of_nodes() == 0:
-        return None, None, None
-    return from_networkx(ctx.g, all, all), ctx.v, ctx.src
+) -> typing.List[Context]:
+    return code_to_graph(data)
 
 
 def to_file_name(path: pathlib.Path) -> str:
@@ -60,14 +62,21 @@ class GraphCoderDatasetBase(Dataset):
 
     def process(self):
         i = 0
-        for path in self.raw_paths:
+        desc = "Processing dataset ({}/{} graphs)"
+        p_bar = tqdm(self.raw_paths)
+
+        for path in p_bar:
+            p_bar.set_description(desc.format('?', '?'))
+
             file_stat = pathlib.Path(path).stat()
             if file_stat.st_size == 0:
+                p_bar.update(1)
                 continue
 
             with open(path) as f:
                 source = f.read()
                 if len(source.strip()) == 0:
+                    p_bar.update(1)
                     continue
             try:
                 source = str(refactor.refactor_string(source + "\n", path))
@@ -76,29 +85,42 @@ class GraphCoderDatasetBase(Dataset):
                     print("Failed to refactor %s: %s\n" % (path, e), file=ff)
 
             try:
-                data, vocab, source = self.pre_transform(source)
-                if data is None:
+                ctxs: typing.List[Context] = self.pre_transform(source)
+                ctxs = [ctx for ctx in ctxs if ctx.g.number_of_nodes() > 9]
+                if len(ctxs) == 0:
+                    p_bar.update(1)
                     continue
             except Exception as e:
                 with open(pathlib.Path(self.processed_dir, "log.txt"), "a") as ff:
                     print("Failed to parse %s: %s\n" % (path, e), file=ff)
+                    p_bar.update(1)
                 continue
+            j = 1
 
-            (pathlib.Path(self.processed_dir) / str(i)).mkdir(
-                parents=True, exist_ok=True
-            )
-            torch.save(data, pathlib.Path(self.processed_dir, str(i), f"data.pt"))
-            with open(
-                pathlib.Path(self.processed_dir, str(i), f"vocab.json"), "w"
-            ) as ff:
-                json.dump(asdict(vocab), ff)
-            with open(
-                pathlib.Path(self.processed_dir, str(i), f"source.py"), "w"
-            ) as ff:
-                ff.write(source)
-            with open(pathlib.Path(self.processed_dir, "ft_data"), "a") as ff:
-                ff.write(data_to_text(data, vocab.value_key.keys()) + "\n")
-            i += 1
+            for ctx in ctxs:
+                vocab = ctx.v
+                data = from_networkx(ctx.g, all, all)
+                src = ast.unparse(docstring_remover.visit(ast.parse(ctx.src)))
+
+                p_bar.set_description(desc=desc.format(j, len(ctxs)))
+                (pathlib.Path(self.processed_dir) / str(i)).mkdir(
+                    parents=True, exist_ok=True
+                )
+                torch.save(data, pathlib.Path(self.processed_dir, str(i), f"data.pt"))
+                with open(
+                    pathlib.Path(self.processed_dir, str(i), f"vocab.json"), "w"
+                ) as ff:
+                    json.dump(asdict(vocab), ff)
+                with open(
+                    pathlib.Path(self.processed_dir, str(i), f"source.py"), "w"
+                ) as ff:
+                    ff.write(src)
+                with open(pathlib.Path(self.processed_dir, "ft_data"), "a") as ff:
+                    ff.write(data_to_text(data, vocab.value_key.keys(), src) + "\n")
+                i += 1
+                j += 1
+
+            p_bar.update(1)
 
     def len(self) -> int:
         return len(self.processed_file_names)
@@ -127,8 +149,3 @@ class GraphCoderDatasetBase(Dataset):
     def source(self, idx: int) -> str:
         with open(pathlib.Path(self.processed_dir, str(idx), f"source.py")) as f:
             return f.read()
-
-
-if __name__ == "__main__":
-    dataset = GraphCoderDatasetBase("./data")
-    print(dataset[0])

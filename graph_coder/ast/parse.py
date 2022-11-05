@@ -1,4 +1,5 @@
 import ast
+import typing
 
 from graph_coder.ast.context import Context
 from graph_coder.ast.transformers.ast_transformer import ASTransformer
@@ -11,23 +12,29 @@ from graph_coder.ast.transformers.function_name_transformer import (
 )
 
 
-def code_to_graph(source: str) -> Context:
-    global counter
-    counter = 0
-
-    ctx = Context(source)
-    visitor = ASTransformer(ctx)
+def code_to_graph(source: str) -> typing.List[Context]:
+    ctxs = []
 
     ast_ = ast.parse(source)
 
     for node in ast_.body:
+        src = ast.unparse(node)
+        if len(src.strip()) == 0:
+            continue
+        ctx = Context(src)
         ctx.depth = 0
+        visitor = ASTransformer(ctx)
         node = KeyValuePreTransformer().visit(node)
         node = ClassNameTransformer().visit(node)
         node = FunctionNameTransformer().visit(node)
         visitor.visit(node)
 
-    for edge in ctx.edges:
-        ctx.add_edge(edge)
+        if ctx.g.number_of_nodes() == 0:
+            continue
 
-    return ctx
+        for edge in ctx.edges:
+            ctx.add_edge(edge)
+
+        ctxs.append(ctx)
+
+    return ctxs

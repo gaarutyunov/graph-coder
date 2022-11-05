@@ -5,7 +5,6 @@ from torch import nn, optim
 from torch.nn import LayerNorm
 import torch.nn.functional as F
 
-from graph_coder.modules.tokengt_graph_decoder import TokenGTGraphDecoder
 from graph_coder.modules.tokengt_graph_encoder import TokenGTGraphEncoder
 from graph_coder.utils.activation import get_activation_fn
 
@@ -36,14 +35,9 @@ class GraphCoder(pl.LightningModule):
     def _create_model(self):
         self.graph_encoder = TokenGTGraphEncoder(
             # <
-            num_nodes=self.hparams.num_nodes,
-            num_edges=self.hparams.num_edges,
+            vocab_size=self.hparams.vocab_size,
             # >
             # < for embedding
-            rand_node_id=self.hparams.rand_node_id,
-            rand_node_id_dim=self.hparams.rand_node_id_dim,
-            orf_node_id=self.hparams.orf_node_id,
-            orf_node_id_dim=self.hparams.orf_node_id_dim,
             lap_node_id=self.hparams.lap_node_id,
             lap_node_id_k=self.hparams.lap_node_id_k,
             lap_node_id_sign_flip=self.hparams.lap_node_id_sign_flip,
@@ -70,25 +64,6 @@ class GraphCoder(pl.LightningModule):
             return_attention=self.hparams.return_attention
             # >
         )
-        self.graph_decoder = TokenGTGraphDecoder(
-            stochastic_depth=self.hparams.stochastic_depth,
-            performer=self.hparams.performer,
-            performer_finetune=self.hparams.performer_finetune,
-            performer_nb_features=self.hparams.performer_nb_features,
-            performer_feature_redraw_interval=self.hparams.performer_feature_redraw_interval,
-            performer_generalized_attention=self.hparams.performer_generalized_attention,
-            num_layers=self.hparams.decoder_layers,
-            embedding_dim=self.hparams.decoder_embed_dim,
-            ffn_embedding_dim=self.hparams.decoder_ffn_embed_dim,
-            num_attention_heads=self.hparams.decoder_attention_heads,
-            dropout=self.hparams.dropout,
-            attention_dropout=self.hparams.attention_dropout,
-            activation_dropout=self.hparams.act_dropout,
-            decoder_normalize_before=self.hparams.decoder_normalize_before,
-            layernorm_style=self.hparams.layernorm_style,
-            activation_fn=self.hparams.activation_fn,
-            return_attention=self.hparams.return_attention,
-        )
 
         self.embed_out = None
         self.lm_output_learned_bias = None
@@ -108,7 +83,7 @@ class GraphCoder(pl.LightningModule):
             self.lm_output_learned_bias = nn.Parameter(torch.zeros(1))
             if not self.hparams.share_encoder_input_output_embed:
                 self.embed_out = nn.Linear(
-                    self.hparams.encoder_embed_dim, self.hparams.num_classes, bias=False
+                    self.hparams.encoder_embed_dim, self.hparams.vocab_size, bias=False
                 )
             else:
                 raise NotImplementedError
@@ -130,13 +105,6 @@ class GraphCoder(pl.LightningModule):
         # project masked tokens only
         x = self.layer_norm(self.activation_fn(self.lm_head_transform_weight(x)))
 
-        x, attn_dict = self.graph_decoder(x, inner_states[-1])
-
-        x = inner_states[-1].transpose(0, 1)  # B x T x C
-
-        # project masked tokens only
-        x = self.layer_norm(self.activation_fn(self.lm_head_transform_weight(x)))
-
         # project back to size of vocabulary
         if self.hparams.share_encoder_input_output_embed and hasattr(
             self.graph_encoder.embed_tokens, "weight"
@@ -148,9 +116,9 @@ class GraphCoder(pl.LightningModule):
             x = x + self.lm_output_learned_bias
 
         if self.hparams.return_attention:
-            return x[:, 0, :], attn_dict
+            return x, attn_dict
         else:
-            return x[:, 0, :]
+            return x
 
     def performer_finetune_setup(self):
         self.graph_encoder.performer_finetune_setup()
@@ -178,10 +146,11 @@ class GraphCoder(pl.LightningModule):
     def _calculate_loss(self, batch, mode="train"):
         preds = self.forward(batch)
 
-        labels = batch['y']
+        labels = batch["y"][:, 1:].contiguous()
+        shift_logits = preds[:, 2:-1, :].contiguous()
 
         loss = F.cross_entropy(
-            preds[:, :-1].contiguous(), labels[:, 1:].contiguous()
+            shift_logits.view(-1, shift_logits.size(-1)), labels.view(-1)
         )
 
         self.log("%s_loss" % mode, loss)

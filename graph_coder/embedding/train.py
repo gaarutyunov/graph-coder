@@ -1,4 +1,3 @@
-import pathlib
 from argparse import ArgumentParser, Namespace
 from fasttext.FastText import unsupervised_default
 
@@ -6,7 +5,7 @@ from graph_coder.embedding.graph_coder_embedder import GraphCoderEmbedder
 from graph_coder.utils.cli import expand_user
 
 default_overwrites = {
-    "dim": 1024,
+    "dim": 8,
 }
 
 
@@ -30,9 +29,17 @@ def train(args: Namespace):
     model.save(output)
 
 
-if __name__ == "__main__":
+def main(**kwargs):
     parser = ArgumentParser()
     setup_parser(parser)
 
     args = parser.parse_args()
+
+    for k, v in kwargs.items():
+        setattr(args, k, v)
+
     train(args)
+
+
+if __name__ == "__main__":
+    main()

@@ -109,41 +109,11 @@ class AbstractTokenizer(ABC):
 
     def enable_padding(
         self,
-        direction="right",
-        pad_id=0,
-        pad_type_id=0,
-        pad_token="[PAD]",
-        length=None,
-        pad_to_multiple_of=None,
     ):
         """
         Enable the padding
-
-        Args:
-            direction (:obj:`str`, `optional`, defaults to :obj:`right`):
-                The direction in which to pad. Can be either ``right`` or ``left``
-
-            pad_to_multiple_of (:obj:`int`, `optional`):
-                If specified, the padding length should always snap to the next multiple of the
-                given value. For example if we were going to pad witha length of 250 but
-                ``pad_to_multiple_of=8`` then we will pad to 256.
-
-            pad_id (:obj:`int`, defaults to 0):
-                The id to be used when padding
-
-            pad_type_id (:obj:`int`, defaults to 0):
-                The type id to be used when padding
-
-            pad_token (:obj:`str`, defaults to :obj:`[PAD]`):
-                The pad token to be used when padding
-
-            length (:obj:`int`, `optional`):
-                If specified, the length at which to pad. If not specified we pad using the size of
-                the longest sequence in a batch.
         """
-        self.tokenizer.enable_padding(
-            direction, pad_id, pad_type_id, pad_token, length, pad_to_multiple_of
-        )
+        self.tokenizer.enable_padding()
 
     def enable_truncation(
         self, max_length, stride=0, strategy="longest_first", direction="right"

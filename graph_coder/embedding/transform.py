@@ -62,9 +62,17 @@ def transform(args):
         dataset.save_transformed(idx, data)
 
 
-if __name__ == "__main__":
+def main(**kwargs):
     parser = ArgumentParser()
     setup_parser(parser)
 
     args = parser.parse_args()
+
+    for k, v in kwargs.items():
+        setattr(args, k, v)
+
     transform(args)
+
+
+if __name__ == "__main__":
+    main()

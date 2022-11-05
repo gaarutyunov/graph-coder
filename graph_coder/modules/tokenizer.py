@@ -27,12 +27,7 @@ class GraphFeatureTokenizer(nn.Module):
 
     def __init__(
         self,
-        num_atoms,
-        num_edges,
-        rand_node_id,
-        rand_node_id_dim,
-        orf_node_id,
-        orf_node_id_dim,
+        vocab_size,
         lap_node_id,
         lap_node_id_k,
         lap_node_id_sign_flip,
@@ -45,23 +40,16 @@ class GraphFeatureTokenizer(nn.Module):
 
         self.encoder_embed_dim = hidden_dim
 
-        self.atom_encoder = nn.Linear(num_atoms, hidden_dim)
-        self.edge_encoder = nn.Linear(num_edges, hidden_dim)
+        self.atom_encoder = nn.Embedding(vocab_size, hidden_dim, padding_idx=1)
+        self.edge_encoder = nn.Embedding(vocab_size, hidden_dim, padding_idx=1)
         self.graph_token = nn.Embedding(1, hidden_dim)
         self.null_token = nn.Embedding(1, hidden_dim)  # this is optional
 
-        self.rand_node_id = rand_node_id
-        self.rand_node_id_dim = rand_node_id_dim
-        self.orf_node_id = orf_node_id
-        self.orf_node_id_dim = orf_node_id_dim
         self.lap_node_id = lap_node_id
         self.lap_node_id_k = lap_node_id_k
         self.lap_node_id_sign_flip = lap_node_id_sign_flip
 
         self.type_id = type_id
-
-        if self.rand_node_id:
-            self.rand_encoder = nn.Linear(2 * rand_node_id_dim, hidden_dim, bias=False)
 
         if self.lap_node_id:
             self.lap_encoder = nn.Linear(2 * lap_node_id_k, hidden_dim, bias=False)
@@ -70,9 +58,6 @@ class GraphFeatureTokenizer(nn.Module):
                 if lap_node_id_eig_dropout > 0
                 else None
             )
-
-        if self.orf_node_id:
-            self.orf_encoder = nn.Linear(2 * orf_node_id_dim, hidden_dim, bias=False)
 
         if self.type_id:
             self.order_encoder = nn.Embedding(2, hidden_dim)
@@ -288,8 +273,6 @@ class GraphFeatureTokenizer(nn.Module):
 
         node_feature = self.atom_encoder(node_data).sum(-2)  # [sum(n_node), D]
         edge_feature = self.edge_encoder(edge_data).sum(-2)  # [sum(n_edge), D]
-        device = node_feature.device
-        dtype = node_feature.dtype
 
         padded_index, padded_feature, padding_mask, _, _ = self.get_batch(
             node_feature, edge_index, edge_feature, node_num, edge_num, perturb
@@ -297,36 +280,6 @@ class GraphFeatureTokenizer(nn.Module):
         node_mask = self.get_node_mask(
             node_num, node_feature.device
         )  # [B, max(n_node)]
-
-        if self.rand_node_id:
-            rand_node_id = torch.rand(
-                sum(node_num), self.rand_node_id_dim, device=device, dtype=dtype
-            )  # [sum(n_node), D]
-            rand_node_id = F.normalize(rand_node_id, p=2, dim=1)
-            rand_index_embed = self.get_index_embed(
-                rand_node_id, node_mask, padded_index
-            )  # [B, T, 2D]
-            padded_feature = padded_feature + self.rand_encoder(rand_index_embed)
-
-        if self.orf_node_id:
-            b, max_n = len(node_num), max(node_num)
-            orf = gaussian_orthogonal_random_matrix_batched(
-                b, max_n, max_n, device=device, dtype=dtype
-            )  # [b, max(n_node), max(n_node)]
-            orf_node_id = orf[node_mask]  # [sum(n_node), max(n_node)]
-            if self.orf_node_id_dim > max_n:
-                orf_node_id = F.pad(
-                    orf_node_id, (0, self.orf_node_id_dim - max_n), value=float("0")
-                )  # [sum(n_node), Do]
-            else:
-                orf_node_id = orf_node_id[
-                    ..., : self.orf_node_id_dim
-                ]  # [sum(n_node), Do]
-            orf_node_id = F.normalize(orf_node_id, p=2, dim=1)
-            orf_index_embed = self.get_index_embed(
-                orf_node_id, node_mask, padded_index
-            )  # [B, T, 2Do]
-            padded_feature = padded_feature + self.orf_encoder(orf_index_embed)
 
         if self.lap_node_id:
             lap_dim = lap_eigvec.size(-1)
