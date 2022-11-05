@@ -59,6 +59,9 @@ pytest = "^5.2"
 jupyter = "^1.0.0"
 black = {extras = ["jupyter"], version = "^22.10.0"}
 
+[tool.poetry.group.dev.dependencies]
+poethepoet = "^0.16.4"
+
 [tool.black]
 line-length = 88
 target-version = ['py39']
