@@ -58,7 +58,9 @@ def transform(args):
 
         data.x = x
         data.edge_attr = edge_attr
-        data.y = torch.FloatTensor(embedder.get_sentence_vector(replace_special_tokens(source)))
+        data.y = torch.FloatTensor(
+            embedder.get_sentence_vector(replace_special_tokens(source))
+        )
 
         dataset.save_transformed(idx, data)
 

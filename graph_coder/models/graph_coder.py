@@ -83,7 +83,9 @@ class GraphCoder(pl.LightningModule):
         self.layer_norm = LayerNorm(self.hparams.encoder_embed_dim)
 
         self.embed_out = nn.Linear(
-            self.hparams.encoder_embed_dim, self.hparams.vocab_size * self.hparams.num_features, bias=False
+            self.hparams.encoder_embed_dim,
+            self.hparams.vocab_size * self.hparams.num_features,
+            bias=False,
         )
 
         if self.hparams.performer_finetune:
@@ -159,7 +161,7 @@ class GraphCoder(pl.LightningModule):
 
         preds = self.forward(batch)
         shift_logits = preds[
-            :, self.graph_encoder.graph_feature.num_special_tokens:-1, :
+            :, self.graph_encoder.graph_feature.num_special_tokens : -1, :
         ].contiguous()
         labels = labels[:, 1:, :]
 

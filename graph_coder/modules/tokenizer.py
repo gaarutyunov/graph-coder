@@ -53,7 +53,8 @@ class GraphFeatureTokenizer(nn.Module):
             self.edge_encoder = nn.Linear(text_embed_size * num_features, hidden_dim)
         else:
             raise NotImplementedError(
-                f"Supported feature representation modes: 'token' and 'embedding', got '{repr_mode}'")
+                f"Supported feature representation modes: 'token' and 'embedding', got '{repr_mode}'"
+            )
 
         self.graph_token = None
         self.null_token = None  # this is optional

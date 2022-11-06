@@ -20,7 +20,9 @@ def setup_parser(parser: ArgumentParser):
     parser.add_argument("--vocab-size", type=int, default=512)
     parser.add_argument("--text-embed-size", type=int, default=512)
     parser.add_argument("--num-features", type=int, default=8)
-    parser.add_argument("--repr-mode", type=str, default="embedding", choices=["token", "embedding"])
+    parser.add_argument(
+        "--repr-mode", type=str, default="embedding", choices=["token", "embedding"]
+    )
 
     parser.add_argument("--num-nodes", type=int, default=1024)
     parser.add_argument("--num-edges", type=int, default=2048)
