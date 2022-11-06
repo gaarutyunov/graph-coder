@@ -215,6 +215,12 @@ def setup_parser(parser: ArgumentParser):
         default=10000,
     )
     parser.add_argument(
+        "--batch-size",
+        help="batch size",
+        default=1,
+        type=int,
+    )
+    parser.add_argument(
         "--num-workers",
         help="number of workers",
         default=4,
