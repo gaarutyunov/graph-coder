@@ -1,16 +1,14 @@
 #! /bin/bash
 #SBATCH --job-name="gc-train"
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-gpu=8
 #SBATCH --gpus-per-node=2
-#SBATCH --ntasks=1
 #SBATCH --time=0-6:0
 #SBATCH --mail-user=gaarutyunov@edu.hse.ru
 #SBATCH --mail-type=ALL
 #SBATCH --output=".slurm/.out/gc-train-"%j.out
 #SBATCH --error=".slurm/.out/gc-train-"%j.err
-#SBATCH --constraint="type_a|type_b|type_c"
+#SBATCH --constraint="type_a|type_b|type_c|type_e"
 
 # modules
 module restore default
