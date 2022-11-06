@@ -165,13 +165,10 @@ class GraphCoder(pl.LightningModule):
         ].contiguous()
         labels = labels[:, 1:, :]
 
-        try:
-            loss = F.cross_entropy(
-                shift_logits,
-                labels,
-            )
-        except Exception as e:
-            raise e
+        loss = F.l1_loss(
+            shift_logits,
+            labels,
+        )
 
         self.log("%s_loss" % mode, loss)
         return loss
