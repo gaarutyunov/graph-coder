@@ -18,6 +18,6 @@ module restore default
 # Executable
 poetry run python graph_coder/train/train.py \
 --log_every_n_steps=5 \
---batch-size=16 \
+--batch-size=256 \
 --accelerator=gpu \
 --strategy=ddp_spawn
