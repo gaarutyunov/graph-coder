@@ -1,14 +1,12 @@
-import pathlib
 from argparse import ArgumentParser, Namespace
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.strategies import StrategyRegistry
-from pytorch_lightning.accelerators import AcceleratorRegistry
 
 from graph_coder.datasets.graph_coder_dataset import GraphCoderLightningDataset
 from graph_coder.models.graph_coder import GraphCoder
 from graph_coder.utils.activation import get_available_activation_fns
+from graph_coder.utils.cli import expand_user
 
 
 def setup_parser(parser: ArgumentParser):
@@ -19,12 +17,18 @@ def setup_parser(parser: ArgumentParser):
         default="postnorm",
         choices=["prenorm", "postnorm"],
     )
-    parser.add_argument("--vocab-size", type=int, default=16000)
+    parser.add_argument("--vocab-size", type=int, default=512)
+    parser.add_argument("--text-embed-size", type=int, default=512)
+    parser.add_argument("--num-features", type=int, default=8)
+    parser.add_argument("--repr-mode", type=str, default="embedding", choices=["token", "embedding"])
+
+    parser.add_argument("--num-nodes", type=int, default=1024)
+    parser.add_argument("--num-edges", type=int, default=2048)
     parser.add_argument("--num-in-degree", type=int, default=64)
     parser.add_argument("--num-out-degree", type=int, default=64)
     parser.add_argument("--num-spatial", type=int, default=64)
     parser.add_argument("--num-edge-dis", type=int, default=16)
-    parser.add_argument("--data", type=pathlib.Path, default="./data")
+    parser.add_argument("--data", type=expand_user, default="~/git-py")
     parser.add_argument(
         "--dropout", type=float, metavar="D", help="dropout prob", default=0.1
     )
@@ -108,7 +112,19 @@ def setup_parser(parser: ArgumentParser):
         "--type-id",
         action="store_true",
         help="use type identifiers",
-        default=True,
+        default=False,
+    )
+    parser.add_argument(
+        "--graph-id",
+        action="store_true",
+        help="use graph identifier",
+        default=False,
+    )
+    parser.add_argument(
+        "--null-id",
+        action="store_true",
+        help="use null identifier",
+        default=False,
     )
 
     parser.add_argument(
@@ -197,20 +213,6 @@ def setup_parser(parser: ArgumentParser):
         default=10000,
     )
     parser.add_argument(
-        "--accelerator",
-        metavar="N",
-        help="accelerator",
-        default="cpu",
-        choices=AcceleratorRegistry.available_accelerators(),
-    )
-    parser.add_argument(
-        "--strategy",
-        metavar="N",
-        help="strategy",
-        default="single_device",
-        choices=StrategyRegistry.available_strategies(),
-    )
-    parser.add_argument(
         "--batch-size",
         help="batch size",
         default=1,
@@ -264,4 +266,4 @@ def main(**kwargs):
 
 
 if __name__ == "__main__":
-    main()
+    main(accelerator="cpu", strategy="single_device")

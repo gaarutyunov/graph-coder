@@ -106,28 +106,25 @@ def collator(
     edge_num = [i.size(0) for i in edge_data]
     edge_size = [i.size(1) for i in edge_data]
     max_n = max(node_num)
-    max_node = max(node_size)
-    max_edge = max(edge_size)
+    max_size = max(node_size + edge_size)
 
     edge_index = torch.cat(edge_index, dim=1)  # [2, sum(edge_num)]
     edge_data = (
         torch.cat(
-            [F.pad(i, (0, max_edge - i.size(1)), value=float("0")) for i in edge_data]
+            [F.pad(i, (0, max_size - i.size(1)), value=float("0")) for i in edge_data]
         )
-        + 1
-    )  # [sum(edge_num), De], +1 for nn.Embedding with pad_index=0
+    )  # [sum(edge_num), De]
     node_data = (
         torch.cat(
-            [F.pad(i, (0, max_node - i.size(1)), value=float("0")) for i in node_data]
+            [F.pad(i, (0, max_size - i.size(1)), value=float("0")) for i in node_data]
         )
-        + 1
-    )  # [sum(node_num), Dn], +1 for nn.Embedding with pad_index=0
+    )  # [sum(node_num), Dn]
     in_degree = (
-        torch.cat(in_degree) + 1
-    )  # [sum(node_num),], +1 for nn.Embedding with pad_index=0
+        torch.cat(in_degree)
+    )  # [sum(node_num),]
     out_degree = (
-        torch.cat(out_degree) + 1
-    )  # [sum(node_num),], +1 for nn.Embedding with pad_index=0
+        torch.cat(out_degree)
+    )  # [sum(node_num),]
 
     # [sum(node_num), Dl] = [sum(node_num), max_n]
     lap_eigvec = torch.cat(

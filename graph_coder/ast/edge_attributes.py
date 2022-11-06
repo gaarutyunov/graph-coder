@@ -1,8 +1,17 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
+
+from graph_coder.ast.utils import empty_token
 
 
 @dataclass
 class EdgeAttributes:
+    code_name: str = field(default=empty_token)
+    import_name: str = field(default=empty_token)
+    import_as: str = field(default=empty_token)
+    type_name: str = field(default=empty_token)
+    docstring: str = field(default=empty_token)
+    return_type: str = field(default=empty_token)
+
     def to_dict(self, ctx):
         return {
             k: ctx.add_string(v) if isinstance(v, str) else v

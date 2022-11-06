@@ -16,6 +16,8 @@ class TokenGTGraphEncoder(nn.Module):
     def __init__(
         self,
         vocab_size: int,
+        text_embed_size: int,
+        num_features: int,
         lap_node_id: bool = False,
         lap_node_id_k: int = 8,
         lap_node_id_sign_flip: bool = False,
@@ -43,6 +45,7 @@ class TokenGTGraphEncoder(nn.Module):
         n_trans_layers_to_freeze: int = 0,
         traceable: bool = False,
         return_attention: bool = False,
+        repr_mode: str = "embedding"
     ) -> None:
 
         super().__init__()
@@ -61,6 +64,9 @@ class TokenGTGraphEncoder(nn.Module):
             type_id=type_id,
             hidden_dim=embedding_dim,
             n_layers=num_encoder_layers,
+            repr_mode=repr_mode,
+            text_embed_size=text_embed_size,
+            num_features=num_features
         )
         self.performer_finetune = performer_finetune
         self.embed_scale = embed_scale

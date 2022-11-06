@@ -1,3 +1,4 @@
+import copy
 from functools import partial
 from typing import Optional
 
@@ -52,12 +53,11 @@ class GraphCoderLightningDataset(LightningDataset):
             **kwargs,
         )
 
-    def dataloader(self, dataset: Dataset, shuffle: bool = False):
+    def dataloader(self, dataset: Dataset, **kwargs):
         return DataLoader(
             dataset,
-            shuffle=shuffle,
             collate_fn=partial(
                 collator, num_nodes=self.num_nodes, num_edges=self.num_edges
             ),
-            **self.kwargs,
+            **kwargs,
         )

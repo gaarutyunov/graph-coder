@@ -5,7 +5,7 @@ from graph_coder.embedding.graph_coder_embedder import GraphCoderEmbedder
 from graph_coder.utils.cli import expand_user
 
 default_overwrites = {
-    "dim": 8,
+    "dim": 512,
 }
 
 

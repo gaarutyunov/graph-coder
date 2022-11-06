@@ -19,6 +19,8 @@ __special_tokens__ = {
 
 __pattern__ = "|".join(map(re.escape, __special_tokens__.keys()))
 
+from graph_coder.ast.utils import empty_token
+
 
 def data_to_node_edge_features(
     data: Data, values: typing.Iterable[str]
@@ -40,8 +42,8 @@ def data_to_text(data: Data, values: typing.Iterable[str], src: str) -> str:
     res = src + " "
 
     for i, (u, v) in enumerate(to_networkx(data, to_undirected="lower").edges):
-        res += " ".join(node_attr[u, node_attr[u] != "[EMP]"]) + " "
+        res += " ".join(node_attr[u, node_attr[u] != empty_token]) + " "
         res += " ".join(edge_attr[i, :]) + " "
-        res += " ".join(node_attr[v, node_attr[v] != "[EMP]"]) + " "
+        res += " ".join(node_attr[v, node_attr[v] != empty_token]) + " "
 
     return replace_special_tokens(res)

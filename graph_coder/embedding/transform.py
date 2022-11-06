@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from tqdm.auto import trange
 
+from graph_coder.data import replace_special_tokens
 from graph_coder.datasets.base import GraphCoderDatasetBase
 from graph_coder.embedding.graph_coder_embedder import GraphCoderEmbedder
 
@@ -14,7 +15,7 @@ def setup_parser(parser: ArgumentParser):
     parser.add_argument(
         "--embedder", type=pathlib.Path, default="~/git-py/embedder.bin"
     )
-    parser.add_argument("--embed_dim", type=int, default=1024)
+    parser.add_argument("--embed_dim", type=int, default=512)
 
 
 def transform(args):
@@ -57,7 +58,7 @@ def transform(args):
 
         data.x = x
         data.edge_attr = edge_attr
-        data.y = embedder.get_sentence_vector(source)
+        data.y = torch.FloatTensor(embedder.get_sentence_vector(replace_special_tokens(source)))
 
         dataset.save_transformed(idx, data)
 

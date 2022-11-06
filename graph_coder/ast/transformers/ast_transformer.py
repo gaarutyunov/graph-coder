@@ -219,7 +219,7 @@ class ASTransformer(ast.NodeTransformer):
                 body.target,
                 self.ctx.depth,
                 NodeAttributes(
-                    type_name=annotation if annotation is not None else empty_token()
+                    type_name=annotation if annotation is not None else empty_token
                 ),
             )
         else:
@@ -562,7 +562,7 @@ class ASTransformer(ast.NodeTransformer):
                 body,
                 self.ctx.depth,
                 NodeAttributes(
-                    import_as=body.asname if body.asname is not None else empty_token(),
+                    import_as=body.asname if body.asname is not None else empty_token,
                     import_name=body.name,
                 ),
             ),

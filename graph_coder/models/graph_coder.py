@@ -43,6 +43,8 @@ class GraphCoder(pl.LightningModule):
             lap_node_id_sign_flip=self.hparams.lap_node_id_sign_flip,
             lap_node_id_eig_dropout=self.hparams.lap_node_id_eig_dropout,
             type_id=self.hparams.type_id,
+            text_embed_size=self.hparams.text_embed_size,
+            num_features=self.hparams.num_features,
             # >
             # <
             stochastic_depth=self.hparams.stochastic_depth,
@@ -61,7 +63,8 @@ class GraphCoder(pl.LightningModule):
             encoder_normalize_before=self.hparams.encoder_normalize_before,
             layernorm_style=self.hparams.layernorm_style,
             activation_fn=self.hparams.activation_fn,
-            return_attention=self.hparams.return_attention
+            return_attention=self.hparams.return_attention,
+            repr_mode=self.hparams.repr_mode
             # >
         )
 
@@ -79,14 +82,9 @@ class GraphCoder(pl.LightningModule):
         self.activation_fn = get_activation_fn(self.hparams.activation_fn)
         self.layer_norm = LayerNorm(self.hparams.encoder_embed_dim)
 
-        if self.load_softmax:
-            self.lm_output_learned_bias = nn.Parameter(torch.zeros(1))
-            if not self.hparams.share_encoder_input_output_embed:
-                self.embed_out = nn.Linear(
-                    self.hparams.encoder_embed_dim, self.hparams.vocab_size, bias=False
-                )
-            else:
-                raise NotImplementedError
+        self.embed_out = nn.Linear(
+            self.hparams.encoder_embed_dim, self.hparams.vocab_size * self.hparams.num_features, bias=False
+        )
 
         if self.hparams.performer_finetune:
             self.performer_finetune_setup()
@@ -144,14 +142,34 @@ class GraphCoder(pl.LightningModule):
         return attention_maps
 
     def _calculate_loss(self, batch, mode="train"):
-        preds = self.forward(batch)
-
-        labels = batch["y"][:, 1:].contiguous()
-        shift_logits = preds[:, 2:-1, :].contiguous()
-
-        loss = F.cross_entropy(
-            shift_logits.view(-1, shift_logits.size(-1)), labels.view(-1)
+        (
+            padded_index,
+            padded_feature,
+            padding_mask,
+            padded_node_mask,
+            padded_edge_mask,
+        ) = self.graph_encoder.graph_feature.get_batch(
+            batch["node_data"],
+            batch["edge_index"],
+            batch["edge_data"],
+            batch["node_num"],
+            batch["edge_num"],
         )
+        labels = padded_feature
+
+        preds = self.forward(batch)
+        shift_logits = preds[
+            :, self.graph_encoder.graph_feature.num_special_tokens:-1, :
+        ].contiguous()
+        labels = labels[:, 1:, :]
+
+        try:
+            loss = F.cross_entropy(
+                shift_logits,
+                labels,
+            )
+        except Exception as e:
+            raise e
 
         self.log("%s_loss" % mode, loss)
         return loss

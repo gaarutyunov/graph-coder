@@ -12,10 +12,13 @@ pyximport.install(setup_args={"include_dirs": np.get_include()})
 
 
 @torch.jit.script
-def convert_to_single_emb(x, offset: int = 1024):
+def convert_to_single_emb(x, offset: int = 512, concat_features: bool = True):
     feature_num = x.size(1) if len(x.size()) > 1 else 1
     feature_offset = 1 + torch.arange(0, feature_num * offset, offset, dtype=torch.long)
-    x = x + feature_offset.unsqueeze(1).repeat(1, offset)
+    x = x + feature_offset.unsqueeze(1).repeat(1, x.size(-1))
+    if concat_features:
+        return x.reshape(x.size(0), -1)
+
     return x
 
 

@@ -1,4 +1,3 @@
-import pathlib
 from argparse import ArgumentParser, Namespace
 
 from tokenizers import trainers, AddedToken
@@ -36,7 +35,6 @@ def train(args: Namespace):
             )
             for token in [
                 "[PAD]",
-                "[EMP]",
                 "[UNK]",
                 "[CLS]",
                 "[SEP]",

@@ -28,6 +28,8 @@ class GraphFeatureTokenizer(nn.Module):
     def __init__(
         self,
         vocab_size,
+        text_embed_size,
+        num_features,
         lap_node_id,
         lap_node_id_k,
         lap_node_id_sign_flip,
@@ -35,15 +37,33 @@ class GraphFeatureTokenizer(nn.Module):
         type_id,
         hidden_dim,
         n_layers,
+        repr_mode,
+        graph_id=False,
+        null_id=False,
     ):
         super(GraphFeatureTokenizer, self).__init__()
 
         self.encoder_embed_dim = hidden_dim
 
-        self.atom_encoder = nn.Embedding(vocab_size, hidden_dim, padding_idx=1)
-        self.edge_encoder = nn.Embedding(vocab_size, hidden_dim, padding_idx=1)
-        self.graph_token = nn.Embedding(1, hidden_dim)
-        self.null_token = nn.Embedding(1, hidden_dim)  # this is optional
+        if repr_mode == "token":
+            self.atom_encoder = nn.Embedding(vocab_size, hidden_dim, padding_idx=0)
+            self.edge_encoder = nn.Embedding(vocab_size, hidden_dim, padding_idx=0)
+        elif repr_mode == "embedding":
+            self.atom_encoder = nn.Linear(text_embed_size * num_features, hidden_dim)
+            self.edge_encoder = nn.Linear(text_embed_size * num_features, hidden_dim)
+        else:
+            raise NotImplementedError(
+                f"Supported feature representation modes: 'token' and 'embedding', got '{repr_mode}'")
+
+        self.graph_token = None
+        self.null_token = None  # this is optional
+        self.num_special_tokens = 0
+        if graph_id:
+            self.graph_token = nn.Embedding(1, hidden_dim)
+            self.num_special_tokens += 1
+        if null_id:
+            self.null_token = nn.Embedding(1, hidden_dim)
+            self.num_special_tokens += 1
 
         self.lap_node_id = lap_node_id
         self.lap_node_id_k = lap_node_id_k
@@ -228,24 +248,42 @@ class GraphFeatureTokenizer(nn.Module):
         """
         b, _, d = padded_feature.size()
 
-        num_special_tokens = 2
-        graph_token_feature = self.graph_token.weight.expand(b, 1, d)  # [1, D]
-        null_token_feature = self.null_token.weight.expand(
-            b, 1, d
-        )  # [1, D], this is optional
-        special_token_feature = torch.cat(
-            (graph_token_feature, null_token_feature), dim=1
-        )  # [B, 2, D]
-        special_token_mask = torch.zeros(
-            b, num_special_tokens, dtype=torch.bool, device=padded_feature.device
+        graph_token_feature, null_token_feature, special_token_feature = (
+            None,
+            None,
+            None,
         )
 
-        padded_feature = torch.cat(
-            (special_token_feature, padded_feature), dim=1
-        )  # [B, 2 + T, D]
-        padding_mask = torch.cat(
-            (special_token_mask, padding_mask), dim=1
-        )  # [B, 2 + T]
+        if self.graph_token is not None:
+            graph_token_feature = self.graph_token.weight.expand(b, 1, d)  # [1, D]
+        if self.null_token is not None:
+            null_token_feature = self.null_token.weight.expand(
+                b, 1, d
+            )  # [1, D], this is optional
+
+        if graph_token_feature is not None and null_token_feature is not None:
+            special_token_feature = torch.cat(
+                (graph_token_feature, null_token_feature), dim=1
+            )  # [B, 2, D]
+        elif graph_token_feature is not None:
+            special_token_feature = graph_token_feature
+        elif null_token_feature is not None:
+            special_token_feature = null_token_feature
+
+        if self.num_special_tokens != 0:
+            special_token_mask = torch.zeros(
+                b,
+                self.num_special_tokens,
+                dtype=torch.bool,
+                device=padded_feature.device,
+            )
+            padded_feature = torch.cat(
+                (special_token_feature, padded_feature), dim=1
+            )  # [B, 2 + T, D]
+            padding_mask = torch.cat(
+                (special_token_mask, padding_mask), dim=1
+            )  # [B, 2 + T]
+
         return padded_feature, padding_mask
 
     def forward(self, batched_data, perturb=None):

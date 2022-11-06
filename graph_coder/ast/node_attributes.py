@@ -5,12 +5,12 @@ from graph_coder.ast.utils import empty_token
 
 @dataclass
 class NodeAttributes:
-    code_name: str = field(default_factory=empty_token)
-    import_name: str = field(default_factory=empty_token)
-    import_as: str = field(default_factory=empty_token)
-    type_name: str = field(default_factory=empty_token)
-    docstring: str = field(default_factory=empty_token)
-    return_type: str = field(default_factory=empty_token)
+    code_name: str = field(default=empty_token)
+    import_name: str = field(default=empty_token)
+    import_as: str = field(default=empty_token)
+    type_name: str = field(default=empty_token)
+    docstring: str = field(default=empty_token)
+    return_type: str = field(default=empty_token)
 
     def to_dict(self, ctx):
         return {

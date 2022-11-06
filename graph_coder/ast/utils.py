@@ -2,8 +2,7 @@ import ast
 import typing
 
 
-def empty_token():
-    return "[EMP]"
+empty_token = "[PAD]"
 
 
 _const_types = {
