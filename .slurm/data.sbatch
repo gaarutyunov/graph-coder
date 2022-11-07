@@ -1,10 +1,7 @@
 #! /bin/bash
 #SBATCH --job-name="gc-data"
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --gpus-per-node=0
-#SBATCH --ntasks=1
+#SBATCH --cpus=4
 #SBATCH --time=0-6:0
 #SBATCH --mail-user=gaarutyunov@edu.hse.ru
 #SBATCH --mail-type=ALL

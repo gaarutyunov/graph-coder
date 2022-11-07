@@ -79,12 +79,13 @@ class GraphCoderDatasetBase(Dataset):
             try:
                 source = str(refactor.refactor_string(source + "\n", path))
             except Exception as e:
+                p_bar.update(1)
                 with open(pathlib.Path(self.processed_dir, "log.txt"), "a") as ff:
                     print("Failed to refactor %s: %s\n" % (path, e), file=ff)
 
             try:
                 ctxs: typing.List[Context] = self.pre_transform(source)
-                ctxs = [ctx for ctx in ctxs if ctx.g.number_of_nodes() > 9]
+                ctxs = [ctx for ctx in ctxs if ctx.g.number_of_nodes() > 9 and ctx.g.number_of_edges() > 3]
                 if len(ctxs) == 0:
                     p_bar.update(1)
                     continue
@@ -97,8 +98,18 @@ class GraphCoderDatasetBase(Dataset):
 
             for ctx in ctxs:
                 vocab = ctx.v
-                data = from_networkx(ctx.g, all, all)
-                src = ast.unparse(docstring_remover.visit(ast.parse(ctx.src)))
+                try:
+                    data = from_networkx(ctx.g, all, all)
+                except Exception as e:
+                    with open(pathlib.Path(self.processed_dir, "log.txt"), "a") as ff:
+                        print("Failed to transform %s: %s\n" % (path, e), file=ff)
+                    continue
+                try:
+                    src = ast.unparse(docstring_remover.visit(ast.parse(ctx.src)))
+                except Exception as e:
+                    with open(pathlib.Path(self.processed_dir, "log.txt"), "a") as ff:
+                        print("Failed to unparse %s: %s\n" % (path, e), file=ff)
+                    continue
 
                 p_bar.set_description(desc=desc.format(j, len(ctxs)))
                 (pathlib.Path(self.processed_dir) / str(i)).mkdir(
