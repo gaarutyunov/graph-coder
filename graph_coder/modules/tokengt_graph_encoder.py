@@ -213,7 +213,7 @@ class TokenGTGraphEncoder(nn.Module):
 
         x, padding_mask, padded_index = self.graph_feature(batched_data, perturb)
 
-        # x: B x T x C
+        # x: B x T x F x D
 
         if self.embed_scale is not None:
             x = x * self.embed_scale
@@ -228,7 +228,7 @@ class TokenGTGraphEncoder(nn.Module):
 
         # account for padding while computing the representation
 
-        # B x T x C -> T x B x C
+        # B x T x F x D -> T x B x F x D
         x = x.transpose(0, 1)
 
         inner_states = []

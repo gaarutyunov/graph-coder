@@ -12,7 +12,7 @@ pyximport.install(setup_args={"include_dirs": np.get_include()})
 
 
 @torch.jit.script
-def convert_to_single_emb(x, offset: int = 512, concat_features: bool = True):
+def convert_to_single_emb(x, offset: int = 512, concat_features: bool = False):
     feature_num = x.size(1) if len(x.size()) > 1 else 1
     feature_offset = 1 + torch.arange(0, feature_num * offset, offset, dtype=torch.long)
     x = x + feature_offset.unsqueeze(1).repeat(1, x.size(-1))
@@ -28,10 +28,10 @@ def preprocess_item(item):
         item.edge_index,
         item.x,
     )
-    node_data = convert_to_single_emb(node_int_feature)
-    if len(edge_int_feature.size()) == 1:
-        edge_int_feature = edge_int_feature[:, None]
-    edge_data = convert_to_single_emb(edge_int_feature)
+    # node_data = convert_to_single_emb(node_int_feature)
+    # edge_data = convert_to_single_emb(edge_int_feature)
+    node_data = node_int_feature
+    edge_data = edge_int_feature
 
     N = node_int_feature.size(0)
     dense_adj = torch.zeros([N, N], dtype=torch.bool)

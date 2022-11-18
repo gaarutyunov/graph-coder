@@ -90,18 +90,19 @@ class GraphFeatureTokenizer(nn.Module):
         node_feature, edge_index, edge_feature, node_num, edge_num, perturb=None
     ):
         """
-        :param node_feature: Tensor([sum(node_num), D])
+        :param node_feature: Tensor([sum(node_num), F, D])
         :param edge_index: LongTensor([2, sum(edge_num)])
-        :param edge_feature: Tensor([sum(edge_num), D])
+        :param edge_feature: Tensor([sum(edge_num), F, D])
         :param node_num: list
         :param edge_num: list
-        :param perturb: Tensor([B, max(node_num), D])
-        :return: padded_index: LongTensor([B, T, 2]), padded_feature: Tensor([B, T, D]), padding_mask: BoolTensor([B, T])
+        :param perturb: Tensor([B, max(node_num), F, D])
+        :return: padded_index: LongTensor([B, T, 2]), padded_feature: Tensor([B, T, F, D]), padding_mask: BoolTensor([B, T])
         """
-        seq_len = [n + e for n, e in zip(node_num, edge_num)]
+        seq_len = [max([n, e]) for n, e in zip(node_num, edge_num)]
         b = len(seq_len)
         d = node_feature.size(-1)
-        max_len = max(seq_len)
+        f = node_feature.size(-2)
+        max_len = max(seq_len) * 2
         max_n = max(node_num)
         device = edge_index.device
 
@@ -146,11 +147,12 @@ class GraphFeatureTokenizer(nn.Module):
                 node_feature.dtype
             )  # [sum(node_num), D]
 
-        padded_feature = torch.zeros(
-            b, max_len, d, device=device, dtype=node_feature.dtype
-        )  # [B, T, D]
-        padded_feature[padded_node_mask, :] = node_feature
-        padded_feature[padded_edge_mask, :] = edge_feature
+        padded_feature = torch.ones(
+            b, max_len, f, d, device=device, dtype=node_feature.dtype
+        )  # [B, T, F, D]
+        for i in range(b):
+            padded_feature[i, padded_node_mask[i], :, :] = node_feature[i, :len(padded_node_mask[i, padded_node_mask[i] == True])]
+            padded_feature[i, padded_edge_mask[i], :, :] = edge_feature[i, :len(padded_edge_mask[i, padded_edge_mask[i] == True])]
 
         padding_mask = torch.greater_equal(token_pos, seq_len)  # [B, T]
         return (
@@ -243,11 +245,11 @@ class GraphFeatureTokenizer(nn.Module):
 
     def add_special_tokens(self, padded_feature, padding_mask):
         """
-        :param padded_feature: Tensor([B, T, D])
+        :param padded_feature: Tensor([B, T, F, D])
         :param padding_mask: BoolTensor([B, T])
-        :return: padded_feature: Tensor([B, 2/3 + T, D]), padding_mask: BoolTensor([B, 2/3 + T])
+        :return: padded_feature: Tensor([B, 2/3 + T, F, D]), padding_mask: BoolTensor([B, 2/3 + T])
         """
-        b, _, d = padded_feature.size()
+        b, _, f, d = padded_feature.size()
 
         graph_token_feature, null_token_feature, special_token_feature = (
             None,
@@ -256,16 +258,16 @@ class GraphFeatureTokenizer(nn.Module):
         )
 
         if self.graph_token is not None:
-            graph_token_feature = self.graph_token.weight.expand(b, 1, d)  # [1, D]
+            graph_token_feature = self.graph_token.weight.expand(b, 1, f, d)  # [1, D]
         if self.null_token is not None:
             null_token_feature = self.null_token.weight.expand(
-                b, 1, d
+                b, 1, f, d
             )  # [1, D], this is optional
 
         if graph_token_feature is not None and null_token_feature is not None:
             special_token_feature = torch.cat(
                 (graph_token_feature, null_token_feature), dim=1
-            )  # [B, 2, D]
+            )  # [B, 2, F, D]
         elif graph_token_feature is not None:
             special_token_feature = graph_token_feature
         elif null_token_feature is not None:
@@ -280,7 +282,7 @@ class GraphFeatureTokenizer(nn.Module):
             )
             padded_feature = torch.cat(
                 (special_token_feature, padded_feature), dim=1
-            )  # [B, 2 + T, D]
+            )  # [B, 2 + T, F, D]
             padding_mask = torch.cat(
                 (special_token_mask, padding_mask), dim=1
             )  # [B, 2 + T]
@@ -337,7 +339,7 @@ class GraphFeatureTokenizer(nn.Module):
             )
             lap_index_embed = self.get_index_embed(
                 lap_node_id, node_mask, padded_index
-            )  # [B, T, 2Dl]
+            )[..., None].transpose(-2, -1).repeat(1, 1, node_feature.size(-2), 1)  # [B, T, F, 2Dl]
             padded_feature = padded_feature + self.lap_encoder(lap_index_embed)
 
         if self.type_id:
@@ -345,11 +347,11 @@ class GraphFeatureTokenizer(nn.Module):
 
         padded_feature, padding_mask = self.add_special_tokens(
             padded_feature, padding_mask
-        )  # [B, 2+T, D], [B, 2+T]
+        )  # [B, 2+T, F, D], [B, 2+T]
 
-        padded_feature = padded_feature.masked_fill(padding_mask[..., None], float("0"))
+        padded_feature = padded_feature.masked_fill(padding_mask[..., None, None], float("0"))
         return (
             padded_feature,
             padding_mask,
             padded_index,
-        )  # [B, 2+T, D], [B, 2+T], [B, T, 2]
+        )  # [B, 2+T, F, D], [B, 2+T], [B, T, 2]

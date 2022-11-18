@@ -1,3 +1,6 @@
+import math
+from functools import reduce
+
 import numpy as np
 import pytorch_lightning as pl
 import torch
@@ -7,6 +10,33 @@ import torch.nn.functional as F
 
 from graph_coder.modules.tokengt_graph_encoder import TokenGTGraphEncoder
 from graph_coder.utils.activation import get_activation_fn
+
+
+def prob_mask_like(t, prob):
+    return torch.zeros_like(t).float().uniform_(0, 1) < prob
+
+
+def mask_with_tokens(t, token_ids):
+    init_no_mask = torch.full_like(t, False, dtype=torch.bool)
+    mask = reduce(lambda acc, el: acc | (t == el), token_ids, init_no_mask)
+    return mask
+
+
+def get_mask_subset_with_prob(mask, prob):
+    batch, seq_len, device = *mask.shape, mask.device
+    max_masked = math.ceil(prob * seq_len)
+
+    num_tokens = mask.sum(dim=-1, keepdim=True)
+    mask_excess = (mask.cumsum(dim=-1) > (num_tokens * prob).ceil())
+    mask_excess = mask_excess[:, :max_masked]
+
+    rand = torch.rand((batch, seq_len), device=device).masked_fill(~mask, -1e9)
+    _, sampled_indices = rand.topk(max_masked, dim=-1)
+    sampled_indices = (sampled_indices + 1).masked_fill_(mask_excess, 0)
+
+    new_mask = torch.zeros((batch, seq_len + 1), device=device)
+    new_mask.scatter_(-1, sampled_indices, 1)
+    return new_mask[:, 1:].bool()
 
 
 class CosineWarmupScheduler(optim.lr_scheduler._LRScheduler):
@@ -84,7 +114,7 @@ class GraphCoder(pl.LightningModule):
 
         self.embed_out = nn.Linear(
             self.hparams.encoder_embed_dim,
-            self.hparams.vocab_size * self.hparams.num_features,
+            self.hparams.vocab_size,
             bias=False,
         )
 
@@ -157,17 +187,16 @@ class GraphCoder(pl.LightningModule):
             batch["node_num"],
             batch["edge_num"],
         )
-        labels = padded_feature
-
+        labels = torch.zeros(
+            (padded_feature.size(0), padded_feature.size(1), padded_feature.size(2), self.hparams.vocab_size),
+            dtype=torch.int64,
+        )
+        labels.scatter_(-1, padded_feature, 1)
         preds = self.forward(batch)
-        shift_logits = preds[
-            :, self.graph_encoder.graph_feature.num_special_tokens : -1, :
-        ].contiguous()
-        labels = labels[:, 1:, :]
-
-        loss = F.l1_loss(
-            shift_logits,
-            labels,
+        loss = F.nll_loss(
+            preds.view(-1),
+            labels.view(-1),
+            ignore_index=0
         )
 
         self.log("%s_loss" % mode, loss)

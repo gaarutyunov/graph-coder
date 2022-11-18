@@ -124,29 +124,29 @@ class MultiheadAttention(nn.Module):
         if need_head_weights:
             need_weights = True
 
-        tgt_len, bsz, embed_dim = query.size()
+        tgt_len, bsz, f, embed_dim = query.size()
         src_len = tgt_len
         assert embed_dim == self.embed_dim, f"query dim {embed_dim} != {self.embed_dim}"
-        assert list(query.size()) == [tgt_len, bsz, embed_dim]
+        assert list(query.size()) == [tgt_len, bsz, f, embed_dim]
         if key is not None:
-            src_len, key_bsz, _ = key.size()
+            src_len, key_bsz, _, _ = key.size()
             if not torch.jit.is_scripting():
                 assert key_bsz == bsz
                 assert value is not None
                 assert src_len, bsz == value.shape[:2]
 
-        q = self.q_proj(query)  # [T, B, D]
-        k = self.k_proj(query)  # [T, B, D]
-        v = self.v_proj(query)  # [T, B, D]
+        q = self.q_proj(query)  # [T, B, F, D]
+        k = self.k_proj(query)  # [T, B, F, D]
+        v = self.v_proj(query)  # [T, B, F, D]
         q *= self.scaling
 
         q = (
             q.contiguous()
-            .view(tgt_len, bsz * self.num_heads, self.head_dim)
+            .view(tgt_len, bsz * self.num_heads, f * self.head_dim)
             .transpose(0, 1)
-        )
-        k = k.contiguous().view(-1, bsz * self.num_heads, self.head_dim).transpose(0, 1)
-        v = v.contiguous().view(-1, bsz * self.num_heads, self.head_dim).transpose(0, 1)
+        ) # [T, B, F*D]
+        k = k.contiguous().view(-1, bsz * self.num_heads, f * self.head_dim).transpose(0, 1) # [T, B, F*D]
+        v = v.contiguous().view(-1, bsz * self.num_heads, f * self.head_dim).transpose(0, 1) # [T, B, F*D]
         assert k.size(1) == src_len
 
         # This is part of a workaround to get around fork/join parallelism
@@ -188,8 +188,8 @@ class MultiheadAttention(nn.Module):
         attn_probs = self.attention_dropout_module(attn_weights)
 
         attn = torch.bmm(attn_probs, v)
-        assert list(attn.size()) == [bsz * self.num_heads, tgt_len, self.head_dim]
-        attn = attn.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim)
+        assert list(attn.size()) == [bsz * self.num_heads, tgt_len, f * self.head_dim]
+        attn = attn.transpose(0, 1).contiguous().view(tgt_len, bsz, f, embed_dim)
 
         attn = self.out_proj(attn)
         attn = self.dropout_module(attn)

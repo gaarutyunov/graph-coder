@@ -68,6 +68,10 @@ __simple_nodes__ = (
     ast.Lt,
     ast.Gt,
     ast.GtE,
+    ast.Is,
+    ast.BitAnd,
+    ast.BitOr,
+    ast.BitXor,
 )
 __skip_nodes__ = (ast.Load, ast.Store, ast.Del)
 __edges__ = "__edges__"
@@ -772,6 +776,7 @@ class ASTransformer(ast.NodeTransformer):
             node=Node.from_ast_body(self.ctx.id, body.left, self.ctx.depth),
             edges=edges,
         )
+
 
     def visit_BoolOp(self, body: ast.BoolOp) -> typing.Any:
         edges = [

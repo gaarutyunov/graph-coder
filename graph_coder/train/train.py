@@ -17,11 +17,11 @@ def setup_parser(parser: ArgumentParser):
         default="postnorm",
         choices=["prenorm", "postnorm"],
     )
-    parser.add_argument("--vocab-size", type=int, default=512)
+    parser.add_argument("--vocab-size", type=int, default=16000)
     parser.add_argument("--text-embed-size", type=int, default=512)
     parser.add_argument("--num-features", type=int, default=8)
     parser.add_argument(
-        "--repr-mode", type=str, default="embedding", choices=["token", "embedding"]
+        "--repr-mode", type=str, default="token", choices=["token", "embedding"]
     )
 
     parser.add_argument("--num-nodes", type=int, default=1024)
@@ -268,4 +268,4 @@ def main(**kwargs):
 
 
 if __name__ == "__main__":
-    main(accelerator="cpu", strategy="single_device")
+    main(accelerator="cpu", strategy="single_device", batch_size=2)

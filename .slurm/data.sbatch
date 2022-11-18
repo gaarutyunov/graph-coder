@@ -14,5 +14,5 @@ module restore default
 
 # Executable
 poetry run python graph_coder/datasets/process.py
-poetry run python graph_coder/embedding/train.py
-poetry run python graph_coder/embedding/transform.py
+poetry run python graph_coder/tokenizer/train.py
+poetry run python graph_coder/tokenizer/transform.py
