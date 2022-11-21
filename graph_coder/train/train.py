@@ -1,4 +1,5 @@
 from argparse import ArgumentParser, Namespace
+from functools import reduce, partial
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import TensorBoardLogger
@@ -6,7 +7,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from graph_coder.datasets.graph_coder_dataset import GraphCoderLightningDataset
 from graph_coder.models.graph_coder import GraphCoder
 from graph_coder.utils.activation import get_available_activation_fns
-from graph_coder.utils.cli import expand_user
+from graph_coder.utils.cli import expand_user, split_string, to_int
 
 
 def setup_parser(parser: ArgumentParser):
@@ -235,6 +236,32 @@ def setup_parser(parser: ArgumentParser):
         help="val size",
         default=0.05,
     )
+    parser.add_argument(
+        "--pad-token-id",
+        help="pad token id",
+        default=0,
+    )
+    parser.add_argument(
+        "--mask-token-id",
+        help="mask token id",
+        default=4,
+    )
+    parser.add_argument(
+        "--replace-prob",
+        help="replace probability",
+        default=0.15,
+    )
+    parser.add_argument(
+        "--mask-prob",
+        help="mask probability",
+        default=0.5,
+    )
+    parser.add_argument(
+        "--mask-ignore-token-ids",
+        help="token ids to ignore when masking",
+        default=",".join([str(i) for i in range(8)]),
+        type=partial(reduce, lambda r, f: f(r), (split_string(), to_int)),
+    )
 
 
 def train(args: Namespace):
@@ -268,4 +295,4 @@ def main(**kwargs):
 
 
 if __name__ == "__main__":
-    main(accelerator="cpu", strategy="single_device", batch_size=2)
+    main()

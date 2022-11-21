@@ -23,7 +23,9 @@ def mask_with_tokens(t, token_ids):
 
 
 def get_mask_subset_with_prob(mask, prob):
-    batch, seq_len, device = *mask.shape, mask.device
+    batch, t, f, d, device = *mask.shape, mask.device
+    mask = mask.view(batch, t * f * d)
+    seq_len = mask.shape[1]
     max_masked = math.ceil(prob * seq_len)
 
     num_tokens = mask.sum(dim=-1, keepdim=True)
@@ -36,7 +38,7 @@ def get_mask_subset_with_prob(mask, prob):
 
     new_mask = torch.zeros((batch, seq_len + 1), device=device)
     new_mask.scatter_(-1, sampled_indices, 1)
-    return new_mask[:, 1:].bool()
+    return new_mask[:, 1:].view(batch, t, f, d).bool()
 
 
 class CosineWarmupScheduler(optim.lr_scheduler._LRScheduler):
@@ -174,6 +176,13 @@ class GraphCoder(pl.LightningModule):
         return attention_maps
 
     def _calculate_loss(self, batch, mode="train"):
+        node_data, node_labels = self.mask(batch["node_data"])
+        edge_data, edge_labels = self.mask(batch["edge_data"])
+        batch["node_data"] = node_data
+        batch["edge_data"] = edge_data
+
+        preds = self.forward(batch)
+
         (
             padded_index,
             padded_feature,
@@ -181,9 +190,9 @@ class GraphCoder(pl.LightningModule):
             padded_node_mask,
             padded_edge_mask,
         ) = self.graph_encoder.graph_feature.get_batch(
-            batch["node_data"],
+            node_labels,
             batch["edge_index"],
-            batch["edge_data"],
+            edge_labels,
             batch["node_num"],
             batch["edge_num"],
         )
@@ -192,15 +201,41 @@ class GraphCoder(pl.LightningModule):
             dtype=torch.int64,
         )
         labels.scatter_(-1, padded_feature, 1)
-        preds = self.forward(batch)
+
         loss = F.nll_loss(
             preds.view(-1),
             labels.view(-1),
-            ignore_index=0
+            ignore_index=self.hparams.pad_token_id,
         )
 
         self.log("%s_loss" % mode, loss)
         return loss
+
+    def mask(self, seq):
+        """Mask the input sequence.
+
+        Modified from https://github.com/lucidrains/mlm-pytorch/blob/master/mlm_pytorch/mlm_pytorch.py"""
+        # do not mask [pad] tokens, or any other tokens in the tokens designated to be excluded
+        # also do not include these special tokens in the tokens chosen at random
+
+        no_mask = mask_with_tokens(seq, self.hparams.mask_ignore_token_ids)
+        mask = get_mask_subset_with_prob(~no_mask, self.hparams.mask_prob)
+
+        # mask input with mask tokens with probability of `replace_prob`
+        # (keep tokens the same with probability 1 - replace_prob)
+
+        masked_seq = seq.clone().detach()
+
+        # derive labels to predict
+
+        labels = seq.masked_fill(~mask, self.hparams.pad_token_id)
+
+        # [mask] input
+
+        replace_prob = prob_mask_like(seq, self.hparams.replace_prob)
+        masked_seq = masked_seq.masked_fill(mask * replace_prob, self.hparams.mask_token_id)
+
+        return masked_seq, labels
 
     def training_step(self, batch, batch_idx):
         loss = self._calculate_loss(batch, mode="train")
