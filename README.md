@@ -1,7 +1,11 @@
 # GraphCoder: Transformer Pretrained on Code as Graphs
 
-## TODOS:
+## Usage
 
-1. Share text/code and nodes/edges encoder
-2. Encode each node/edge as text
-3. Flatten the graph
+1. Install [Poetry](https://python-poetry.org/docs/#installation)
+
+2. Install dependencies
+
+```bash
+poetry install
+```
