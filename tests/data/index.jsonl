@@ -1,0 +1,7 @@
+{"source": "function_001.py", "lineno": 1, "end_lineno": 3, "nodes": 12, "edges": 11}
+{"source": "multi_class_001.py", "lineno": 5, "end_lineno": 26, "nodes": 46, "edges": 70}
+{"source": "multi_class_001.py", "lineno": 29, "end_lineno": 38, "nodes": 24, "edges": 30}
+{"source": "function_003.py", "lineno": 1, "end_lineno": 7, "nodes": 18, "edges": 23}
+{"source": "class_001.py", "lineno": 1, "end_lineno": 8, "nodes": 17, "edges": 19}
+{"source": "multi_function_001.py", "lineno": 4, "end_lineno": 17, "nodes": 42, "edges": 55}
+{"source": "multi_function_001.py", "lineno": 20, "end_lineno": 27, "nodes": 27, "edges": 33}

@@ -1,0 +1,69 @@
+runner:
+  _target_: graph_coder.runners.GraphCoderGeneratorRunner
+  model:
+    _target_: graph_coder.models.GraphCoderGenerator
+    _var_: model
+    vocab_size: &vocab_size 50277
+    eos_token_id: &eos_token_id 0
+    embedding:
+      _target_: torch.nn.Embedding
+      _var_: embedding
+      num_embeddings: *vocab_size
+      embedding_dim: 128
+      padding_idx: &pad_token_id 1
+    encoder:
+      _target_: torch.nn.TransformerEncoder
+      _var_: encoder
+      encoder_layer:
+        _target_: torch.nn.TransformerEncoderLayer
+        d_model: 512
+        nhead: 8
+        dim_feedforward: 2048
+        dropout: 0.1
+        activation: relu
+      num_layers: 6
+    graph_encoder:
+      _target_: graph_coder.modules.TokenGTEncoder
+      embedding:
+        _var_: embedding
+    decoder:
+      _target_: torch.nn.TransformerDecoder
+      decoder_layer:
+        _target_: torch.nn.TransformerDecoderLayer
+        d_model: 128
+        nhead: 4
+        dim_feedforward: 2048
+        dropout: 0.1
+        activation: relu
+        layer_norm_eps: 1e-5
+      num_layers: 6
+    hidden_size: 128
+  criterion:
+    _target_: torch.nn.CrossEntropyLoss
+
+run:
+  - _call_: train
+
+    optimizer:
+      _target_: torch.optim.Adam
+      params:
+        _var_: model.parameters
+      lr: 0.02
+
+    loaders:
+      _target_: graph_coder.utils.get_loaders
+      dataset:
+        _target_: graph_coder.datasets.AstDataset
+        tokenizer:
+          _target_: graph_coder.utils.get_pretrained_tokenizer
+          name: EleutherAI/gpt-neox-20b
+          pad_token_id: *pad_token_id
+          eos_token_id: *eos_token_id
+          _mode_: call
+        root: ~/git-py/raw/python
+      _mode_: call
+
+    num_epochs: 10
+    logdir: logs
+    valid_loader: valid
+    valid_metric: loss

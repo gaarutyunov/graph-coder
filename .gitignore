@@ -1,0 +1,10 @@
+.DS_Store
+.pytest_cache
+__pycache__
+.ipynb_checkpoints
+venv
+.idea
+.vscode
+.mypy_cache
+htmlcov
+*coverage*
