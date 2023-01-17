@@ -11,7 +11,6 @@ class TokenGTEncoder(nn.Module):
     def __init__(
         self,
         embedding: nn.Module,
-        max_nodes: int = 1000,
         encoder_layers: int = 12,
         encoder_attention_heads: int = 8,
         encoder_embed_dim: int = 768,
@@ -39,7 +38,6 @@ class TokenGTEncoder(nn.Module):
         return_attention: bool = False,
     ):
         super().__init__()
-        self.max_nodes = max_nodes
         self.encoder_layers = encoder_layers
         self.num_attention_heads = encoder_attention_heads
         self.return_attention = return_attention

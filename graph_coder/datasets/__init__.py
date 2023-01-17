@@ -1,5 +1,4 @@
-from .ast_dataset import *
-from .ast_example import *
+from .ast import *
 from .base import *
 
-__all__ = ("AstDataset", "AstExample")
+__all__ = ("AstDataset",)

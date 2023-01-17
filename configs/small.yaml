@@ -1,24 +1,43 @@
+dataset:
+  _target_: graph_coder.datasets.AstDataset
+  _var_: dataset
+  tokenizer:
+    _target_: graph_coder.utils.get_pretrained_tokenizer
+    _var_: tokenizer
+    name: EleutherAI/gpt-neox-20b
+    pad_token_id: 1
+    eos_token_id: 0
+    _mode_: call
+  root: ~/git-py/raw/python
+
 runner:
   _target_: graph_coder.runners.GraphCoderGeneratorRunner
   model:
     _target_: graph_coder.models.GraphCoderGenerator
     _var_: model
-    vocab_size: &vocab_size 50277
-    eos_token_id: &eos_token_id 0
+    vocab_size: &vocab_size
+      _target_: graph_coder.utils.get_vocab_size
+      tokenizer:
+        _var_: tokenizer
+      _mode_: call
+    eos_token_id:
+      _var_: tokenizer.eos_token_id
+    hidden_size: &hidden_size 128
     embedding:
       _target_: torch.nn.Embedding
       _var_: embedding
       num_embeddings: *vocab_size
-      embedding_dim: 128
-      padding_idx: &pad_token_id 1
+      embedding_dim: *hidden_size
+      padding_idx:
+        _var_: tokenizer.pad_token_id
     encoder:
       _target_: torch.nn.TransformerEncoder
       _var_: encoder
       encoder_layer:
         _target_: torch.nn.TransformerEncoderLayer
-        d_model: 512
-        nhead: 8
-        dim_feedforward: 2048
+        d_model: *hidden_size
+        nhead: 4
+        dim_feedforward: 512
         dropout: 0.1
         activation: relu
       num_layers: 6
@@ -30,40 +49,53 @@ runner:
       _target_: torch.nn.TransformerDecoder
       decoder_layer:
         _target_: torch.nn.TransformerDecoderLayer
-        d_model: 128
+        d_model: *hidden_size
         nhead: 4
-        dim_feedforward: 2048
+        dim_feedforward: 512
         dropout: 0.1
         activation: relu
-        layer_norm_eps: 1e-5
       num_layers: 6
-    hidden_size: 128
-  criterion:
-    _target_: torch.nn.CrossEntropyLoss
 
 run:
   - _call_: train
+    logdir: &logdir logs
+    num_epochs: 100
+    valid_loader: &loader_key valid
+    valid_metric: &metric_key loss
+    minimize_valid_metric: &minimize true
+    verbose: true
+    timeit: true
+
+    criterion:
+      _target_: torch.nn.CrossEntropyLoss
+      ignore_index:
+        _var_: tokenizer.pad_token_id
 
     optimizer:
       _target_: torch.optim.Adam
+      _var_: optimizer
       params:
         _var_: model.parameters
       lr: 0.02
 
-    loaders:
-      _target_: graph_coder.utils.get_loaders
-      dataset:
-        _target_: graph_coder.datasets.AstDataset
-        tokenizer:
-          _target_: graph_coder.utils.get_pretrained_tokenizer
-          name: EleutherAI/gpt-neox-20b
-          pad_token_id: *pad_token_id
-          eos_token_id: *eos_token_id
-          _mode_: call
-        root: ~/git-py/raw/python
-      _mode_: call
+    scheduler:
+      _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+      optimizer:
+        _var_: optimizer
+        patience: 10
 
-    num_epochs: 10
-    logdir: logs
-    valid_loader: valid
-    valid_metric: loss
+    loaders:
+      _var_: dataset.loaders
+
+    callbacks:
+      - _target_: catalyst.callbacks.checkpoint.CheckpointCallback
+        topk: 2
+        logdir: *logdir
+        loader_key: *loader_key
+        metric_key: *metric_key
+        minimize: *minimize
+      - _target_: catalyst.callbacks.misc.EarlyStoppingCallback
+        patience: 20
+        loader_key: *loader_key
+        metric_key: *metric_key
+        minimize: *minimize

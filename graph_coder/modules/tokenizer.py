@@ -187,7 +187,7 @@ class GraphFeatureTokenizer(nn.Module):
             batched_data.edge_num,
         )
 
-        node_feature = self.embedding(node_data).sum(-2)  # [sum(node_num), D]
+        node_feature = self.embedding(node_data).sum(-2)  # [sum(node_num), D] TODO: investigate if it is a good idea
         edge_feature = self.embedding(edge_data).sum(-2)  # [sum(edge_num), D]
 
         padded_index, padded_feature, padding_mask, _, _ = self.get_batch(

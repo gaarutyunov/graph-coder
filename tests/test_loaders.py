@@ -1,13 +1,11 @@
 import math
 from pathlib import Path
 
-from transformers import GPTNeoXTokenizerFast
-
-from graph_coder.datasets.ast_dataset import AstDataset
+from graph_coder.datasets import AstDataset
 from graph_coder.utils import get_pretrained_tokenizer
 
 
-def test_collator():
+def test_loaders():
     tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
     dataset = AstDataset(tokenizer=tokenizer, root=Path(__file__).parent / "./data")
 

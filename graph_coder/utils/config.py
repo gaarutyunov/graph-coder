@@ -25,3 +25,7 @@ def get_pretrained_tokenizer(name: str, pad_token_id: int = 1, eos_token_id: int
         tokenizer.eos_token_id = eos_token_id
 
     return tokenizer
+
+
+def get_vocab_size(tokenizer: PreTrainedTokenizerFast) -> int:
+    return tokenizer._tokenizer.get_vocab_size(with_added_tokens=True)

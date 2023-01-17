@@ -1,13 +1,12 @@
 import dataclasses
+from typing import Generic, TypeVar
 
-import torch
-from torch_geometric.data import Data
+T = TypeVar("T")
 
 
 @dataclasses.dataclass
-class BaseExample:
+class BaseExample(Generic[T]):
     """Base class for examples."""
-
-    source: torch.LongTensor
-    graph: Data
-    docstring: torch.LongTensor
+    source: str
+    graph: T
+    docstring: str

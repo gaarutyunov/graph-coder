@@ -1,9 +1,8 @@
 from pathlib import Path
 
 import numpy as np
-from transformers import GPTNeoXTokenizerFast
 
-from graph_coder.datasets.ast_dataset import AstDataset
+from graph_coder.datasets import AstDataset
 from graph_coder.utils import get_pretrained_tokenizer
 
 
@@ -22,4 +21,4 @@ def test_dataset():
         assert data.graph.edge_index.size(1) > 0, "Graph should have edges"
 
         if dataset.index.iloc[i]["source"] == "function_003.py":
-            assert data.docstring.size(0) == 0, "Docstring should be empty"
+            assert len(data.docstring) == 0, "Docstring should be empty"
