@@ -15,14 +15,15 @@
 import dataclasses
 
 import torch
+from typing import List
 
 from .base import BaseExample
 
 
 @dataclasses.dataclass
 class AstData:
-    x: list[str]
-    edge_attr: list[str]
+    x: List[str]
+    edge_attr: List[str]
     edge_index: torch.LongTensor
     idx: int
 

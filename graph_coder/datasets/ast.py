@@ -25,7 +25,7 @@ import torch
 import transformers
 
 from functools import lru_cache, partial
-from typing import Union, AsyncGenerator, Optional
+from typing import Union, AsyncGenerator, Optional, Tuple, List, Dict
 from astmonkey import transformers as ast_transformers
 from pathlib import Path
 from tqdm.auto import tqdm
@@ -67,7 +67,7 @@ def get_docstring(node: ast.AST) -> str:
         return ""
 
 
-def node_to_graph(node: ast.AST) -> tuple[ast.AST, nx.Graph]:
+def node_to_graph(node: ast.AST) -> Tuple[ast.AST, nx.Graph]:
     node = ast_transformers.ParentChildNodeTransformer().visit(node)
     visitor = GraphNodeVisitor()
     visitor.visit(node)
@@ -75,7 +75,7 @@ def node_to_graph(node: ast.AST) -> tuple[ast.AST, nx.Graph]:
     return node, visitor.graph
 
 
-def parse_graph(code: str) -> tuple[ast.AST, nx.Graph]:
+def parse_graph(code: str) -> Tuple[ast.AST, nx.Graph]:
     mod = ast.parse(code)
     node = mod.body[0]
 
@@ -147,7 +147,7 @@ class AstDataset(BaseDataset):
         )
 
     @lru_cache(maxsize=16)
-    def _get_source(self, source: str) -> list[str]:
+    def _get_source(self, source: str) -> List[str]:
         with open(self.root / source, "r") as f:
             return f.readlines()
 
@@ -180,7 +180,7 @@ class AstDataset(BaseDataset):
 
     async def _parse_source(
         self, file: Path
-    ) -> AsyncGenerator[dict[str, Union[nx.Graph, int]], None]:
+    ) -> AsyncGenerator[Dict[str, Union[nx.Graph, int]], None]:
         async with aiofiles.open(file, "r") as f:
             source = await f.read()
             try:

@@ -17,6 +17,7 @@ import typing
 
 import torch
 from torch.utils.data import DataLoader, random_split, Dataset
+from typing import Dict
 
 
 class BaseDataset(Dataset, abc.ABC):
@@ -36,7 +37,7 @@ class BaseDataset(Dataset, abc.ABC):
         self.test_size = test_size
 
     @property
-    def loaders(self) -> dict[str, DataLoader]:
+    def loaders(self) -> Dict[str, DataLoader]:
         return self._loaders
 
     def split(self):

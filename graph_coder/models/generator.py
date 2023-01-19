@@ -14,6 +14,7 @@
 
 import torch
 from torch import nn
+from typing import Dict
 
 from graph_coder.data import GraphCoderBatch
 
@@ -42,7 +43,7 @@ class GraphCoderGenerator(nn.Module):
         self.lm_head = nn.Linear(hidden_size, vocab_size, bias=False)
         self.lm_graph_head = nn.Linear(hidden_size, vocab_size * max_length, bias=False)
 
-    def forward(self, batch: GraphCoderBatch) -> dict[str, torch.Tensor]:
+    def forward(self, batch: GraphCoderBatch) -> Dict[str, torch.Tensor]:
         x = []
         tgt = []
 

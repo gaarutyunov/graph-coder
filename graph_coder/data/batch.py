@@ -15,16 +15,17 @@
 import dataclasses
 
 import torch
+from typing import Dict
 
 
 @dataclasses.dataclass
 class GraphCoderBatch:
     idx: torch.Tensor
-    source_: dict[str, torch.Tensor]
-    docstring_: dict[str, torch.Tensor]
+    source_: Dict[str, torch.Tensor]
+    docstring_: Dict[str, torch.Tensor]
     edge_index: torch.LongTensor
-    edge_data_: dict[str, torch.Tensor]
-    node_data_: dict[str, torch.Tensor]
+    edge_data_: Dict[str, torch.Tensor]
+    node_data_: Dict[str, torch.Tensor]
     node_num: torch.LongTensor
     edge_num: torch.LongTensor
     lap_eigval: torch.Tensor

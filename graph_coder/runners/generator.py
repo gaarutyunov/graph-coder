@@ -43,7 +43,7 @@ class GraphCoderGeneratorRunner(dl.Runner):
         self.loader_batch_step += self.engine.num_processes
         self.sample_step += self.batch_size * self.engine.num_processes
         self.loader_sample_step += self.batch_size * self.engine.num_processes
-        self.batch_metrics: dict = defaultdict(None)
+        self.batch_metrics = defaultdict(None)
 
     def handle_batch(self, batch: GraphCoderBatch) -> None:
         loss = self._calc_loss(batch)

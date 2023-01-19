@@ -11,3 +11,4 @@ htmlcov
 logs
 log.txt
 index.jsonl
+poetry.lock

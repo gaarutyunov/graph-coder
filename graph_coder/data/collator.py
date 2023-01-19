@@ -16,6 +16,7 @@ import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.functional import F
 from transformers import PreTrainedTokenizerFast
+from typing import List, Dict
 
 from .batch import GraphCoderBatch
 from .ast import AstExample
@@ -23,11 +24,11 @@ from .algos import lap_eig
 
 
 def pad(
-    batch: list[str],
-    num: list[int],
+    batch: List[str],
+    num: List[int],
     tokenizer: PreTrainedTokenizerFast,
     max_length: int = 64,
-) -> dict[str, torch.Tensor]:
+) -> Dict[str, torch.Tensor]:
     """Pad a batch of strings restoring the original packs."""
     encoding = tokenizer(
         batch,
@@ -59,7 +60,7 @@ def pad(
 
 @torch.no_grad()
 def collate_ast(
-    batch: list[AstExample], tokenizer: PreTrainedTokenizerFast, max_length: int = 64
+    batch: List[AstExample], tokenizer: PreTrainedTokenizerFast, max_length: int = 64
 ) -> GraphCoderBatch:
     """Collate a batch of examples into a batch of tensors."""
     idx = []
