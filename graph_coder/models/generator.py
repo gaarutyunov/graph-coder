@@ -55,8 +55,9 @@ class GraphCoderGenerator(nn.Module):
 
         if batch.has_graph:
             graph_encoded = self.graph_encoder(batch)
+            device = graph_encoded.device
             if len(x) != 0:
-                eos = torch.Tensor([self.eos_token_id]).repeat(
+                eos = torch.tensor([self.eos_token_id], device=device, dtype=torch.float).repeat(
                     graph_encoded.size(0), 1, graph_encoded.size(-1)
                 )
                 x.append(eos)
@@ -77,8 +78,9 @@ class GraphCoderGenerator(nn.Module):
         if batch.has_source:
             emb = self.embedding(batch.source)
             source_code_encoded = self.encoder(emb)
+            device = source_code_encoded.device
             if len(x) != 0:
-                eos = torch.Tensor([self.eos_token_id]).repeat(
+                eos = torch.tensor([self.eos_token_id], device=device, dtype=torch.float).repeat(
                     source_code_encoded.size(0), 1, source_code_encoded.size(-1)
                 )
                 x.append(eos)

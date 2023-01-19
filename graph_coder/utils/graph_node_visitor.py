@@ -56,6 +56,6 @@ class GraphNodeVisitor(ast.NodeVisitor):
 
     def _edge_label(self, node):
         label = node.parent_field
-        if not node.parent_field_index is None:
+        if node.parent_field_index is not None:
             label += "[{0}]".format(node.parent_field_index)
         return label

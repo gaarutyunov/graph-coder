@@ -15,7 +15,7 @@
 import dataclasses
 
 import torch
-from typing import List
+from typing import List, Tuple
 
 from .base import BaseExample
 
@@ -24,7 +24,7 @@ from .base import BaseExample
 class AstData:
     x: List[str]
     edge_attr: List[str]
-    edge_index: torch.LongTensor
+    edge_index: List[Tuple[int, int]]
     idx: int
 
 

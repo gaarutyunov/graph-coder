@@ -92,7 +92,6 @@ class GraphFeatureTokenizer(nn.Module):
     ):
         seq_len = [n + e for n, e in zip(node_num, edge_num)]
         b = len(seq_len)
-        d = node_feature.size(-1)
         max_len = max(seq_len)
         max_n = max(node_num)
         device = edge_index.device

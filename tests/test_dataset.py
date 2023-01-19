@@ -31,8 +31,8 @@ def test_dataset():
     for i in range(len(dataset)):
         data = dataset[i]
         assert data is not None
-        assert data.graph.edge_index.size(0) == 2, "Edge should have 2 nodes"
-        assert data.graph.edge_index.size(1) > 0, "Graph should have edges"
+        assert len(data.graph.edge_index[0]) == 2, "Edge should have 2 nodes"
+        assert len(data.graph.edge_index) > 0, "Graph should have edges"
 
         if dataset.index.iloc[i]["source"] == "function_003.py":
             assert len(data.docstring) == 0, "Docstring should be empty"

@@ -30,6 +30,7 @@ from astmonkey import transformers as ast_transformers
 from pathlib import Path
 from tqdm.auto import tqdm
 from lib2to3.refactor import MultiprocessRefactoringTool, get_fixers_from_package
+from catalyst.utils import get_device
 
 from graph_coder.data import AstData
 from graph_coder.data.collator import collate_ast
@@ -54,7 +55,7 @@ def graph_to_data(idx: int, graph: nx.Graph) -> AstData:
     return AstData(
         idx=idx,
         x=x,
-        edge_index=torch.LongTensor(edge_index).t().contiguous(),
+        edge_index=edge_index,
         edge_attr=edge_attr,
     )
 
@@ -99,10 +100,11 @@ class AstDataset(BaseDataset):
         batch_size: int = 1,
         log_file: str = "log.txt",
         introspect: bool = False,
+        device: torch.device = get_device()
     ) -> None:
         super().__init__(
             collate_fn
-            or partial(collate_ast, tokenizer=tokenizer, max_length=max_length),
+            or partial(collate_ast, tokenizer=tokenizer, max_length=max_length, device=device),
             random_seed,
             test_size,
             val_size,
@@ -111,13 +113,11 @@ class AstDataset(BaseDataset):
         self.tokenizer = tokenizer
         self.root = Path(root).expanduser()
         self.log_file = self.root / log_file
-        if not self.log_file.exists():
-            self.log_file.touch()
-        else:
-            os.truncate(self.log_file, 0)
         self.index_file = self.root / index_file
         if introspect and self.index_file.exists():
             os.remove(self.index_file)
+            if self.log_file.exists():
+                os.truncate(self.log_file, 0)
         self.min_nodes = min_nodes
         self.random_seed = random_seed
         self.max_length = max_length

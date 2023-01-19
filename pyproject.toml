@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "graph_coder"}]
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = "==3.8"
 catalyst = "^22.4"
 astmonkey = {git = "https://github.com/jepler/astmonkey.git", rev = "ast-fixes"}
 networkx = "^2.8.8"
@@ -15,7 +15,7 @@ aiofiles = "^22.1.0"
 pandas = "^1.5.2"
 tokenizers = "^0.13.2"
 torch = [
-    {markers = "sys_platform == 'darwin'", url = "https://download.pytorch.org/whl/cpu/torch-1.13.1-cp38-none-macosx_10_9_x86_64.whl"},
+    {markers = "sys_platform == 'darwin'", version = "1.13.1"},
     {markers = "sys_platform == 'linux'", url = "https://download.pytorch.org/whl/cu116/torch-1.13.1%2Bcu116-cp38-cp38-linux_x86_64.whl"},
 ]
 fairseq = "^0.12.2"
