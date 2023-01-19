@@ -9,3 +9,5 @@ venv
 htmlcov
 *coverage*
 logs
+log.txt
+index.jsonl

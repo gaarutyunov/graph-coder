@@ -1,5 +1,6 @@
 import ast
 import asyncio
+import datetime
 import json
 import os
 import typing
@@ -15,6 +16,7 @@ from typing import Union, AsyncGenerator, Optional
 from astmonkey import transformers as ast_transformers
 from pathlib import Path
 from tqdm.auto import tqdm
+from lib2to3.refactor import MultiprocessRefactoringTool, get_fixers_from_package
 
 from graph_coder.data import AstData
 from graph_coder.data.collator import collate_ast
@@ -82,6 +84,8 @@ class AstDataset(BaseDataset):
         val_size: float = 0.2,
         collate_fn: typing.Callable = None,
         batch_size: int = 1,
+        log_file: str = "log.txt",
+        introspect: bool = False,
     ) -> None:
         super().__init__(
             collate_fn or partial(collate_ast, tokenizer=tokenizer, max_length=max_length),
@@ -92,11 +96,19 @@ class AstDataset(BaseDataset):
         )
         self.tokenizer = tokenizer
         self.root = Path(root).expanduser()
+        self.log_file = self.root / log_file
+        if not self.log_file.exists():
+            self.log_file.touch()
+        else:
+            os.truncate(self.log_file, 0)
         self.index_file = self.root / index_file
+        if introspect and self.index_file.exists():
+            os.remove(self.index_file)
         self.min_nodes = min_nodes
         self.random_seed = random_seed
         self.max_length = max_length
         self._loaders = {}
+        self.refactoring_tool = MultiprocessRefactoringTool(get_fixers_from_package("lib2to3.fixes"))
         self.introspect()
         self.split()
 
@@ -155,7 +167,17 @@ class AstDataset(BaseDataset):
     ) -> AsyncGenerator[dict[str, Union[pydot.Dot, int]], None]:
         async with aiofiles.open(file, "r") as f:
             source = await f.read()
-            mod = ast.parse(source)
+            try:
+                source = self.refactoring_tool.refactor_string(source, str(file))
+            except Exception as e:
+                await self.log("ERROR", f"Refactoring {file.relative_to(self.root)}: {e}")
+                return
+
+            try:
+                mod = ast.parse(str(source))
+            except Exception as e:
+                await self.log("ERROR", f"Parsing {file.relative_to(self.root)}: {e}")
+                return
 
             for node in mod.body:
                 _, graph = node_to_graph(node)
@@ -172,3 +194,8 @@ class AstDataset(BaseDataset):
                     "nodes": nodes,
                     "edges": graph.number_of_edges(),
                 }
+
+    async def log(self, level: str, msg: str):
+        level = f"[{level}]"
+        async with aiofiles.open(self.log_file, "a") as log:
+            await log.write(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {level:8s} {msg}\n")
