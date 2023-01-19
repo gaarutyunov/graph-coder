@@ -11,36 +11,13 @@ python = ">=3.9,<3.11"
 catalyst = "^22.4"
 astmonkey = {git = "https://github.com/jepler/astmonkey.git", rev = "ast-fixes"}
 networkx = "^2.8.8"
-joblib = "^1.2.0"
 aiofiles = "^22.1.0"
-aioreactive = "^0.16.0"
 pandas = "^1.5.2"
 tokenizers = "^0.13.2"
 torch = [
-    {markers = "sys_platform == 'darwin'", url = "https://files.pythonhosted.org/packages/68/13/62f70eaa7f0785841e4df6d31c2e5027eca589040854b34ad8eba154eea8/torch-1.13.0-cp39-none-macosx_10_9_x86_64.whl"},
-    {markers = "sys_platform == 'linux'", url = "https://download.pytorch.org/whl/cu117/torch-1.13.0%2Bcu117-cp39-cp39-linux_x86_64.whl"},
+    {markers = "sys_platform == 'darwin'", url = "https://download.pytorch.org/whl/cpu/torch-1.13.1-cp39-none-macosx_10_9_x86_64.whl"},
+    {markers = "sys_platform == 'linux'", url = "https://download.pytorch.org/whl/cu117/torch-1.13.1%2Bcu117-cp39-cp39-linux_x86_64.whl"},
 ]
-pyg-lib = [
-    {markers = "sys_platform == 'darwin'", url = "https://data.pyg.org/whl/torch-1.13.0%2Bcpu/pyg_lib-0.1.0%2Bpt113-cp39-cp39-macosx_10_15_x86_64.whl"},
-    {markers = "sys_platform == 'linux'", url = "https://data.pyg.org/whl/torch-1.13.0%2Bcu117/pyg_lib-0.1.0%2Bpt113cu117-cp39-cp39-linux_x86_64.whl"},
-]
-torch-cluster = [
-    {markers = "sys_platform == 'darwin'", url = "https://data.pyg.org/whl/torch-1.13.0%2Bcpu/torch_cluster-1.6.0-cp39-cp39-macosx_10_15_x86_64.whl"},
-    {markers = "sys_platform == 'linux'", url = "https://data.pyg.org/whl/torch-1.13.0%2Bcu117/torch_cluster-1.6.0%2Bpt113cu117-cp39-cp39-linux_x86_64.whl"},
-]
-torch-scatter = [
-    {markers = "sys_platform == 'darwin'", url = "https://data.pyg.org/whl/torch-1.13.0%2Bcpu/torch_scatter-2.1.0-cp39-cp39-macosx_10_15_x86_64.whl"},
-    {markers = "sys_platform == 'linux'", url = "https://data.pyg.org/whl/torch-1.13.0%2Bcu117/torch_scatter-2.1.0%2Bpt113cu117-cp39-cp39-linux_x86_64.whl"},
-]
-torch-sparse = [
-    {markers = "sys_platform == 'darwin'", url = "https://data.pyg.org/whl/torch-1.13.0%2Bcpu/torch_sparse-0.6.16-cp39-cp39-macosx_10_15_x86_64.whl"},
-    {markers = "sys_platform == 'linux'", url = "https://data.pyg.org/whl/torch-1.13.0%2Bcu117/torch_sparse-0.6.16%2Bpt113cu117-cp39-cp39-linux_x86_64.whl"},
-]
-torch-spline-conv = [
-    {markers = "sys_platform == 'darwin'", url = "https://data.pyg.org/whl/torch-1.13.0%2Bcpu/torch_spline_conv-1.2.1-cp39-cp39-macosx_10_15_x86_64.whl"},
-    {markers = "sys_platform == 'linux'", url = "https://data.pyg.org/whl/torch-1.13.0%2Bcu117/torch_spline_conv-1.2.1%2Bpt113cu117-cp39-cp39-linux_x86_64.whl"},
-]
-torch-geometric = "^2.2.0"
 fairseq = "^0.12.2"
 performer-pytorch = "^1.1.4"
 einops = "^0.6.0"
