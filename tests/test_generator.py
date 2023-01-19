@@ -52,7 +52,8 @@ def test_generator():
         if "docstring" in decoded:
             assert decoded["docstring"].size(-1) == len(tokenizer.vocab)
         if "graph" in decoded:
-            assert decoded["graph"].size(-1) == len(tokenizer.vocab) * dataset.max_length
+            assert (
+                decoded["graph"].size(-1) == len(tokenizer.vocab) * dataset.max_length
+            )
         if "source" in decoded:
             assert decoded["source"].size(-1) == len(tokenizer.vocab)
-

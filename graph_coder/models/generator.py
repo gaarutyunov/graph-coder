@@ -79,7 +79,7 @@ class GraphCoderGenerator(nn.Module):
         result = {}
 
         if batch.has_docstring:
-            result["docstring"] = self.lm_head(hidden_states[:, :batch.docstring_size])
+            result["docstring"] = self.lm_head(hidden_states[:, : batch.docstring_size])
 
         if batch.has_graph:
             if batch.has_docstring:
@@ -93,6 +93,6 @@ class GraphCoderGenerator(nn.Module):
             result["graph"] = self.lm_graph_head(hidden_states[:, start:-end])
 
         if batch.has_source:
-            result["source"] = self.lm_head(hidden_states[:, -batch.source_size:])
+            result["source"] = self.lm_head(hidden_states[:, -batch.source_size :])
 
         return result

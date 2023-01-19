@@ -34,8 +34,12 @@ def pad(
         start = end
 
     return {
-        "input_ids": pad_sequence(inputs_ids, batch_first=True, padding_value=tokenizer.pad_token_id),
-        "attention_mask": pad_sequence(attention_mask, batch_first=True, padding_value=False),
+        "input_ids": pad_sequence(
+            inputs_ids, batch_first=True, padding_value=tokenizer.pad_token_id
+        ),
+        "attention_mask": pad_sequence(
+            attention_mask, batch_first=True, padding_value=False
+        ),
     }
 
 
@@ -81,8 +85,12 @@ def collate_ast(
         edge_index=torch.LongTensor(torch.cat(edge_index, dim=1)),
         node_num=torch.LongTensor(node_num),
         edge_num=torch.LongTensor(edge_num),
-        lap_eigval=torch.cat([F.pad(i, (0, max_n - i.size(1)), value=float('0')) for i in lap_eigvals]),
-        lap_eigvec=torch.cat([F.pad(i, (0, max_n - i.size(1)), value=float('0')) for i in lap_eigvecs]),
+        lap_eigval=torch.cat(
+            [F.pad(i, (0, max_n - i.size(1)), value=float("0")) for i in lap_eigvals]
+        ),
+        lap_eigvec=torch.cat(
+            [F.pad(i, (0, max_n - i.size(1)), value=float("0")) for i in lap_eigvecs]
+        ),
         source_=tokenizer(
             sources, padding=True, return_tensors="pt", return_attention_mask=True
         ).convert_to_tensors(),

@@ -12,7 +12,9 @@ def test_collator():
     tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
 
     dataset = AstDataset(tokenizer=tokenizer, root=Path(__file__).parent / "./data")
-    loader = DataLoader(dataset, batch_size=2, collate_fn=partial(collate_ast, tokenizer=tokenizer))
+    loader = DataLoader(
+        dataset, batch_size=2, collate_fn=partial(collate_ast, tokenizer=tokenizer)
+    )
 
     for batch in loader:
         assert batch.edge_index.size(0) == 2

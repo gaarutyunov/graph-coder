@@ -12,7 +12,9 @@ from graph_coder.utils import get_pretrained_tokenizer
 
 def test_runner():
     tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
-    dataset = AstDataset(tokenizer=tokenizer, root=Path(__file__).parent / "./data", batch_size=2)
+    dataset = AstDataset(
+        tokenizer=tokenizer, root=Path(__file__).parent / "./data", batch_size=2
+    )
     loader = dataset.loaders["train"]
     embedding = nn.Embedding(
         len(tokenizer.vocab), 128, padding_idx=tokenizer.pad_token_id

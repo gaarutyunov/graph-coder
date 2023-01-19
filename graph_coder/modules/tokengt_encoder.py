@@ -120,4 +120,3 @@ class TokenGTEncoder(nn.Module):
 
     def performer_finetune_setup(self):
         self.graph_encoder.performer_finetune_setup()
-

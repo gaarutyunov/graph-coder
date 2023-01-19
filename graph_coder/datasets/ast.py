@@ -88,7 +88,8 @@ class AstDataset(BaseDataset):
         introspect: bool = False,
     ) -> None:
         super().__init__(
-            collate_fn or partial(collate_ast, tokenizer=tokenizer, max_length=max_length),
+            collate_fn
+            or partial(collate_ast, tokenizer=tokenizer, max_length=max_length),
             random_seed,
             test_size,
             val_size,
@@ -108,7 +109,9 @@ class AstDataset(BaseDataset):
         self.random_seed = random_seed
         self.max_length = max_length
         self._loaders = {}
-        self.refactoring_tool = MultiprocessRefactoringTool(get_fixers_from_package("lib2to3.fixes"))
+        self.refactoring_tool = MultiprocessRefactoringTool(
+            get_fixers_from_package("lib2to3.fixes")
+        )
         self.introspect()
         self.split()
 
@@ -121,7 +124,7 @@ class AstDataset(BaseDataset):
         ]
 
         code = self._get_source(source)
-        graph_source = "".join(code[lineno - 1: end_lineno])
+        graph_source = "".join(code[lineno - 1 : end_lineno])
         node, graph = parse_graph(graph_source)
 
         return AstExample(
@@ -170,7 +173,9 @@ class AstDataset(BaseDataset):
             try:
                 source = self.refactoring_tool.refactor_string(source, str(file))
             except Exception as e:
-                await self.log("ERROR", f"Refactoring {file.relative_to(self.root)}: {e}")
+                await self.log(
+                    "ERROR", f"Refactoring {file.relative_to(self.root)}: {e}"
+                )
                 return
 
             try:
@@ -198,4 +203,6 @@ class AstDataset(BaseDataset):
     async def log(self, level: str, msg: str):
         level = f"[{level}]"
         async with aiofiles.open(self.log_file, "a") as log:
-            await log.write(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {level:8s} {msg}\n")
+            await log.write(
+                f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {level:8s} {msg}\n"
+            )

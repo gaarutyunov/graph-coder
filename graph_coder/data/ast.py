@@ -16,4 +16,5 @@ class AstData:
 @dataclasses.dataclass
 class AstExample(BaseExample[AstData]):
     """Example for AST dataset."""
+
     pass

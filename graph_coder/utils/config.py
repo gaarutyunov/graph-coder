@@ -15,7 +15,9 @@ def get_model_parameters(model: nn.Module) -> typing.Iterator[nn.Parameter]:
     return model.parameters()
 
 
-def get_pretrained_tokenizer(name: str, pad_token_id: int = 1, eos_token_id: int = 0) -> PreTrainedTokenizerFast:
+def get_pretrained_tokenizer(
+    name: str, pad_token_id: int = 1, eos_token_id: int = 0
+) -> PreTrainedTokenizerFast:
     tokenizer = AutoTokenizer.from_pretrained(name)
 
     if tokenizer.pad_token_id is None:

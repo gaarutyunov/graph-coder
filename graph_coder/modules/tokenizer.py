@@ -71,33 +71,55 @@ class GraphFeatureTokenizer(nn.Module):
         max_n = max(node_num)
         device = edge_index.device
 
-        token_pos = torch.arange(max_len, device=device)[None, :].expand(b, max_len)  # [B, T]
+        token_pos = torch.arange(max_len, device=device)[None, :].expand(
+            b, max_len
+        )  # [B, T]
 
-        seq_len = torch.tensor(seq_len, device=device, dtype=torch.long)[:, None]  # [B, 1]
+        seq_len = torch.tensor(seq_len, device=device, dtype=torch.long)[
+            :, None
+        ]  # [B, 1]
         node_num = node_num[:, None]  # [B, 1]
         edge_num = edge_num[:, None]  # [B, 1]
 
-        node_index = torch.arange(max_n, device=device, dtype=torch.long)[None, :].expand(b, max_n)  # [B, max_n]
-        node_index = node_index[None, node_index < node_num].repeat(2, 1)  # [2, sum(node_num)]
+        node_index = torch.arange(max_n, device=device, dtype=torch.long)[
+            None, :
+        ].expand(
+            b, max_n
+        )  # [B, max_n]
+        node_index = node_index[None, node_index < node_num].repeat(
+            2, 1
+        )  # [2, sum(node_num)]
 
         padded_node_mask = torch.less(token_pos, node_num)
         padded_edge_mask = torch.logical_and(
             torch.greater_equal(token_pos, node_num),
-            torch.less(token_pos, node_num + edge_num)
+            torch.less(token_pos, node_num + edge_num),
         )
 
-        padded_index = torch.zeros(b, max_len, 2, device=device, dtype=torch.long)  # [B, T, 2]
+        padded_index = torch.zeros(
+            b, max_len, 2, device=device, dtype=torch.long
+        )  # [B, T, 2]
         padded_index[padded_node_mask, :] = node_index.t()
         padded_index[padded_edge_mask, :] = edge_index.t()
 
         if perturb is not None:
             perturb_mask = padded_node_mask[:, :max_n]  # [B, max_n]
-            node_feature = node_feature + perturb[perturb_mask].type(node_feature.dtype)  # [sum(node_num), D]
+            node_feature = node_feature + perturb[perturb_mask].type(
+                node_feature.dtype
+            )  # [sum(node_num), D]
 
-        padded_feature = torch.cat([node_feature, edge_feature], dim=1)  # [B, sum(node_num) + sum(edge_num), D]
+        padded_feature = torch.cat(
+            [node_feature, edge_feature], dim=1
+        )  # [B, sum(node_num) + sum(edge_num), D]
 
         padding_mask = torch.greater_equal(token_pos, seq_len)  # [B, T]
-        return padded_index, padded_feature, padding_mask, padded_node_mask, padded_edge_mask
+        return (
+            padded_index,
+            padded_feature,
+            padding_mask,
+            padded_node_mask,
+            padded_edge_mask,
+        )
 
     @staticmethod
     @torch.no_grad()
@@ -109,9 +131,7 @@ class GraphFeatureTokenizer(nn.Module):
         ].expand(
             b, max_n
         )  # [B, max_n]
-        node_num = node_num[
-            :, None
-        ]  # [B, 1]
+        node_num = node_num[:, None]  # [B, 1]
         node_mask = torch.less(node_index, node_num)  # [B, max_n]
         return node_mask
 
@@ -187,7 +207,9 @@ class GraphFeatureTokenizer(nn.Module):
             batched_data.edge_num,
         )
 
-        node_feature = self.embedding(node_data).sum(-2)  # [sum(node_num), D] TODO: investigate if it is a good idea
+        node_feature = self.embedding(node_data).sum(
+            -2
+        )  # [sum(node_num), D] TODO: investigate if it is a good idea
         edge_feature = self.embedding(edge_data).sum(-2)  # [sum(edge_num), D]
 
         padded_index, padded_feature, padding_mask, _, _ = self.get_batch(

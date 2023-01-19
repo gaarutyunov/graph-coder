@@ -53,7 +53,11 @@ class GraphCoderGeneratorRunner(dl.Runner):
         if batch.has_graph:
             if len(target_ids) != 0:
                 target_ids.append(torch.Tensor([self.model.eos_token_id]))
-                lm_logits.append(torch.Tensor([self.model.eos_token_id]).repeat(1, self.model.vocab_size))
+                lm_logits.append(
+                    torch.Tensor([self.model.eos_token_id]).repeat(
+                        1, self.model.vocab_size
+                    )
+                )
 
             target_ids.extend(
                 [
@@ -61,15 +65,21 @@ class GraphCoderGeneratorRunner(dl.Runner):
                     batch.edge_data[batch.edge_data_attn_mask.bool()],
                 ]
             )
-            masks = torch.cat([
-                batch.node_data_attn_mask.view(-1),
-                batch.edge_data_attn_mask.view(-1),
-            ]).bool()
+            masks = torch.cat(
+                [
+                    batch.node_data_attn_mask.view(-1),
+                    batch.edge_data_attn_mask.view(-1),
+                ]
+            ).bool()
             lm_logits.append(result["graph"].view(-1, self.model.vocab_size)[masks, :])
         if batch.has_source:
             if len(target_ids) != 0:
                 target_ids.append(torch.Tensor([self.model.eos_token_id]))
-                lm_logits.append(torch.Tensor([self.model.eos_token_id]).repeat(1, self.model.vocab_size))
+                lm_logits.append(
+                    torch.Tensor([self.model.eos_token_id]).repeat(
+                        1, self.model.vocab_size
+                    )
+                )
 
             target_ids.append(batch.source[batch.source_attn_mask.bool()])
             lm_logits.append(result["source"][batch.source_attn_mask.bool()])
@@ -80,6 +90,4 @@ class GraphCoderGeneratorRunner(dl.Runner):
         shift_logits = lm_logits[:-1, :].contiguous()
         shift_labels = target_ids[1:].contiguous().long()
 
-        return self.criterion(
-            shift_logits, shift_labels.long()
-        )
+        return self.criterion(shift_logits, shift_labels.long())
