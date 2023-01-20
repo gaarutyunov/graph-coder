@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "graph_coder"}]
 
 [tool.poetry.dependencies]
-python = "==3.8"
+python = "^3.9"
 catalyst = "^22.4"
 astmonkey = {git = "https://github.com/jepler/astmonkey.git", rev = "ast-fixes"}
 networkx = "^2.8.8"
@@ -16,7 +16,7 @@ pandas = "^1.5.2"
 tokenizers = "^0.13.2"
 torch = [
     {markers = "sys_platform == 'darwin'", version = "1.13.1"},
-    {markers = "sys_platform == 'linux'", url = "https://download.pytorch.org/whl/cu116/torch-1.13.1%2Bcu116-cp38-cp38-linux_x86_64.whl"},
+    {markers = "sys_platform == 'linux'", url = "https://download.pytorch.org/whl/cu117/torch-1.13.1%2Bcu117-cp39-cp39-linux_x86_64.whl"},
 ]
 fairseq = "^0.12.2"
 performer-pytorch = "^1.1.4"
@@ -35,7 +35,7 @@ jupyter = "^1.0.0"
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py39']
 include = '\.pyi?$'
 exclude = 'tests/data'
 
@@ -48,7 +48,7 @@ directory = "coverage"
 [tool.mypy]
 files = "graph_coder"
 mypy_path = "graph_coder"
-python_version = "3.8"
+python_version = "3.9"
 
 [build-system]
 requires = ["poetry-core"]
