@@ -15,15 +15,7 @@
 import typing
 
 from torch import nn
-from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, PreTrainedTokenizerFast
-from typing import Dict
-
-from graph_coder.datasets.base import BaseDataset
-
-
-def get_loaders(dataset: BaseDataset) -> Dict[str, DataLoader]:
-    return dataset.loaders
 
 
 def get_model_parameters(model: nn.Module) -> typing.Iterator[nn.Parameter]:
