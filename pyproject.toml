@@ -31,7 +31,6 @@ black = {version = "^22.12.0", extras = ["d"]}
 pytest = "^7.2.0"
 coverage = {version = "^7.0.5", extras = ["toml"]}
 mypy = "^0.991"
-jupyter = "^1.0.0"
 
 [tool.black]
 line-length = 88
