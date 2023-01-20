@@ -11,22 +11,29 @@
 #     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
-
-from pathlib import Path
-
-from graph_coder.datasets import AstDataset
+import sys
 
 
-def test_error():
-    dataset = AstDataset(
-        tokenizer="EleutherAI/gpt-neox-20b", root=Path(__file__).parent / "./data", introspect=True
-    )
-    with open(dataset.log_file, "r") as log:
-        lines = log.readlines()
-        assert len(lines) == 2
-        assert lines[0].endswith(
-            "[WARN]   Refactoring error_001.py: bad input: type=0, value='', context=('', (2, 0))\n"
-        )
-        assert lines[1].endswith(
-            "[ERROR]  Parsing error_001.py: unexpected EOF while parsing (<unknown>, line 1)\n"
-        )
+def check_ipython() -> bool:
+    try:
+        get_ipython = sys.modules["IPython"].get_ipython
+
+        if get_ipython is None:
+            return False
+        else:
+            _ = str(get_ipython())
+            return True
+    except:
+        return False
+
+
+def run_async(func):
+    import asyncio
+
+    if check_ipython():
+        import nest_asyncio
+
+        nest_asyncio.apply()
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(func)

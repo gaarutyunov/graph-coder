@@ -22,7 +22,9 @@ def lap_eig(
     edge_index: torch.LongTensor, num_nodes: int
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """Computes Laplacian eigenvalues and eigenvectors with symmetric normalization."""
-    dense_adj = torch.zeros([num_nodes, num_nodes], dtype=torch.bool, device=edge_index.device)
+    dense_adj = torch.zeros(
+        [num_nodes, num_nodes], dtype=torch.bool, device=edge_index.device
+    )
     dense_adj[edge_index[0, :], edge_index[1, :]] = True
     in_degree = dense_adj.long().sum(dim=1).view(-1)
     A = dense_adj.float()

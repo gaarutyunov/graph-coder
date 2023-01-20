@@ -67,7 +67,9 @@ class GraphCoderGeneratorRunner(dl.Runner):
         if batch.has_graph:
             if len(target_ids) != 0:
                 device = batch.node_data.device
-                target_ids.append(torch.tensor([self.model.eos_token_id], device=device))
+                target_ids.append(
+                    torch.tensor([self.model.eos_token_id], device=device)
+                )
                 lm_logits.append(
                     torch.tensor([self.model.eos_token_id], device=device).repeat(
                         1, self.model.vocab_size
@@ -90,7 +92,9 @@ class GraphCoderGeneratorRunner(dl.Runner):
         if batch.has_source:
             if len(target_ids) != 0:
                 device = batch.source.device
-                target_ids.append(torch.tensor([self.model.eos_token_id], device=device))
+                target_ids.append(
+                    torch.tensor([self.model.eos_token_id], device=device)
+                )
                 lm_logits.append(
                     torch.tensor([self.model.eos_token_id], device=device).repeat(
                         1, self.model.vocab_size

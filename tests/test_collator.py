@@ -12,23 +12,14 @@
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
 
-from functools import partial
 from pathlib import Path
 
-from torch.utils.data import DataLoader
-
-from graph_coder.data.collator import collate_ast
 from graph_coder.datasets import AstDataset
-from graph_coder.utils import get_pretrained_tokenizer
 
 
 def test_collator():
-    tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
-
-    dataset = AstDataset(tokenizer=tokenizer, root=Path(__file__).parent / "./data")
-    loader = DataLoader(
-        dataset, batch_size=2, collate_fn=partial(collate_ast, tokenizer=tokenizer)
-    )
+    dataset = AstDataset(tokenizer="EleutherAI/gpt-neox-20b", root=Path(__file__).parent / "./data", batch_size=2)
+    loader = dataset.loaders["train"]
 
     for batch in loader:
         assert batch.edge_index.size(0) == 2

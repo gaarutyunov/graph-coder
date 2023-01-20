@@ -37,6 +37,7 @@ jupyter = "^1.0.0"
 line-length = 88
 target-version = ['py38']
 include = '\.pyi?$'
+exclude = 'tests/data'
 
 [tool.coverage.run]
 omit = ["tests/*"]

@@ -13,7 +13,6 @@
 #     limitations under the License.
 
 import ast
-import asyncio
 import datetime
 import json
 import os
@@ -36,7 +35,7 @@ from graph_coder.data import AstData
 from graph_coder.data.collator import collate_ast
 from graph_coder.data import AstExample
 from graph_coder.datasets.base import BaseDataset
-from graph_coder.utils.graph_node_visitor import GraphNodeVisitor
+from graph_coder.utils import run_async, GraphNodeVisitor, get_pretrained_tokenizer
 
 
 def graph_to_data(idx: int, graph: nx.Graph) -> AstData:
@@ -89,7 +88,7 @@ class AstDataset(BaseDataset):
     def __init__(
         self,
         root: typing.Union[os.PathLike, str],
-        tokenizer: transformers.PreTrainedTokenizerFast,
+        tokenizer: typing.Union[str, transformers.PreTrainedTokenizerFast],
         min_nodes: int = 10,
         max_length: int = 64,
         index_file: str = "index.jsonl",
@@ -100,17 +99,23 @@ class AstDataset(BaseDataset):
         batch_size: int = 1,
         log_file: str = "log.txt",
         introspect: bool = False,
-        device: torch.device = get_device()
+        device: torch.device = get_device(),
     ) -> None:
+        self.tokenizer = (
+            tokenizer
+            if isinstance(tokenizer, transformers.PreTrainedTokenizerFast)
+            else get_pretrained_tokenizer(tokenizer)
+        )
         super().__init__(
             collate_fn
-            or partial(collate_ast, tokenizer=tokenizer, max_length=max_length, device=device),
+            or partial(
+                collate_ast, tokenizer=self.tokenizer, max_length=max_length, device=device
+            ),
             random_seed,
             test_size,
             val_size,
             batch_size,
         )
-        self.tokenizer = tokenizer
         self.root = Path(root).expanduser()
         self.log_file = self.root / log_file
         self.index_file = self.root / index_file
@@ -154,17 +159,19 @@ class AstDataset(BaseDataset):
     def introspect(self):
         if not self.index_file.exists():
             self.index_file.touch()
-            asyncio.run(self._introspect())
+            run_async(self._introspect())
         self.index = pandas.read_json(self.index_file, lines=True)
 
     async def _introspect(self):
-        async for graph in tqdm(
-            self._parse_root(), desc=f"Introspecting dataset in {self.root}"
-        ):
+        async for graph in self._parse_root():
             await self._write_index(**graph)
 
     async def _parse_root(self):
-        for file in self.root.rglob("**/*.py"):
+        for file in tqdm(
+            self.root.rglob("**/*.py"),
+            desc=f"Introspecting dataset in {self.root}",
+            unit="files",
+        ):
             async for graph in self._parse_source(file):
                 yield {
                     "source": str(file.relative_to(self.root)),
@@ -183,16 +190,18 @@ class AstDataset(BaseDataset):
     ) -> AsyncGenerator[Dict[str, Union[nx.Graph, int]], None]:
         async with aiofiles.open(file, "r") as f:
             source = await f.read()
+            if not source.endswith("\n"):
+                source += "\n"
             try:
-                source = self.refactoring_tool.refactor_string(source, str(file))
+                source_ = self.refactoring_tool.refactor_string(source, str(file))
+                source = str(source_)
             except Exception as e:
                 await self.log(
-                    "ERROR", f"Refactoring {file.relative_to(self.root)}: {e}"
+                    "WARN", f"Refactoring {file.relative_to(self.root)}: {e}"
                 )
-                return
 
             try:
-                mod = ast.parse(str(source))
+                mod = ast.parse(source)
             except Exception as e:
                 await self.log("ERROR", f"Parsing {file.relative_to(self.root)}: {e}")
                 return

@@ -11,6 +11,8 @@
 #     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
+from functools import partial
+
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.functional import F
@@ -28,6 +30,7 @@ def pad(
     num: List[int],
     tokenizer: PreTrainedTokenizerFast,
     max_length: int = 64,
+    device: torch.device = get_device(),
 ) -> Dict[str, torch.Tensor]:
     """Pad a batch of strings restoring the original packs."""
     encoding = tokenizer(
@@ -51,16 +54,19 @@ def pad(
     return {
         "input_ids": pad_sequence(
             inputs_ids, batch_first=True, padding_value=tokenizer.pad_token_id
-        ),
+        ).to(device),
         "attention_mask": pad_sequence(
             attention_mask, batch_first=True, padding_value=False
-        ),
+        ).to(device),
     }
 
 
 @torch.no_grad()
 def collate_ast(
-    batch: List[AstExample], tokenizer: PreTrainedTokenizerFast, max_length: int = 64, device: torch.device = get_device()
+    batch: List[AstExample],
+    tokenizer: PreTrainedTokenizerFast,
+    max_length: int = 64,
+    device: torch.device = get_device(),
 ) -> GraphCoderBatch:
     """Collate a batch of examples into a batch of tensors."""
     idx = []
@@ -79,7 +85,11 @@ def collate_ast(
         docstrings.append(data.docstring)
 
         data = data.graph
-        edge_index_ = torch.tensor(data.edge_index, dtype=torch.long, device=device).t().contiguous()
+        edge_index_ = (
+            torch.tensor(data.edge_index, dtype=torch.long, device=device)
+            .t()
+            .contiguous()
+        )
         lap_eigval, lap_eigvec = lap_eig(edge_index_, len(data.x))
         lap_eigval = lap_eigval[None, :].expand_as(lap_eigvec)
         lap_eigvals.append(lap_eigval)
@@ -95,6 +105,8 @@ def collate_ast(
         edge_num.append(len(data.edge_attr))
 
     max_n = max(node_num)
+
+    pad_ = partial(pad, max_length=max_length, device=device)
 
     return GraphCoderBatch(
         idx=torch.tensor(idx, dtype=torch.long, device=device),
@@ -113,6 +125,6 @@ def collate_ast(
         docstring_=tokenizer(
             docstrings, padding=True, return_tensors="pt", return_attention_mask=True
         ).convert_to_tensors(),
-        edge_data_=pad(edge_data, edge_num, tokenizer, max_length=max_length),
-        node_data_=pad(node_data, node_num, tokenizer, max_length=max_length),
+        edge_data_=pad_(edge_data, edge_num, tokenizer),
+        node_data_=pad_(node_data, node_num, tokenizer),
     )

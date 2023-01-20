@@ -14,7 +14,6 @@
 
 import dataclasses
 
-import torch
 from typing import List, Tuple
 
 from .base import BaseExample

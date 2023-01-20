@@ -17,12 +17,10 @@ from pathlib import Path
 import numpy as np
 
 from graph_coder.datasets import AstDataset
-from graph_coder.utils import get_pretrained_tokenizer
 
 
 def test_dataset():
-    tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
-    dataset = AstDataset(tokenizer=tokenizer, root=Path(__file__).parent / "./data")
+    dataset = AstDataset(tokenizer="EleutherAI/gpt-neox-20b", root=Path(__file__).parent / "./data")
     assert dataset is not None
     assert np.all(
         dataset.index["source"] != "function_002.py"
