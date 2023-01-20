@@ -11,3 +11,20 @@
 #     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
+
+from catalyst.registry import REGISTRY
+
+import graph_coder.data
+import graph_coder.datasets
+import graph_coder.models
+import graph_coder.modules
+import graph_coder.runners
+import graph_coder.utils
+
+
+REGISTRY.add_from_module(graph_coder.data)
+REGISTRY.add_from_module(graph_coder.datasets)
+REGISTRY.add_from_module(graph_coder.models)
+REGISTRY.add_from_module(graph_coder.modules)
+REGISTRY.add_from_module(graph_coder.runners)
+REGISTRY.add_from_module(graph_coder.utils)

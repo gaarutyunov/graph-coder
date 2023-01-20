@@ -23,7 +23,6 @@ __all__ = (
     "BaseExample",
     "GraphCoderBatch",
     "AstExample",
-    "lap_eig",
     "pad",
     "AstData",
 )
