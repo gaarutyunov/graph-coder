@@ -12,14 +12,7 @@
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
 
-import typing
-
-from torch import nn
 from transformers import AutoTokenizer, PreTrainedTokenizerFast
-
-
-def get_model_parameters(model: nn.Module) -> typing.Iterator[nn.Parameter]:
-    return model.parameters()
 
 
 def get_pretrained_tokenizer(

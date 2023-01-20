@@ -35,7 +35,7 @@ from graph_coder.data import AstData
 from graph_coder.data.collator import collate_ast
 from graph_coder.data import AstExample
 from graph_coder.datasets.base import BaseDataset
-from graph_coder.utils import run_async, GraphNodeVisitor, get_pretrained_tokenizer
+from graph_coder.utils import run_async, GraphNodeVisitor
 
 
 def graph_to_data(idx: int, graph: nx.Graph) -> AstData:
@@ -88,7 +88,7 @@ class AstDataset(BaseDataset):
     def __init__(
         self,
         root: typing.Union[os.PathLike, str],
-        tokenizer: typing.Union[str, transformers.PreTrainedTokenizerFast],
+        tokenizer: transformers.PreTrainedTokenizerFast,
         min_nodes: int = 10,
         max_length: int = 64,
         index_file: str = "index.jsonl",
@@ -101,15 +101,10 @@ class AstDataset(BaseDataset):
         introspect: bool = False,
         device: torch.device = get_device(),
     ) -> None:
-        self.tokenizer = (
-            tokenizer
-            if isinstance(tokenizer, transformers.PreTrainedTokenizerFast)
-            else get_pretrained_tokenizer(tokenizer)
-        )
         super().__init__(
             collate_fn
             or partial(
-                collate_ast, tokenizer=self.tokenizer, max_length=max_length, device=device
+                collate_ast, tokenizer=tokenizer, max_length=max_length, device=device
             ),
             random_seed,
             test_size,

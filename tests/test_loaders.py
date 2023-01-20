@@ -16,10 +16,11 @@ import math
 from pathlib import Path
 
 from graph_coder.datasets import AstDataset
+from graph_coder.utils import get_pretrained_tokenizer
 
 
 def test_loaders():
-    dataset = AstDataset(tokenizer="EleutherAI/gpt-neox-20b", root=Path(__file__).parent / "./data")
+    dataset = AstDataset(tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"), root=Path(__file__).parent / "./data")
 
     train = dataset.loaders["train"]
     val = dataset.loaders["val"]

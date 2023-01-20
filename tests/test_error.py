@@ -15,11 +15,12 @@
 from pathlib import Path
 
 from graph_coder.datasets import AstDataset
+from graph_coder.utils import get_pretrained_tokenizer
 
 
 def test_error():
     dataset = AstDataset(
-        tokenizer="EleutherAI/gpt-neox-20b", root=Path(__file__).parent / "./data", introspect=True
+        tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"), root=Path(__file__).parent / "./data", introspect=True
     )
     with open(dataset.log_file, "r") as log:
         lines = log.readlines()
