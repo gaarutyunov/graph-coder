@@ -22,5 +22,8 @@
 #SBATCH --constraint="type_a|type_b|type_c|type_d"
 #SBATCH --time=0-3:0
 
+# Load modules
+module restore default
+
 # Preprocess the data
 poetry run python -m graph_coder.preprocess --root "$1"

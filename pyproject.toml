@@ -25,7 +25,6 @@ timm = "^0.6.12"
 tensorboard = "^2.11.2"
 transformers = "^4.25.1"
 
-
 [tool.poetry.group.dev.dependencies]
 black = {version = "^22.12.0", extras = ["d"]}
 pytest = "^7.2.0"

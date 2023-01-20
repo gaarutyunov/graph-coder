@@ -24,7 +24,7 @@
 #SBATCH --cpus-per-gpu=4
 
 # Load modules
-module load CUDA/11.7
+module restore default
 
 # Train model
 poetry run -m graph_coder.train --config "$1"
