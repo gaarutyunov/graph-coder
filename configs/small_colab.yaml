@@ -9,6 +9,7 @@ dataset:
     eos_token_id: 0
     _mode_: call
   root: git-py/raw/python
+  batch_size: 4
 
 runner:
   _target_: graph_coder.runners.GraphCoderGeneratorRunner

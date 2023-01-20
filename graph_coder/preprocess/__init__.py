@@ -11,16 +11,3 @@
 #     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
-
-import click
-from catalyst.contrib.scripts.run import run_from_config
-
-
-@click.command()
-@click.option("--config", default="configs/small.yaml", help="Path to config file")
-def main(config: str):
-    run_from_config(configs=[config])
-
-
-if __name__ == "__main__":
-    main()
