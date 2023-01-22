@@ -21,17 +21,32 @@ source ~/.bashrc
 module restore default
 source activate graph-coder
 
-printf 'Loaded modules:\n'
+function separator() {
+    printf '\n'
+    printf '=%.0s' {1..80}
+}
+
+printf 'Loaded modules:\n\n'
 module list
 
-printf 'Python path:\n'
+separator
+
+printf 'Python path:\n\n'
 type python
 
-printf 'Conda environment graph-coder:\n'
+separator
+
+printf 'Conda environment graph-coder:\n\n'
 conda list
 
-printf 'Cuda version:\n'
+separator
+
+printf 'Cuda version:\n\n'
 nvcc --version
 
-printf 'PyTorch environment:\n'
+separator
+
+printf 'PyTorch environment:\n\n'
 python -m torch.utils.collect_env
+
+separator
