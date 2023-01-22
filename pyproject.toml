@@ -9,7 +9,7 @@ packages = [{include = "graph_coder"}]
 [tool.poetry.dependencies]
 python = ">=3.9,<=3.11"
 catalyst = "^22.4"
-astmonkey = {git = "https://github.com/jepler/astmonkey.git", rev = "ast-fixes"}
+astmonkey = {git = "https://github.com/jepler/astmonkey.git", tag = "ast-fixes"}
 networkx = "^2.8.8"
 aiofiles = "^22.1.0"
 pandas = "^1.5.2"
@@ -32,6 +32,13 @@ no-implicit-optional = "^1.3"
 types-aiofiles = "^22.1.0.6"
 types-tqdm = "^4.64.7.11"
 pandas-stubs = "^1.5.2.230105"
+poetry2conda = "^0.3.0"
+
+[tool.poetry2conda]
+name = "graph-coder"
+
+[tool.poetry2conda.dependencies]
+torch= { name = "pytorch", channel = "pytorch" }
 
 [tool.black]
 line-length = 88
