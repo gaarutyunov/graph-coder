@@ -38,7 +38,11 @@ poetry2conda = "^0.3.0"
 name = "graph-coder"
 
 [tool.poetry2conda.dependencies]
-torch= { name = "pytorch", channel = "pytorch" }
+torch = { name = "pytorch", channel = "pytorch" }
+fairseq = { channel = "pip" }
+tokenizers = { channel = "pip" }
+catalyst = { channel = "pip" }
+transformers = { channel = "pip" }
 
 [tool.black]
 line-length = 88
