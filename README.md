@@ -1,5 +1,11 @@
 # GraphCoder: Transformer Pretrained on Code as Graphs
 
+## Installation
+
+```bash
+pip install git+https://github.com/gaarutyunov/graph-coder.git@main#egg=graph_coder
+```
+
 ## Usage (poetry)
 
 1. Install [Poetry](https://python-poetry.org/docs/#installation)
@@ -10,7 +16,7 @@
 poetry install
 ```
 
-### Usage (conda)
+## Usage (conda)
 
 1. Install [Anaconda](https://www.anaconda.com/products/distribution)
 
