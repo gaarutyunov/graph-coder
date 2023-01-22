@@ -26,8 +26,8 @@
 #SBATCH --cpus-per-gpu=4
 
 # Load modules and activate virtual environment
-chmod +x ./prepare.sh
-./prepare.sh
+chmod +x ./scripts/prepare.sh
+./scripts/prepare.sh
 
 # Train model
 python -m graph_coder.train --config "$1"
