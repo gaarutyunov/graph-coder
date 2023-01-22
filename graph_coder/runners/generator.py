@@ -13,10 +13,11 @@
 #     limitations under the License.
 
 from collections import defaultdict
-from typing import Mapping, Any
+from typing import Mapping, Any, Dict
 
 import torch
 from catalyst import dl
+from catalyst.core import IRunner
 from torch import nn
 
 from graph_coder.data import GraphCoderBatch
@@ -26,16 +27,20 @@ class GraphCoderGeneratorRunner(dl.Runner):
     def __init__(
         self,
         model: nn.Module,
+        eos_token_id: int,
+        vocab_size: int,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.model = model
+        self.eos_token_id = eos_token_id
+        self.vocab_size = vocab_size
 
     def predict_batch(self, batch: GraphCoderBatch, **kwargs) -> Mapping[str, Any]:
-        pass
+        return {"predictions": self.model(batch, **kwargs)}
 
-    def on_batch_start(self, runner: "IRunner"):
+    def on_batch_start(self, runner: IRunner) -> None:
         # noinspection PyTypeChecker
         batch: GraphCoderBatch = self.batch
         self.batch_size = batch.idx.size(0)
@@ -43,12 +48,12 @@ class GraphCoderGeneratorRunner(dl.Runner):
         self.loader_batch_step += self.engine.num_processes
         self.sample_step += self.batch_size * self.engine.num_processes
         self.loader_sample_step += self.batch_size * self.engine.num_processes
-        self.batch_metrics = defaultdict(None)
+        self.batch_metrics: Dict[str, float] = defaultdict(None)
 
     def handle_batch(self, batch: GraphCoderBatch) -> None:
         loss = self._calc_loss(batch)
 
-        self.batch_metrics.update({"loss", loss.item()})
+        self.batch_metrics["loss"] = loss.item()
 
         if self.is_train_loader:
             self.engine.backward(loss)
@@ -67,12 +72,10 @@ class GraphCoderGeneratorRunner(dl.Runner):
         if batch.has_graph:
             if len(target_ids) != 0:
                 device = batch.node_data.device
-                target_ids.append(
-                    torch.tensor([self.model.eos_token_id], device=device)
-                )
+                target_ids.append(torch.tensor([self.eos_token_id], device=device))
                 lm_logits.append(
-                    torch.tensor([self.model.eos_token_id], device=device).repeat(
-                        1, self.model.vocab_size
+                    torch.tensor([self.eos_token_id], device=device).repeat(
+                        1, self.vocab_size
                     )
                 )
 
@@ -88,26 +91,24 @@ class GraphCoderGeneratorRunner(dl.Runner):
                     batch.edge_data_attn_mask.view(-1),
                 ]
             ).bool()
-            lm_logits.append(result["graph"].view(-1, self.model.vocab_size)[masks, :])
+            lm_logits.append(result["graph"].view(-1, self.vocab_size)[masks, :])
         if batch.has_source:
             if len(target_ids) != 0:
                 device = batch.source.device
-                target_ids.append(
-                    torch.tensor([self.model.eos_token_id], device=device)
-                )
+                target_ids.append(torch.tensor([self.eos_token_id], device=device))
                 lm_logits.append(
-                    torch.tensor([self.model.eos_token_id], device=device).repeat(
-                        1, self.model.vocab_size
+                    torch.tensor([self.eos_token_id], device=device).repeat(
+                        1, self.vocab_size
                     )
                 )
 
             target_ids.append(batch.source[batch.source_attn_mask.bool()])
             lm_logits.append(result["source"][batch.source_attn_mask.bool()])
 
-        target_ids = torch.cat(target_ids)
-        lm_logits = torch.cat(lm_logits, dim=0)
+        target_ids_ = torch.cat(target_ids)
+        lm_logits_ = torch.cat(lm_logits, dim=0)
 
-        shift_logits = lm_logits[:-1, :].contiguous()
-        shift_labels = target_ids[1:].contiguous().long()
+        shift_logits = lm_logits_[:-1, :].contiguous()
+        shift_labels = target_ids_[1:].contiguous().long()
 
         return self.criterion(shift_logits, shift_labels.long())

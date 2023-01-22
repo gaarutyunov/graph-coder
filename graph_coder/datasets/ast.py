@@ -42,7 +42,7 @@ def graph_to_data(idx: int, graph: nx.Graph) -> AstData:
     x = []
     edge_index = []
     edge_attr = []
-    graph: nx.Graph = nx.convert_node_labels_to_integers(graph, label_attribute="label")
+    graph = nx.convert_node_labels_to_integers(graph, label_attribute="label")
 
     for node, label in graph.nodes(data="label"):
         x.append(label)
@@ -95,7 +95,7 @@ class AstDataset(BaseDataset):
         random_seed: Optional[int] = None,
         test_size: float = 0.2,
         val_size: float = 0.2,
-        collate_fn: typing.Callable = None,
+        collate_fn: Optional[typing.Callable] = None,
         batch_size: int = 1,
         log_file: str = "log.txt",
         introspect: bool = False,
@@ -121,10 +121,10 @@ class AstDataset(BaseDataset):
         self.min_nodes = min_nodes
         self.random_seed = random_seed
         self.max_length = max_length
-        self._loaders = {}
         self.refactoring_tool = MultiprocessRefactoringTool(
             get_fixers_from_package("lib2to3.fixes")
         )
+        self.index: Optional[pandas.DataFrame] = None
         self.introspect()
         self.split()
 
@@ -132,6 +132,9 @@ class AstDataset(BaseDataset):
         return len(self.index)
 
     def __getitem__(self, index: int) -> AstExample:
+        assert (
+            self.index is not None
+        ), "Dataset is not introspected yet, call .introspect()"
         source, lineno, end_lineno = self.index.iloc[index][
             ["source", "lineno", "end_lineno"]
         ]
@@ -182,7 +185,7 @@ class AstDataset(BaseDataset):
 
     async def _parse_source(
         self, file: Path
-    ) -> AsyncGenerator[Dict[str, Union[nx.Graph, int]], None]:
+    ) -> AsyncGenerator[Dict[str, Union[nx.Graph, Optional[int]]], None]:
         async with aiofiles.open(file, "r") as f:
             source = await f.read()
             if not source.endswith("\n"):

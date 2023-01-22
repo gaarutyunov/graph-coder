@@ -88,9 +88,9 @@ class GraphCoderGenerator(nn.Module):
             x.append(source_code_encoded)
             tgt.append(emb)
 
-        x, tgt = torch.cat(x, dim=1), torch.cat(tgt, dim=1)
+        x_, tgt_ = torch.cat(x, dim=1), torch.cat(tgt, dim=1)
 
-        out = self.decoder(tgt, x)
+        out = self.decoder(tgt_, x_)
         hidden_states = torch.tanh(self.dense(out)).contiguous()
 
         result = {}

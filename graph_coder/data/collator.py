@@ -84,25 +84,25 @@ def collate_ast(
         sources.append(data.source)
         docstrings.append(data.docstring)
 
-        data = data.graph
+        graph_data = data.graph
         edge_index_ = (
-            torch.tensor(data.edge_index, dtype=torch.long, device=device)
+            torch.tensor(graph_data.edge_index, dtype=torch.long, device=device)
             .t()
             .contiguous()
         )
-        lap_eigval, lap_eigvec = lap_eig(edge_index_, len(data.x))
+        lap_eigval, lap_eigvec = lap_eig(edge_index_, len(graph_data.x))
         lap_eigval = lap_eigval[None, :].expand_as(lap_eigvec)
         lap_eigvals.append(lap_eigval)
         lap_eigvecs.append(lap_eigvec)
 
-        idx.append(data.idx)
+        idx.append(graph_data.idx)
         edge_index.append(edge_index_)
 
-        node_data.extend(data.x)
-        edge_data.extend(data.edge_attr)
+        node_data.extend(graph_data.x)
+        edge_data.extend(graph_data.edge_attr)
 
-        node_num.append(len(data.x))
-        edge_num.append(len(data.edge_attr))
+        node_num.append(len(graph_data.x))
+        edge_num.append(len(graph_data.edge_attr))
 
     max_n = max(node_num)
 

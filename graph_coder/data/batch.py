@@ -23,11 +23,11 @@ class GraphCoderBatch:
     idx: torch.Tensor
     source_: Dict[str, torch.Tensor]
     docstring_: Dict[str, torch.Tensor]
-    edge_index: torch.LongTensor
+    edge_index: torch.Tensor
     edge_data_: Dict[str, torch.Tensor]
     node_data_: Dict[str, torch.Tensor]
-    node_num: torch.LongTensor
-    edge_num: torch.LongTensor
+    node_num: torch.Tensor
+    edge_num: torch.Tensor
     lap_eigval: torch.Tensor
     lap_eigvec: torch.Tensor
 

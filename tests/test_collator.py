@@ -19,7 +19,11 @@ from graph_coder.utils import get_pretrained_tokenizer
 
 
 def test_collator():
-    dataset = AstDataset(tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"), root=Path(__file__).parent / "./data", batch_size=2)
+    dataset = AstDataset(
+        tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"),
+        root=Path(__file__).parent / "./data",
+        batch_size=2,
+    )
     loader = dataset.loaders["train"]
 
     for batch in loader:

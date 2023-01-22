@@ -31,6 +31,7 @@ from torch.nn import LayerNorm
 from torch.functional import F
 
 from graph_coder.modules.tokengt_graph_encoder import TokenGTGraphEncoder
+from typing import Optional
 
 
 class TokenGTEncoder(nn.Module):
@@ -42,7 +43,7 @@ class TokenGTEncoder(nn.Module):
         encoder_embed_dim: int = 768,
         encoder_ffn_embed_dim: int = 768,
         act_dropout: float = 0.1,
-        share_encoder_input_output_embed: bool = None,
+        share_encoder_input_output_embed: Optional[bool] = None,
         remove_head: bool = False,
         lap_node_id: bool = False,
         lap_node_id_k: int = 8,
@@ -52,7 +53,7 @@ class TokenGTEncoder(nn.Module):
         stochastic_depth: bool = False,
         performer: bool = False,
         performer_finetune: bool = False,
-        performer_nb_features: int = None,
+        performer_nb_features: Optional[int] = None,
         performer_feature_redraw_interval: int = 1000,
         performer_generalized_attention: bool = False,
         dropout: float = 0.1,

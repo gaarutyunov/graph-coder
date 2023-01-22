@@ -58,7 +58,9 @@ def test_runner():
         eos_token_id=tokenizer.eos_token_id,
     )
 
-    runner = GraphCoderGeneratorRunner(generator)
+    runner = GraphCoderGeneratorRunner(
+        generator, vocab_size=len(tokenizer.vocab), eos_token_id=tokenizer.eos_token_id
+    )
     runner.criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
 
     for batch in loader:

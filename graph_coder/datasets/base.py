@@ -29,7 +29,7 @@ class BaseDataset(Dataset, abc.ABC):
         val_size: float = 0.2,
         batch_size: int = 1,
     ):
-        self._loaders = {}
+        self._loaders: Dict[str, DataLoader] = {}
         self.batch_size = batch_size
         self.collate_fn = collate_fn
         self.random_seed = random_seed

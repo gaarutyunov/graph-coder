@@ -13,14 +13,17 @@ dataset:
 
 runner:
   _target_: graph_coder.runners.GraphCoderGeneratorRunner
+  vocab_size: &vocab_size
+    _target_: graph_coder.utils.get_vocab_size
+    tokenizer:
+      _var_: tokenizer
+    _mode_: call
+  eos_token_id:
+    _var_: tokenizer.eos_token_id
   model:
     _target_: graph_coder.models.GraphCoderGenerator
     _var_: model
-    vocab_size: &vocab_size
-      _target_: graph_coder.utils.get_vocab_size
-      tokenizer:
-        _var_: tokenizer
-      _mode_: call
+    vocab_size: *vocab_size
     eos_token_id:
       _var_: tokenizer.eos_token_id
     hidden_size: &hidden_size 768

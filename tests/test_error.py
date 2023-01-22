@@ -20,7 +20,9 @@ from graph_coder.utils import get_pretrained_tokenizer
 
 def test_error():
     dataset = AstDataset(
-        tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"), root=Path(__file__).parent / "./data", introspect=True
+        tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"),
+        root=Path(__file__).parent / "./data",
+        introspect=True,
     )
     with open(dataset.log_file, "r") as log:
         lines = log.readlines()
@@ -29,5 +31,5 @@ def test_error():
             "[WARN]   Refactoring error_001.py: bad input: type=0, value='', context=('', (2, 0))\n"
         )
         assert lines[1].endswith(
-            "[ERROR]  Parsing error_001.py: unexpected EOF while parsing (<unknown>, line 1)\n"
+            "[ERROR]  Parsing error_001.py: expected an indented block (<unknown>, line 1)\n"
         )

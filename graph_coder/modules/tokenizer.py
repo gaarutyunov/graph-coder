@@ -84,10 +84,10 @@ class GraphFeatureTokenizer(nn.Module):
     @staticmethod
     def get_batch(
         node_feature: torch.Tensor,
-        edge_index: torch.LongTensor,
+        edge_index: torch.Tensor,
         edge_feature: torch.Tensor,
-        node_num: torch.LongTensor,
-        edge_num: torch.LongTensor,
+        node_num: torch.Tensor,
+        edge_num: torch.Tensor,
         perturb=None,
     ):
         seq_len = [n + e for n, e in zip(node_num, edge_num)]
@@ -100,7 +100,7 @@ class GraphFeatureTokenizer(nn.Module):
             b, max_len
         )  # [B, T]
 
-        seq_len = torch.tensor(seq_len, device=device, dtype=torch.long)[
+        seq_len_ = torch.tensor(seq_len, device=device, dtype=torch.long)[
             :, None
         ]  # [B, 1]
         node_num = node_num[:, None]  # [B, 1]
@@ -137,7 +137,7 @@ class GraphFeatureTokenizer(nn.Module):
             [node_feature, edge_feature], dim=1
         )  # [B, sum(node_num) + sum(edge_num), D]
 
-        padding_mask = torch.greater_equal(token_pos, seq_len)  # [B, T]
+        padding_mask = torch.greater_equal(token_pos, seq_len_)  # [B, T]
         return (
             padded_index,
             padded_feature,

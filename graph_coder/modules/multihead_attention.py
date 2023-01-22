@@ -140,7 +140,7 @@ class MultiheadAttention(nn.Module):
         attn_mask: Optional[Tensor] = None,
         before_softmax: bool = False,
         need_head_weights: bool = False,
-    ) -> Tuple[Tensor, Optional[Tensor]]:
+    ) -> Tuple[Optional[Tensor], Optional[Tensor]]:
         """Input shape: Time x Batch x Channel
 
         Args:
@@ -195,10 +195,10 @@ class MultiheadAttention(nn.Module):
             assert key_padding_mask.size(0) == bsz
             assert key_padding_mask.size(1) == src_len
 
-        attn_weights = torch.bmm(q, k.transpose(1, 2))
+        attn_weights: Optional[torch.Tensor] = torch.bmm(q, k.transpose(1, 2))
         attn_weights = self.apply_sparse_mask(attn_weights, tgt_len, src_len, bsz)
 
-        assert list(attn_weights.size()) == [bsz * self.num_heads, tgt_len, src_len]
+        assert attn_weights is not None and list(attn_weights.size()) == [bsz * self.num_heads, tgt_len, src_len]
 
         if attn_bias is not None:
             attn_weights += attn_bias.view(bsz * self.num_heads, tgt_len, src_len)
@@ -207,7 +207,7 @@ class MultiheadAttention(nn.Module):
             attn_mask = attn_mask.unsqueeze(0)
             attn_weights += attn_mask
 
-        if key_padding_mask is not None:
+        if key_padding_mask is not None and attn_weights is not None:
             # don't attend to padding symbols
             attn_weights = attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
             attn_weights = attn_weights.masked_fill(
@@ -231,16 +231,17 @@ class MultiheadAttention(nn.Module):
         attn = self.out_proj(attn)
         attn = self.dropout_module(attn)
 
-        attn_weights: Optional[Tensor] = None
         if need_weights:
             attn_weights = attn_weights_float.view(
                 bsz, self.num_heads, tgt_len, src_len
             ).transpose(
                 1, 0
             )  # [num_heads, bsz, tgt_len, src_len]
-            if not need_head_weights:
+            if not need_head_weights and attn_weights is not None:
                 # average attention weights over heads
                 attn_weights = attn_weights.mean(dim=0)
+        else:
+            attn_weights = None
 
         return attn, attn_weights
 
