@@ -16,17 +16,7 @@
 #    limitations under the License.
 #
 
-#SBATCH --mail-user=gaarutyunov@edu.hse.ru
-#SBATCH --mail-type=ALL
-#SBATCH --job-name=gc-prep
-#SBATCH --output="logs/slurm/preprocess/"%j.out
-#SBATCH --error="logs/slurm/preprocess/"%j.err
-#SBATCH --constraint="type_a|type_b|type_c|type_d"
-#SBATCH --time=0-3:0
-
 # Load modules and activate virtual environment
-chmod +x ./prepare.sh
-./prepare.sh
-
-# Preprocess the data
-python -m graph_coder.preprocess --root "$1"
+source ~/.bashrc
+module restore default
+source activate graph-coder

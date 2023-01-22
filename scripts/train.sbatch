@@ -25,8 +25,9 @@
 #SBATCH --gpus=1
 #SBATCH --cpus-per-gpu=4
 
-# Load modules
-module restore default
+# Load modules and activate virtual environment
+chmod +x ./prepare.sh
+./prepare.sh
 
 # Train model
-poetry run -m graph_coder.train --config "$1"
+python -m graph_coder.train --config "$1"
