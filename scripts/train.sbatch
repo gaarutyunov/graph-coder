@@ -27,7 +27,7 @@
 
 # Load modules and activate virtual environment
 chmod +x ./scripts/prepare.sh
-./scripts/prepare.sh
+source ./scripts/prepare.sh
 
 # Train model
 python -m graph_coder.train --config "$1"

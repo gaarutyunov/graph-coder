@@ -26,7 +26,7 @@
 
 # Load modules and activate virtual environment
 chmod +x ./scripts/prepare.sh
-./scripts/prepare.sh
+source ./scripts/prepare.sh
 
 # Preprocess the data
 python -m graph_coder.preprocess --root "$1"
