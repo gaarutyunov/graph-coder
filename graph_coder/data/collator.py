@@ -39,7 +39,7 @@ def pad(
         return_tensors="pt",
         truncation=True,
         max_length=max_length,
-    ).convert_to_tensors()
+    ).to(device).convert_to_tensors()
     inputs_ids = []
     attention_mask = []
 
@@ -54,10 +54,10 @@ def pad(
     return {
         "input_ids": pad_sequence(
             inputs_ids, batch_first=True, padding_value=tokenizer.pad_token_id
-        ).to(device),
+        ),
         "attention_mask": pad_sequence(
             attention_mask, batch_first=True, padding_value=False
-        ).to(device),
+        ),
     }
 
 
@@ -121,10 +121,10 @@ def collate_ast(
         ),
         source_=tokenizer(
             sources, padding=True, return_tensors="pt", return_attention_mask=True
-        ).convert_to_tensors(),
+        ).to(device).convert_to_tensors(),
         docstring_=tokenizer(
             docstrings, padding=True, return_tensors="pt", return_attention_mask=True
-        ).convert_to_tensors(),
+        ).to(device).convert_to_tensors(),
         edge_data_=pad_(edge_data, edge_num, tokenizer),
         node_data_=pad_(node_data, node_num, tokenizer),
     )
