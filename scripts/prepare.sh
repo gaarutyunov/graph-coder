@@ -17,36 +17,43 @@
 #
 
 # Load modules and activate virtual environment
-source ~/.bashrc
-module restore default
-source activate graph-coder
 
 function separator() {
     printf '\n'
     printf '=%.0s' {1..80}
+    printf '\n'
+    printf '\n'
 }
 
-printf 'Loaded modules:\n\n'
-module list
+function print() {
+    printf '%s\n\n' "$1"
+}
+
+source ~/.bashrc
+module restore default || print 'Not running in slurm environment'
+source activate graph-coder || print 'No env graph-coder'
+
+print 'Loaded modules:'
+module list || print 'Not running in slurm environment'
 
 separator
 
-printf 'Python path:\n\n'
+print 'Python path:'
 type python
 
 separator
 
-printf 'Conda environment graph-coder:\n\n'
-conda list
+print 'Conda environment graph-coder:'
+conda list || print 'No conda available'
 
 separator
 
-printf 'Cuda version:\n\n'
-nvcc --version
+print 'Cuda version:'
+nvcc --version || print 'No cuda available'
 
 separator
 
-printf 'PyTorch environment:\n\n'
+print 'PyTorch environment:'
 python -m torch.utils.collect_env
 
 separator
