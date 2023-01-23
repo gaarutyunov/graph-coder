@@ -12,53 +12,34 @@
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
 
-from collections import defaultdict
-from typing import Mapping, Any, Dict
+from typing import Mapping, Any
 
 import torch
-from catalyst import dl
-from catalyst.core import IRunner
 from torch import nn
 
 from graph_coder.data import GraphCoderBatch
+from graph_coder.runners.base import GraphCoderRunnerBase
 
 
-class GraphCoderGeneratorRunner(dl.Runner):
+class GraphCoderGeneratorRunner(GraphCoderRunnerBase):
     def __init__(
         self,
         model: nn.Module,
         eos_token_id: int,
         vocab_size: int,
+        batch_size: int,
+        hidden_size: int,
+        max_length: int,
         *args,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
-        self.model = model
+        super().__init__(
+            model, batch_size, hidden_size, vocab_size, max_length, *args, **kwargs
+        )
         self.eos_token_id = eos_token_id
-        self.vocab_size = vocab_size
 
     def predict_batch(self, batch: GraphCoderBatch, **kwargs) -> Mapping[str, Any]:
         return {"predictions": self.model(batch, **kwargs)}
-
-    def on_batch_start(self, runner: IRunner) -> None:
-        # noinspection PyTypeChecker
-        batch: GraphCoderBatch = self.batch
-        self.batch_size = batch.idx.size(0)
-        self.batch_step += self.engine.num_processes
-        self.loader_batch_step += self.engine.num_processes
-        self.sample_step += self.batch_size * self.engine.num_processes
-        self.loader_sample_step += self.batch_size * self.engine.num_processes
-        self.batch_metrics: Dict[str, float] = defaultdict(None)
-
-    def handle_batch(self, batch: GraphCoderBatch) -> None:
-        loss = self._calc_loss(batch)
-
-        self.batch_metrics["loss"] = loss.item()
-
-        if self.is_train_loader:
-            self.engine.backward(loss)
-            self.optimizer.step()
-            self.optimizer.zero_grad()
 
     def _calc_loss(self, batch: GraphCoderBatch) -> torch.Tensor:
         result = self.model(batch)

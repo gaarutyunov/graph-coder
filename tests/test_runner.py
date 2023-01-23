@@ -59,10 +59,18 @@ def test_runner():
     )
 
     runner = GraphCoderGeneratorRunner(
-        generator, vocab_size=len(tokenizer.vocab), eos_token_id=tokenizer.eos_token_id
+        generator,
+        vocab_size=len(tokenizer.vocab),
+        eos_token_id=tokenizer.eos_token_id,
+        batch_size=2,
+        hidden_size=128,
+        max_length=64,
     )
+    runner._loaders = dataset.loaders
     runner.criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
 
-    for batch in loader:
+    runner._print_summary()
+
+    for batch in iter(loader):
         loss = runner._calc_loss(batch)
         assert torch.is_floating_point(loss)

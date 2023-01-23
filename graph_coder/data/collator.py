@@ -33,13 +33,17 @@ def pad(
     device: torch.device = get_device(),
 ) -> Dict[str, torch.Tensor]:
     """Pad a batch of strings restoring the original packs."""
-    encoding = tokenizer(
-        batch,
-        padding="max_length",
-        return_tensors="pt",
-        truncation=True,
-        max_length=max_length,
-    ).to(device).convert_to_tensors()
+    encoding = (
+        tokenizer(
+            batch,
+            padding="max_length",
+            return_tensors="pt",
+            truncation=True,
+            max_length=max_length,
+        )
+        .to(device)
+        .convert_to_tensors()
+    )
     inputs_ids = []
     attention_mask = []
 
@@ -121,10 +125,14 @@ def collate_ast(
         ),
         source_=tokenizer(
             sources, padding=True, return_tensors="pt", return_attention_mask=True
-        ).to(device).convert_to_tensors(),
+        )
+        .to(device)
+        .convert_to_tensors(),
         docstring_=tokenizer(
             docstrings, padding=True, return_tensors="pt", return_attention_mask=True
-        ).to(device).convert_to_tensors(),
+        )
+        .to(device)
+        .convert_to_tensors(),
         edge_data_=pad_(edge_data, edge_num, tokenizer),
         node_data_=pad_(node_data, node_num, tokenizer),
     )

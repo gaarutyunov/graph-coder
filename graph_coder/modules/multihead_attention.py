@@ -198,7 +198,11 @@ class MultiheadAttention(nn.Module):
         attn_weights: Optional[torch.Tensor] = torch.bmm(q, k.transpose(1, 2))
         attn_weights = self.apply_sparse_mask(attn_weights, tgt_len, src_len, bsz)
 
-        assert attn_weights is not None and list(attn_weights.size()) == [bsz * self.num_heads, tgt_len, src_len]
+        assert attn_weights is not None and list(attn_weights.size()) == [
+            bsz * self.num_heads,
+            tgt_len,
+            src_len,
+        ]
 
         if attn_bias is not None:
             attn_weights += attn_bias.view(bsz * self.num_heads, tgt_len, src_len)

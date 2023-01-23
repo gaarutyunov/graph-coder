@@ -25,6 +25,8 @@ import transformers
 
 from functools import lru_cache, partial
 from typing import Union, AsyncGenerator, Optional, Tuple, List, Dict
+
+from aiofiles.threadpool.text import AsyncTextIOWrapper
 from astmonkey import transformers as ast_transformers
 from pathlib import Path
 from tqdm.auto import tqdm
@@ -100,6 +102,7 @@ class AstDataset(BaseDataset):
         log_file: str = "log.txt",
         introspect: bool = False,
         device: torch.device = get_device(),
+        encoding_order: Optional[List[str]] = None,
     ) -> None:
         super().__init__(
             collate_fn
@@ -111,6 +114,8 @@ class AstDataset(BaseDataset):
             val_size,
             batch_size,
         )
+        if encoding_order is None:
+            encoding_order = ["utf-8", "cp1252", "latin-1", "ascii", "utf-16"]
         self.root = Path(root).expanduser()
         self.log_file = self.root / log_file
         self.index_file = self.root / index_file
@@ -121,6 +126,11 @@ class AstDataset(BaseDataset):
         self.min_nodes = min_nodes
         self.random_seed = random_seed
         self.max_length = max_length
+        assert encoding_order is not None, "Encoding order must be specified"
+        self.encoding_order: Dict[Union[str, int], Union[str, int]] = {
+            **dict(zip(range(len(encoding_order)), encoding_order)),
+            **dict(zip(encoding_order, range(len(encoding_order)))),
+        }
         self.refactoring_tool = MultiprocessRefactoringTool(
             get_fixers_from_package("lib2to3.fixes")
         )
@@ -186,39 +196,63 @@ class AstDataset(BaseDataset):
     async def _parse_source(
         self, file: Path
     ) -> AsyncGenerator[Dict[str, Union[nx.Graph, Optional[int]]], None]:
-        async with aiofiles.open(file, "r") as f:
-            source = await f.read()
-            if not source.endswith("\n"):
-                source += "\n"
-            try:
-                source_ = self.refactoring_tool.refactor_string(source, str(file))
-                source = str(source_)
-            except Exception as e:
-                await self.log(
-                    "WARN", f"Refactoring {file.relative_to(self.root)}: {e}"
-                )
+        f = await self._try_open(file)
 
-            try:
-                mod = ast.parse(source)
-            except Exception as e:
-                await self.log("ERROR", f"Parsing {file.relative_to(self.root)}: {e}")
-                return
+        if f is None:
+            return
 
-            for node in mod.body:
-                _, graph = node_to_graph(node)
+        source = await f.read()
+        if not source.endswith("\n"):
+            source += "\n"
+        try:
+            source_ = self.refactoring_tool.refactor_string(source, str(file))
+            source = str(source_)
+        except Exception as e:
+            await self.log("WARN", f"Refactoring {file.relative_to(self.root)}: {e}")
 
-                nodes = graph.number_of_nodes()
+        try:
+            mod = ast.parse(source)
+        except Exception as e:
+            await self.log("ERROR", f"Parsing {file.relative_to(self.root)}: {e}")
+            return
 
-                if self.min_nodes > nodes:
-                    continue
+        for node in mod.body:
+            _, graph = node_to_graph(node)
 
-                yield {
-                    "graph": graph,
-                    "lineno": node.lineno,
-                    "end_lineno": node.end_lineno,
-                    "nodes": nodes,
-                    "edges": graph.number_of_edges(),
-                }
+            nodes = graph.number_of_nodes()
+
+            if self.min_nodes > nodes:
+                continue
+
+            yield {
+                "graph": graph,
+                "lineno": node.lineno,
+                "end_lineno": node.end_lineno,
+                "nodes": nodes,
+                "edges": graph.number_of_edges(),
+            }
+
+        await f.close()
+
+    async def _try_open(
+        self, file: Path, encoding: str = "utf-8", retry: int = 0
+    ) -> Optional[AsyncTextIOWrapper]:
+        if retry == len(self.encoding_order):
+            return None
+
+        try:
+            return await aiofiles.open(file, "r", encoding=encoding)
+        except Exception as e:
+            await self.log(
+                "ERROR",
+                f"Opening {file.relative_to(self.root)} with encoding {encoding}: {e}",
+            )
+            return await self._try_open(
+                file, encoding=self._determine_encoding(retry), retry=retry + 1
+            )
+
+    def _determine_encoding(self, retry: int) -> str:
+        return str(self.encoding_order[retry])
 
     async def log(self, level: str, msg: str):
         level = f"[{level}]"

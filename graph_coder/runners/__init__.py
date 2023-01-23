@@ -13,5 +13,6 @@
 #     limitations under the License.
 
 from .generator import *
+from .base import *
 
-__all__ = ("GraphCoderGeneratorRunner",)
+__all__ = ("GraphCoderGeneratorRunner", "GraphCoderRunnerBase")

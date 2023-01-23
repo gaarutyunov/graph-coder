@@ -23,6 +23,7 @@ tensorboard = "^2.11.2"
 transformers = "^4.25.1"
 torchaudio = "^0.13.1"
 torchvision = "^0.14.1"
+torchinfo = "^1.7.1"
 
 [tool.poetry.group.dev.dependencies]
 black = {version = "^22.12.0", extras = ["d", "jupyter"]}
@@ -47,6 +48,7 @@ fairseq = { channel = "pip" }
 tokenizers = { channel = "pip" }
 catalyst = { channel = "pip" }
 transformers = { channel = "pip" }
+torch-info = { channel = "conda-forge" }
 
 [tool.black]
 line-length = 88

@@ -9,6 +9,8 @@ dataset:
     eos_token_id: 0
     _mode_: call
   root: ./tests/data
+  batch_size: &batch_size 2
+  max_length: &max_length 64
 
 runner:
   _target_: graph_coder.runners.GraphCoderGeneratorRunner
@@ -19,13 +21,16 @@ runner:
     _mode_: call
   eos_token_id:
     _var_: tokenizer.eos_token_id
+  batch_size: *batch_size
+  hidden_size: &hidden_size 128
+  max_length: *max_length
   model:
     _target_: graph_coder.models.GraphCoderGenerator
     _var_: model
     vocab_size: *vocab_size
     eos_token_id:
       _var_: tokenizer.eos_token_id
-    hidden_size: &hidden_size 128
+    hidden_size: *hidden_size
     embedding:
       _target_: torch.nn.Embedding
       _var_: embedding
