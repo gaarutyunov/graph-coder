@@ -22,7 +22,7 @@
 #SBATCH --output="logs/slurm/preprocess/"%j.out
 #SBATCH --error="logs/slurm/preprocess/"%j.err
 #SBATCH --constraint="type_a|type_b|type_c|type_d"
-#SBATCH --time=0-3:0
+#SBATCH --time=1-0:0
 
 # Load modules and activate virtual environment
 chmod +x ./scripts/prepare.sh

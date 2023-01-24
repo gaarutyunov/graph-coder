@@ -24,6 +24,7 @@
 #SBATCH --constraint="type_a|type_b|type_c"
 #SBATCH --gpus=1
 #SBATCH --cpus-per-gpu=4
+#SBATCH --time=7-0:0
 
 # Load modules and activate virtual environment
 chmod +x ./scripts/prepare.sh
