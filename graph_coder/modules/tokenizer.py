@@ -267,6 +267,7 @@ class GraphFeatureTokenizer(nn.Module):
             lap_index_embed = self.get_index_embed(
                 lap_node_id, node_mask, padded_index
             )  # [B, T, 2Dl]
+            # TODO: check flaky test behaviour (maybe encoding)
             padded_feature = padded_feature + self.lap_encoder(lap_index_embed)
 
         if self.type_id:

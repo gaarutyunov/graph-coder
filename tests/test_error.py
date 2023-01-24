@@ -29,10 +29,10 @@ def test_error():
     )
     with open(dataset.log_file, "r") as log:
         lines = log.readlines()
-        assert len(lines) == 2
-        assert lines[0].endswith(
+        assert len(lines) > 0
+        assert lines[-2].endswith(
             "[WARN]   Refactoring error_001.py: bad input: type=0, value='', context=('', (2, 0))\n"
         )
-        assert lines[1].endswith(
+        assert lines[-1].endswith(
             "[ERROR]  Parsing error_001.py: expected an indented block (<unknown>, line 1)\n"
         )

@@ -18,6 +18,7 @@ import json
 import os
 import typing
 import aiofiles
+import chardet
 import networkx as nx
 import pandas as pandas
 import pandas as pd
@@ -97,7 +98,6 @@ class AstDataset(BaseDataset):
         batch_size: int = 1,
         log_file: str = "log.txt",
         introspect: bool = False,
-        encoding_order: Optional[List[str]] = None,
         filter_index: Optional[typing.Callable[[pd.DataFrame], pd.DataFrame]] = None,
     ) -> None:
         super().__init__(
@@ -107,8 +107,6 @@ class AstDataset(BaseDataset):
             val_size,
             batch_size,
         )
-        if encoding_order is None:
-            encoding_order = ["utf-8", "cp1252", "latin-1", "ascii", "utf-16"]
         self.root = Path(root).expanduser()
         self.log_file = self.root / log_file
         self.index_file = self.root / index_file
@@ -119,14 +117,10 @@ class AstDataset(BaseDataset):
         self.min_nodes = min_nodes
         self.random_seed = random_seed
         self.max_length = max_length
-        assert encoding_order is not None, "Encoding order must be specified"
-        self.encoding_order: Dict[Union[str, int], Union[str, int]] = {
-            **dict(zip(range(len(encoding_order)), encoding_order)),
-            **dict(zip(encoding_order, range(len(encoding_order)))),
-        }
         self.refactoring_tool = MultiprocessRefactoringTool(
             get_fixers_from_package("lib2to3.fixes")
         )
+        self.encodings = ["big5", "latin-1"]
         self.index: Optional[pandas.DataFrame] = None
         self.filter_index = filter_index
         self.introspect()
@@ -139,11 +133,11 @@ class AstDataset(BaseDataset):
         assert (
             self.index is not None
         ), "Dataset is not introspected yet, call .introspect()"
-        path, lineno, end_lineno = self.index.iloc[index][
-            ["path", "lineno", "end_lineno"]
+        path, lineno, end_lineno, encoding = self.index.iloc[index][
+            ["path", "lineno", "end_lineno", "encoding"]
         ]
 
-        code = self._get_source(path)
+        code = self._get_source(path, encoding)
         graph_source = "".join(code[lineno - 1 : end_lineno])
         node, graph = parse_graph(graph_source)
 
@@ -154,8 +148,8 @@ class AstDataset(BaseDataset):
         )
 
     @lru_cache(maxsize=16)
-    def _get_source(self, path: str) -> List[str]:
-        with open(self.root / path, "r") as f:
+    def _get_source(self, path: str, encoding: str = "utf-8") -> List[str]:
+        with open(self.root / path, "r", encoding=encoding) as f:
             return f.readlines()
 
     def introspect(self):
@@ -186,12 +180,11 @@ class AstDataset(BaseDataset):
     async def _parse_source(
         self, file: Path
     ) -> AsyncGenerator[Dict[str, Union[nx.Graph, Optional[int]]], None]:
-        f = await self._try_open(file)
+        source, encoding = await self._try_open(file)
 
-        if f is None:
+        if source is None:
             return
 
-        source = await f.read()
         if not source.endswith("\n"):
             source += "\n"
         try:
@@ -220,29 +213,54 @@ class AstDataset(BaseDataset):
                 "nodes": nodes,
                 "edges": graph.number_of_edges(),
                 "has_docstring": get_docstring(node) != "",
+                "encoding": encoding,
             }
 
-        await f.close()
-
     async def _try_open(
-        self, file: Path, encoding: str = "utf-8", retry: int = 0
-    ) -> Optional[AsyncTextIOWrapper]:
-        if retry == len(self.encoding_order):
-            return None
+        self, file: Path
+    ) -> Tuple[Optional[str], Optional[str]]:
+        lines = []
+        detector = chardet.UniversalDetector()
 
         try:
-            return await aiofiles.open(file, "r", encoding=encoding)
+            encoding = "utf-8"
+            async with aiofiles.open(file, "r", encoding=encoding) as f:
+                source = await f.read()
+                return source, encoding
         except Exception as e:
             await self.log(
-                "ERROR",
-                f"Opening {file.relative_to(self.root)} with encoding {encoding}: {e}",
+                "WARN",
+                f"Opening {file.relative_to(self.root)} as utf-8: {e}",
             )
-            return await self._try_open(
-                file, encoding=self._determine_encoding(retry), retry=retry + 1
-            )
+            pass
 
-    def _determine_encoding(self, retry: int) -> str:
-        return str(self.encoding_order[retry])
+        async with aiofiles.open(file, "rb") as f:
+            encoding: Optional[str] = None
+
+            for line in await f.readlines():
+                lines.append(line)
+                if not detector.done:
+                    detector.feed(line)
+                if detector.done and encoding is None:
+                    detector.close()
+                    encoding = detector.result["encoding"]
+
+        if encoding is None:
+            source, encoding = await self._try_encodings(file, lines)
+        else:
+            encoding = encoding.lower()
+            source = b"".join(lines).decode(encoding)
+
+        return source, encoding
+
+    async def _try_encodings(self, file: Path, lines: List[bytearray]) -> Tuple[Optional[str], Optional[str]]:
+        for encoding in self.encodings:
+            try:
+                return b"".join(lines).decode(encoding), encoding
+            except Exception as e:
+                await self.log("ERROR", f"Decoding {file.relative_to(self.root)}: {e}")
+
+        return None, None
 
     async def log(self, level: str, msg: str):
         level = f"[{level}]"

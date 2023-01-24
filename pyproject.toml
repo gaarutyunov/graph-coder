@@ -24,6 +24,7 @@ transformers = "^4.25.1"
 torchaudio = "^0.13.1"
 torchvision = "^0.14.1"
 torchinfo = "^1.7.1"
+chardet = "^5.1.0"
 
 [tool.poetry.group.dev.dependencies]
 black = {version = "^22.12.0", extras = ["d", "jupyter"]}
@@ -49,6 +50,7 @@ tokenizers = { channel = "pip" }
 catalyst = { channel = "pip" }
 transformers = { channel = "pip" }
 torchinfo = { channel = "conda-forge" }
+chardet = { channel = "pip" }
 
 [tool.black]
 line-length = 88
@@ -94,3 +96,7 @@ cmd = "black ."
 [tool.poe.tasks.fix_optional]
 help = "Fix optional types with no_implicit_optional"
 cmd = "no_implicit_optional ."
+
+[tool.poe.tasks.conda_deps]
+help = "Generate conda dependencies"
+cmd = "poetry2conda pyproject.toml environment.yaml"
