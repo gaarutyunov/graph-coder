@@ -11,12 +11,30 @@
 #     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
-import asyncio
-import nest_asyncio
+
+import sys
+
+
+def check_ipython() -> bool:
+    try:
+        get_ipython = sys.modules["IPython"].get_ipython
+
+        if get_ipython is None:
+            return False
+        else:
+            _ = str(get_ipython())
+            return True
+    except:
+        return False
 
 
 def run_async(func):
-    """Allows running nested async functions"""
-    nest_asyncio.apply()
+    import asyncio
+
+    if check_ipython():
+        import nest_asyncio
+
+        nest_asyncio.apply()
+
     loop = asyncio.get_event_loop()
     loop.run_until_complete(func)
