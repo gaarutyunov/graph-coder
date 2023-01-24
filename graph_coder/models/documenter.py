@@ -1,27 +1,27 @@
 #  Copyright 2023 German Arutyunov
 #
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
 #
-#         http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+from typing import Dict
 
 import torch
 from torch import nn
-from typing import Dict
 
+from .base import GraphCoderBase
 from graph_coder.data import GraphCoderBatch
-from graph_coder.models.base import GraphCoderBase
 
 
-class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
-    """Graph-coder model for code generation"""
+class GraphCoderDocumenter(GraphCoderBase):
+    """Graph-coder model for documentation generation"""
 
     def __init__(
         self,
@@ -46,15 +46,15 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
         x = []
         tgt = []
 
-        if batch.has_docstring:
-            emb = self.embedding(batch.docstring)
-            docstring_encoded = self.encoder(emb)
-            x.append(docstring_encoded)
+        if batch.has_source:
+            emb = self.embedding(batch.source)
+            source_encoded = self.encoder(emb)
+            x.append(source_encoded)
             tgt.append(emb)
             # add eos token
             eos = torch.tensor(
-                [self.eos_token_id], device=docstring_encoded.device, dtype=torch.float
-            ).repeat(docstring_encoded.size(0), 1, docstring_encoded.size(-1))
+                [self.eos_token_id], device=source_encoded.device, dtype=torch.float
+            ).repeat(source_encoded.size(0), 1, source_encoded.size(-1))
             x.append(eos)
             tgt.append(eos)
 
@@ -80,16 +80,16 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
             x.append(eos)
             tgt.append(eos)
 
-        if batch.has_source:
-            emb = self.embedding(batch.source)
-            source_code_encoded = self.encoder(emb)
-            device = source_code_encoded.device
-            x.append(source_code_encoded)
+        if batch.has_docstring:
+            emb = self.embedding(batch.docstring)
+            docstring_encoded = self.encoder(emb)
+            device = docstring_encoded.device
+            x.append(docstring_encoded)
             tgt.append(emb)
             # add eos token
             eos = torch.tensor(
                 [self.eos_token_id], device=device, dtype=torch.float
-            ).repeat(source_code_encoded.size(0), 1, source_code_encoded.size(-1))
+            ).repeat(docstring_encoded.size(0), 1, docstring_encoded.size(-1))
             x.append(eos)
             tgt.append(eos)
 
@@ -100,23 +100,23 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
 
         result = {}
 
-        if batch.has_docstring:
-            result["docstring"] = self.lm_head(hidden_states[:, : batch.docstring_size])
+        if batch.has_source:
+            result["source"] = self.lm_head(hidden_states[:, : batch.source_size])
 
         if batch.has_graph:
-            if batch.has_docstring:
-                start = batch.docstring_size + 1
+            if batch.has_source:
+                start = batch.source_size + 1
             else:
                 start = 0
-            if batch.has_source:
-                end = batch.source_size + 1
+            if batch.has_docstring:
+                end = batch.docstring_size + 1
             else:
                 end = 0
             result["graph"] = self.lm_graph_head(hidden_states[:, start : -end - 1])
 
-        if batch.has_source:
-            result["source"] = self.lm_head(
-                hidden_states[:, -batch.source_size - 1 : -1]
+        if batch.has_docstring:
+            result["docstring"] = self.lm_head(
+                hidden_states[:, -batch.docstring_size - 1 : -1]
             )
 
         return result

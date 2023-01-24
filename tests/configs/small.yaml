@@ -1,68 +1,71 @@
 dataset:
   _target_: graph_coder.datasets.AstDataset
   _var_: dataset
-  tokenizer:
-    _target_: graph_coder.utils.get_pretrained_tokenizer
-    _var_: tokenizer
-    name: EleutherAI/gpt-neox-20b
-    pad_token_id: 1
-    eos_token_id: 0
-    _mode_: call
   root: ./tests/data
-  batch_size: &batch_size 2
-  max_length: &max_length 64
+  batch_size: &batch_size 4
+  max_length: &max_length 32
+  collate_fn:
+    _target_: graph_coder.utils.partial
+    func:
+      _target_: graph_coder.data.collate_ast
+    max_length: *max_length
+    tokenizer:
+      _target_: graph_coder.utils.get_pretrained_tokenizer
+      _var_: tokenizer
+      name: EleutherAI/gpt-neox-20b
+      pad_token_id: &pad_token_id 1
+      eos_token_id: &eos_token_id 0
+      _mode_: call
 
-runner:
-  _target_: graph_coder.runners.GraphCoderGeneratorRunner
+model:
+  _target_: graph_coder.models.GraphCoderGenerator
+  _var_: model
   vocab_size: &vocab_size
     _target_: graph_coder.utils.get_vocab_size
     tokenizer:
       _var_: tokenizer
     _mode_: call
-  eos_token_id:
-    _var_: tokenizer.eos_token_id
-  batch_size: *batch_size
+  eos_token_id: *eos_token_id
   hidden_size: &hidden_size 128
-  max_length: *max_length
-  model:
-    _target_: graph_coder.models.GraphCoderGenerator
-    _var_: model
-    vocab_size: *vocab_size
-    eos_token_id:
-      _var_: tokenizer.eos_token_id
-    hidden_size: *hidden_size
+  embedding:
+    _target_: torch.nn.Embedding
+    _var_: embedding
+    num_embeddings: *vocab_size
+    embedding_dim: *hidden_size
+    padding_idx:
+      _var_: tokenizer.pad_token_id
+  encoder:
+    _target_: torch.nn.TransformerEncoder
+    _var_: encoder
+    encoder_layer:
+      _target_: torch.nn.TransformerEncoderLayer
+      d_model: *hidden_size
+      nhead: 4
+      dim_feedforward: 512
+      dropout: 0.1
+      activation: relu
+    num_layers: 6
+  graph_encoder:
+    _target_: graph_coder.modules.TokenGTEncoder
     embedding:
-      _target_: torch.nn.Embedding
       _var_: embedding
-      num_embeddings: *vocab_size
-      embedding_dim: *hidden_size
-      padding_idx:
-        _var_: tokenizer.pad_token_id
-    encoder:
-      _target_: torch.nn.TransformerEncoder
-      _var_: encoder
-      encoder_layer:
-        _target_: torch.nn.TransformerEncoderLayer
-        d_model: *hidden_size
-        nhead: 4
-        dim_feedforward: 512
-        dropout: 0.1
-        activation: relu
-      num_layers: 6
-    graph_encoder:
-      _target_: graph_coder.modules.TokenGTEncoder
-      embedding:
-        _var_: embedding
-    decoder:
-      _target_: torch.nn.TransformerDecoder
-      decoder_layer:
-        _target_: torch.nn.TransformerDecoderLayer
-        d_model: *hidden_size
-        nhead: 4
-        dim_feedforward: 512
-        dropout: 0.1
-        activation: relu
-      num_layers: 6
+  decoder:
+    _target_: torch.nn.TransformerDecoder
+    decoder_layer:
+      _target_: torch.nn.TransformerDecoderLayer
+      d_model: *hidden_size
+      nhead: 4
+      dim_feedforward: 512
+      dropout: 0.1
+      activation: relu
+    num_layers: 6
+
+runner:
+  _target_: graph_coder.runners.GraphCoderGeneratorRunner
+  eos_token_id: *eos_token_id
+  vocab_size: *vocab_size
+  model:
+    _var_: model
 
 run:
   - _call_: train
@@ -76,8 +79,7 @@ run:
 
     criterion:
       _target_: torch.nn.CrossEntropyLoss
-      ignore_index:
-          _var_: tokenizer.pad_token_id
+      ignore_index: *pad_token_id
 
     optimizer:
       _target_: torch.optim.Adam

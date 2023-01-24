@@ -27,7 +27,12 @@ from graph_coder.utils import get_pretrained_tokenizer
 
 def test_generator():
     tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
-    dataset = AstDataset(tokenizer=tokenizer, root=Path(__file__).parent / "./data")
+    dataset = AstDataset(
+        collate_fn=partial(
+            collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
+        ),
+        root=Path(__file__).parent / "./data",
+    )
     loader = DataLoader(
         dataset,
         batch_size=2,

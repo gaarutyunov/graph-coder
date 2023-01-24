@@ -16,18 +16,21 @@ from pathlib import Path
 
 import numpy as np
 
+from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
-from graph_coder.utils import get_pretrained_tokenizer
+from graph_coder.utils import get_pretrained_tokenizer, partial
 
 
 def test_dataset():
     dataset = AstDataset(
-        tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"),
+        collate_fn=partial(
+            collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
+        ),
         root=Path(__file__).parent / "./data",
     )
     assert dataset is not None
     assert np.all(
-        dataset.index["source"] != "function_002.py"
+        dataset.index["path"] != "function_002.py"
     ), "Small graph should be skipped"
 
     for i in range(len(dataset)):
@@ -36,5 +39,5 @@ def test_dataset():
         assert len(data.graph.edge_index[0]) == 2, "Edge should have 2 nodes"
         assert len(data.graph.edge_index) > 0, "Graph should have edges"
 
-        if dataset.index.iloc[i]["source"] == "function_003.py":
+        if dataset.index.iloc[i]["path"] == "function_003.py":
             assert len(data.docstring) == 0, "Docstring should be empty"

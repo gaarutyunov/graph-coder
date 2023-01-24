@@ -30,21 +30,16 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
     def __init__(
         self,
         model: nn.Module,
-        batch_size: int,
-        hidden_size: int,
-        vocab_size: int,
-        max_length: int,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.model = model
-        self.batch_size = batch_size
-        self.hidden_size = hidden_size
-        self.vocab_size = vocab_size
-        self.max_length = max_length
 
     def on_batch_start(self, runner: IRunner) -> None:
+        # noinspection PyTypeChecker
+        batch: GraphCoderBatch = self.batch  # type: ignore
+        self.batch_size = batch.batch_size
         self.batch_step += self.engine.num_processes
         self.loader_batch_step += self.engine.num_processes
         self.sample_step += self.batch_size * self.engine.num_processes

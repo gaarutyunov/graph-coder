@@ -21,8 +21,8 @@ from graph_coder.data import GraphCoderBatch
 from graph_coder.runners.base import GraphCoderRunnerBase
 
 
-class GraphCoderGeneratorRunner(GraphCoderRunnerBase):
-    """Runner for graph-coder generator model"""
+class GraphCoderDocumenterRunner(GraphCoderRunnerBase):
+    """Runner for graph-coder documentation model"""
 
     def __init__(
         self,
@@ -37,7 +37,7 @@ class GraphCoderGeneratorRunner(GraphCoderRunnerBase):
         self.vocab_size = vocab_size
 
     def predict_batch(self, batch: GraphCoderBatch, **kwargs) -> Mapping[str, Any]:
-        # TODO: split prediction into graph and source
+        # TODO: split prediction into graph and docstring
         return {"predictions": self.model(batch, **kwargs)}
 
     def _calc_loss(self, batch: GraphCoderBatch) -> torch.Tensor:
@@ -47,11 +47,11 @@ class GraphCoderGeneratorRunner(GraphCoderRunnerBase):
         lm_logits = []
         target_ids = []
 
-        if batch.has_docstring:
-            target_ids.append(batch.docstring[batch.docstring_attn_mask.bool()])
-            lm_logits.append(result["docstring"][batch.docstring_attn_mask.bool()])
+        if batch.has_source:
+            target_ids.append(batch.source[batch.source_attn_mask.bool()])
+            lm_logits.append(result["source"][batch.source_attn_mask.bool()])
             # add eos token
-            device = batch.docstring.device
+            device = batch.source.device
             target_ids.append(torch.tensor([self.eos_token_id], device=device))
             lm_logits.append(
                 torch.tensor([self.eos_token_id], device=device).repeat(
@@ -80,11 +80,11 @@ class GraphCoderGeneratorRunner(GraphCoderRunnerBase):
                     1, self.vocab_size
                 )
             )
-        if batch.has_source:
-            target_ids.append(batch.source[batch.source_attn_mask.bool()])
-            lm_logits.append(result["source"][batch.source_attn_mask.bool()])
+        if batch.has_docstring:
+            target_ids.append(batch.docstring[batch.docstring_attn_mask.bool()])
+            lm_logits.append(result["docstring"][batch.docstring_attn_mask.bool()])
             # add eos token
-            device = batch.source.device
+            device = batch.docstring.device
             target_ids.append(torch.tensor([self.eos_token_id], device=device))
             lm_logits.append(
                 torch.tensor([self.eos_token_id], device=device).repeat(

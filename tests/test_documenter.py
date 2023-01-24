@@ -12,29 +12,32 @@
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
 
+from functools import partial
 from pathlib import Path
 
-import torch
 from torch import nn
+from torch.utils.data import DataLoader
 
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
-from graph_coder.models import GraphCoderGenerator
+from graph_coder.models import GraphCoderDocumenter
 from graph_coder.modules import TokenGTEncoder
-from graph_coder.runners import GraphCoderGeneratorRunner
-from graph_coder.utils import get_pretrained_tokenizer, partial
+from graph_coder.utils import get_pretrained_tokenizer
 
 
-def test_runner():
+def test_documenter():
     tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
     dataset = AstDataset(
         collate_fn=partial(
             collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
         ),
         root=Path(__file__).parent / "./data",
-        batch_size=2,
     )
-    loader = dataset.loaders["train"]
+    loader = DataLoader(
+        dataset,
+        batch_size=2,
+        collate_fn=partial(collate_ast, tokenizer=tokenizer),
+    )
     embedding = nn.Embedding(
         len(tokenizer.vocab), 128, padding_idx=tokenizer.pad_token_id
     )
@@ -53,7 +56,7 @@ def test_runner():
         decoder_layer=nn.TransformerDecoderLayer(d_model=128, nhead=8), num_layers=6
     )
 
-    generator = GraphCoderGenerator(
+    generator = GraphCoderDocumenter(
         embedding=embedding,
         encoder=text_encoder,
         graph_encoder=encoder,
@@ -63,16 +66,13 @@ def test_runner():
         eos_token_id=tokenizer.eos_token_id,
     )
 
-    runner = GraphCoderGeneratorRunner(
-        generator,
-        vocab_size=len(tokenizer.vocab),
-        eos_token_id=tokenizer.eos_token_id,
-    )
-    runner._loaders = dataset.loaders
-    runner.criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
-
-    runner._print_summary()
-
-    for batch in iter(loader):
-        loss = runner._calc_loss(batch)
-        assert torch.is_floating_point(loss)
+    for batch in loader:
+        decoded = generator(batch)
+        if "docstring" in decoded:
+            assert decoded["docstring"].size(-1) == len(tokenizer.vocab)
+        if "graph" in decoded:
+            assert (
+                decoded["graph"].size(-1) == len(tokenizer.vocab) * dataset.max_length
+            )
+        if "source" in decoded:
+            assert decoded["source"].size(-1) == len(tokenizer.vocab)

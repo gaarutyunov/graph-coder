@@ -23,7 +23,7 @@ from typing import Dict
 class BaseDataset(Dataset, abc.ABC):
     def __init__(
         self,
-        collate_fn: typing.Callable,
+        collate_fn: typing.Optional[typing.Callable] = None,
         random_seed: typing.Optional[int] = None,
         test_size: float = 0.2,
         val_size: float = 0.2,

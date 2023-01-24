@@ -1,16 +1,21 @@
 dataset:
   _target_: graph_coder.datasets.AstDataset
   _var_: dataset
-  tokenizer:
-    _target_: graph_coder.utils.get_pretrained_tokenizer
-    _var_: tokenizer
-    name: EleutherAI/gpt-neox-20b
-    pad_token_id: &pad_token_id 1
-    eos_token_id: &eos_token_id 0
-    _mode_: call
   root: ~/git-py/raw/python
   batch_size: &batch_size 4
   max_length: &max_length 32
+  collate_fn:
+    _target_: graph_coder.utils.partial
+    func:
+      _target_: graph_coder.data.collate_ast
+    max_length: *max_length
+    tokenizer:
+      _target_: graph_coder.utils.get_pretrained_tokenizer
+      _var_: tokenizer
+      name: EleutherAI/gpt-neox-20b
+      pad_token_id: &pad_token_id 1
+      eos_token_id: &eos_token_id 0
+      _mode_: call
 
 model:
   _target_: graph_coder.models.GraphCoderGenerator
@@ -59,10 +64,7 @@ runner:
   model:
     _var_: model
   eos_token_id: *eos_token_id
-  batch_size: *batch_size
-  hidden_size: *hidden_size
   vocab_size: *vocab_size
-  max_length: *max_length
 
 run:
   - _call_: train

@@ -14,14 +14,12 @@
 import click
 
 from graph_coder.datasets import AstDataset
-from graph_coder.utils import get_pretrained_tokenizer
 
 
 @click.command()
 @click.option("--root", default="~/git-py/raw/python", help="Root data directory")
 def main(root: str):
-    tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
-    AstDataset(root=root, introspect=True, tokenizer=tokenizer)
+    AstDataset(root=root, introspect=True)
 
 
 if __name__ == "__main__":

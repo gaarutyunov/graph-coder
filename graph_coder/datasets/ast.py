@@ -20,10 +20,9 @@ import typing
 import aiofiles
 import networkx as nx
 import pandas as pandas
-import torch
-import transformers
+import pandas as pd
 
-from functools import lru_cache, partial
+from functools import lru_cache
 from typing import Union, AsyncGenerator, Optional, Tuple, List, Dict
 
 from aiofiles.threadpool.text import AsyncTextIOWrapper
@@ -31,10 +30,8 @@ from astmonkey import transformers as ast_transformers
 from pathlib import Path
 from tqdm.auto import tqdm
 from lib2to3.refactor import MultiprocessRefactoringTool, get_fixers_from_package
-from catalyst.utils import get_device
 
 from graph_coder.data import AstData
-from graph_coder.data.collator import collate_ast
 from graph_coder.data import AstExample
 from graph_coder.datasets.base import BaseDataset
 from graph_coder.utils import run_async, GraphNodeVisitor
@@ -90,25 +87,21 @@ class AstDataset(BaseDataset):
     def __init__(
         self,
         root: typing.Union[os.PathLike, str],
-        tokenizer: transformers.PreTrainedTokenizerFast,
+        collate_fn: Optional[typing.Callable] = None,
         min_nodes: int = 10,
         max_length: int = 64,
         index_file: str = "index.jsonl",
         random_seed: Optional[int] = None,
         test_size: float = 0.2,
         val_size: float = 0.2,
-        collate_fn: Optional[typing.Callable] = None,
         batch_size: int = 1,
         log_file: str = "log.txt",
         introspect: bool = False,
-        device: torch.device = get_device(),
         encoding_order: Optional[List[str]] = None,
+        filter_index: Optional[typing.Callable[[pd.DataFrame], pd.DataFrame]] = None,
     ) -> None:
         super().__init__(
-            collate_fn
-            or partial(
-                collate_ast, tokenizer=tokenizer, max_length=max_length, device=device
-            ),
+            collate_fn,
             random_seed,
             test_size,
             val_size,
@@ -135,6 +128,7 @@ class AstDataset(BaseDataset):
             get_fixers_from_package("lib2to3.fixes")
         )
         self.index: Optional[pandas.DataFrame] = None
+        self.filter_index = filter_index
         self.introspect()
         self.split()
 
@@ -145,11 +139,11 @@ class AstDataset(BaseDataset):
         assert (
             self.index is not None
         ), "Dataset is not introspected yet, call .introspect()"
-        source, lineno, end_lineno = self.index.iloc[index][
-            ["source", "lineno", "end_lineno"]
+        path, lineno, end_lineno = self.index.iloc[index][
+            ["path", "lineno", "end_lineno"]
         ]
 
-        code = self._get_source(source)
+        code = self._get_source(path)
         graph_source = "".join(code[lineno - 1 : end_lineno])
         node, graph = parse_graph(graph_source)
 
@@ -160,8 +154,8 @@ class AstDataset(BaseDataset):
         )
 
     @lru_cache(maxsize=16)
-    def _get_source(self, source: str) -> List[str]:
-        with open(self.root / source, "r") as f:
+    def _get_source(self, path: str) -> List[str]:
+        with open(self.root / path, "r") as f:
             return f.readlines()
 
     def introspect(self):
@@ -169,10 +163,12 @@ class AstDataset(BaseDataset):
             self.index_file.touch()
             run_async(self._introspect())
         self.index = pandas.read_json(self.index_file, lines=True)
+        if self.filter_index is not None:
+            self.index = self.filter_index(self.index)
 
     async def _introspect(self):
-        async for graph in self._parse_root():
-            await self._write_index(**graph)
+        async for graph_meta in self._parse_root():
+            await self._write_index(**graph_meta)
 
     async def _parse_root(self):
         for file in tqdm(
@@ -180,14 +176,8 @@ class AstDataset(BaseDataset):
             desc=f"Introspecting dataset in {self.root}",
             unit="files",
         ):
-            async for graph in self._parse_source(file):
-                yield {
-                    "source": str(file.relative_to(self.root)),
-                    "lineno": graph["lineno"],
-                    "end_lineno": graph["end_lineno"],
-                    "nodes": graph["nodes"],
-                    "edges": graph["edges"],
-                }
+            async for graph_meta in self._parse_source(file):
+                yield {"path": str(file.relative_to(self.root)), **graph_meta}
 
     async def _write_index(self, **kwargs) -> None:
         async with aiofiles.open(self.index_file, "a") as f:
@@ -217,7 +207,7 @@ class AstDataset(BaseDataset):
             return
 
         for node in mod.body:
-            _, graph = node_to_graph(node)
+            node, graph = node_to_graph(node)  # type: ignore[assignment]
 
             nodes = graph.number_of_nodes()
 
@@ -225,11 +215,11 @@ class AstDataset(BaseDataset):
                 continue
 
             yield {
-                "graph": graph,
                 "lineno": node.lineno,
                 "end_lineno": node.end_lineno,
                 "nodes": nodes,
                 "edges": graph.number_of_edges(),
+                "has_docstring": get_docstring(node) != "",
             }
 
         await f.close()

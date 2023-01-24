@@ -19,13 +19,13 @@ from torch import nn
 
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
-from graph_coder.models import GraphCoderGenerator
+from graph_coder.models import GraphCoderDocumenter
 from graph_coder.modules import TokenGTEncoder
-from graph_coder.runners import GraphCoderGeneratorRunner
+from graph_coder.runners import GraphCoderDocumenterRunner
 from graph_coder.utils import get_pretrained_tokenizer, partial
 
 
-def test_runner():
+def test_documenter_runner():
     tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
     dataset = AstDataset(
         collate_fn=partial(
@@ -53,7 +53,7 @@ def test_runner():
         decoder_layer=nn.TransformerDecoderLayer(d_model=128, nhead=8), num_layers=6
     )
 
-    generator = GraphCoderGenerator(
+    generator = GraphCoderDocumenter(
         embedding=embedding,
         encoder=text_encoder,
         graph_encoder=encoder,
@@ -63,7 +63,7 @@ def test_runner():
         eos_token_id=tokenizer.eos_token_id,
     )
 
-    runner = GraphCoderGeneratorRunner(
+    runner = GraphCoderDocumenterRunner(
         generator,
         vocab_size=len(tokenizer.vocab),
         eos_token_id=tokenizer.eos_token_id,

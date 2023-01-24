@@ -14,13 +14,16 @@
 
 from pathlib import Path
 
+from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
-from graph_coder.utils import get_pretrained_tokenizer
+from graph_coder.utils import get_pretrained_tokenizer, partial
 
 
 def test_collator():
     dataset = AstDataset(
-        tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"),
+        collate_fn=partial(
+            collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
+        ),
         root=Path(__file__).parent / "./data",
         batch_size=2,
     )

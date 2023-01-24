@@ -48,7 +48,7 @@ fairseq = { channel = "pip" }
 tokenizers = { channel = "pip" }
 catalyst = { channel = "pip" }
 transformers = { channel = "pip" }
-torch-info = { channel = "conda-forge" }
+torchinfo = { channel = "conda-forge" }
 
 [tool.black]
 line-length = 88
@@ -78,7 +78,19 @@ _test = "coverage run -m pytest"
 _report = "coverage report"
 _html = "coverage html"
 _lcov = "coverage lcov"
-test = ["_test", "_report", "_html", "_lcov"]
-lint = "mypy ."
-format = "black ."
-fix_optional = "no_implicit_optional ."
+
+[tool.poe.tasks.test]
+help = "Run tests and report coverage (html and lcov)"
+sequence = ["_test", "_report", "_html", "_lcov"]
+
+[tool.poe.tasks.lint]
+help = "Lint typings with mypy"
+cmd = "mypy ."
+
+[tool.poe.tasks.fmt]
+help = "Format code with black"
+cmd = "black ."
+
+[tool.poe.tasks.fix_optional]
+help = "Fix optional types with no_implicit_optional"
+cmd = "no_implicit_optional ."
