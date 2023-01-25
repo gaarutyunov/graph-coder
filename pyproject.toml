@@ -25,6 +25,7 @@ torchaudio = "^0.13.1"
 torchvision = "^0.14.1"
 torchinfo = "^1.7.1"
 chardet = "^5.1.0"
+pytorch-fast-transformers = "^0.4.0"
 
 [tool.poetry.group.dev.dependencies]
 black = {version = "^22.12.0", extras = ["d", "jupyter"]}
@@ -45,12 +46,13 @@ name = "graph-coder"
 torch = { name = "pytorch", channel = "pytorch" }
 torchvision = { channel = "pytorch" }
 torchaudio = { channel = "pytorch" }
+torchinfo = { channel = "conda-forge" }
 fairseq = { channel = "pip" }
 tokenizers = { channel = "pip" }
 catalyst = { channel = "pip" }
 transformers = { channel = "pip" }
-torchinfo = { channel = "conda-forge" }
 chardet = { channel = "pip" }
+pytorch-fast-transformers = { channel = "pip" }
 
 [tool.black]
 line-length = 88
