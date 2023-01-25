@@ -16,6 +16,7 @@ from pathlib import Path
 
 import torch
 from torch import nn
+from torch.utils.data import DataLoader
 
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
@@ -34,7 +35,6 @@ def test_documenter_runner():
         root=Path(__file__).parent / "./data",
         batch_size=2,
     )
-    loader = dataset.loaders["train"]
     embedding = nn.Embedding(
         len(tokenizer.vocab), 128, padding_idx=tokenizer.pad_token_id
     )
@@ -73,6 +73,10 @@ def test_documenter_runner():
 
     runner._print_summary()
 
-    for batch in iter(loader):
+    loader = DataLoader(
+        dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer), batch_size=2
+    )
+
+    for batch in loader:
         loss = runner._calc_loss(batch)
         assert torch.is_floating_point(loss)

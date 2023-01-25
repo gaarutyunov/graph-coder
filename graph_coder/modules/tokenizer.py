@@ -234,7 +234,7 @@ class GraphFeatureTokenizer(nn.Module):
 
         node_feature = self.embedding(node_data).sum(
             -2
-        )  # [sum(node_num), D] TODO: investigate if it is a good idea
+        )  # [sum(node_num), D] TODO: investigate if it is a good idea to sum
         edge_feature = self.embedding(edge_data).sum(-2)  # [sum(edge_num), D]
 
         padded_index, padded_feature, padding_mask, _, _ = self.get_batch(
@@ -267,7 +267,6 @@ class GraphFeatureTokenizer(nn.Module):
             lap_index_embed = self.get_index_embed(
                 lap_node_id, node_mask, padded_index
             )  # [B, T, 2Dl]
-            # TODO: check flaky test behaviour (maybe encoding)
             padded_feature = padded_feature + self.lap_encoder(lap_index_embed)
 
         if self.type_id:
