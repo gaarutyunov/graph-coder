@@ -52,6 +52,7 @@ class MultiheadPerformerAttention(MultiheadAttention):
         self_attention=False,
         q_noise=0.0,
         qn_block_size=8,
+        causal=False,
     ):
         super().__init__(
             embed_dim,
@@ -69,7 +70,7 @@ class MultiheadPerformerAttention(MultiheadAttention):
         self.fast_attention = FastAttention(
             self.head_dim,
             performer_nb_features,
-            causal=False,
+            causal=causal,
             generalized_attention=performer_generalized_attention,
             kernel_fn=nn.ReLU(),
             no_projection=False,

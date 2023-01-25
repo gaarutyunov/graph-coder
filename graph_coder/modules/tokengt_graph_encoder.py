@@ -97,6 +97,7 @@ class TokenGTGraphEncoder(nn.Module):
         q_noise: float = 0.0,
         qn_block_size: int = 8,
         return_attention: bool = False,
+        causal: bool = False,
     ) -> None:
 
         super().__init__()
@@ -186,6 +187,7 @@ class TokenGTGraphEncoder(nn.Module):
                     qn_block_size=qn_block_size,
                     layernorm_style=layernorm_style,
                     return_attention=return_attention,
+                    causal=causal,
                 )
                 for layer_idx in range(num_encoder_layers)
             ]
@@ -255,6 +257,7 @@ class TokenGTGraphEncoder(nn.Module):
         qn_block_size,
         layernorm_style,
         return_attention,
+        causal: bool = False
     ):
         return TokenGTGraphEncoderLayer(
             embedding_dim=embedding_dim,
@@ -274,6 +277,7 @@ class TokenGTGraphEncoder(nn.Module):
             qn_block_size=qn_block_size,
             layernorm_style=layernorm_style,
             return_attention=return_attention,
+            causal=causal,
         )
 
     def forward(

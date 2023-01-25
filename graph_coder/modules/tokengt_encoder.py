@@ -63,6 +63,7 @@ class TokenGTEncoder(nn.Module):
         apply_graphormer_init: bool = False,
         activation_fn: str = "gelu",
         return_attention: bool = False,
+        causal: bool = False,
     ):
         super().__init__()
         self.encoder_layers = encoder_layers
@@ -81,12 +82,15 @@ class TokenGTEncoder(nn.Module):
             lap_node_id_eig_dropout=lap_node_id_eig_dropout,
             type_id=type_id,
             # >
-            stochastic_depth=stochastic_depth,
+            # < performer
             performer=performer,
             performer_finetune=performer_finetune,
             performer_nb_features=performer_nb_features,
             performer_feature_redraw_interval=performer_feature_redraw_interval,
             performer_generalized_attention=performer_generalized_attention,
+            # >
+            stochastic_depth=stochastic_depth,
+            causal=causal,
             num_encoder_layers=encoder_layers,
             embedding_dim=encoder_embed_dim,
             ffn_embedding_dim=encoder_ffn_embed_dim,

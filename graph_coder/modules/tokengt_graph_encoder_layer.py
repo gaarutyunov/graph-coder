@@ -58,6 +58,7 @@ class TokenGTGraphEncoderLayer(nn.Module):
         init_fn: Optional[Callable] = None,
         layernorm_style: str = "postnorm",
         return_attention: bool = False,
+        causal: bool = False,
     ) -> None:
         super().__init__()
 
@@ -91,6 +92,7 @@ class TokenGTGraphEncoderLayer(nn.Module):
             self_attention=True,
             q_noise=q_noise,
             qn_block_size=qn_block_size,
+            causal=causal,
         )
 
         # layer norm associated with the self attention layer
@@ -150,6 +152,7 @@ class TokenGTGraphEncoderLayer(nn.Module):
         self_attention,
         q_noise,
         qn_block_size,
+        causal: bool = False,
     ):
         if performer:
             return MultiheadPerformerAttention(
@@ -162,6 +165,7 @@ class TokenGTGraphEncoderLayer(nn.Module):
                 self_attention=True,
                 q_noise=q_noise,
                 qn_block_size=qn_block_size,
+                causal=causal,
             )
         else:
             return MultiheadAttention(

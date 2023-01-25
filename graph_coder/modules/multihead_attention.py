@@ -348,7 +348,8 @@ class MultiheadAttention(nn.Module):
         q, k, v = map(
             lambda t: rearrange(t, "n b (h d) -> b h n d", h=self.num_heads), (q, k, v)
         )
-        attn = self.fast_attention(q, k, v, key_padding_mask)
+        # attn = self.fast_attention(q, k, v, key_padding_mask) TODO: check if this implementation is needed https://github.com/jw9730/tokengt/blob/main/large-scale-regression/tokengt/modules/performer_pytorch.py#L183
+        attn = self.fast_attention(q, k, v)
         attn = rearrange(attn, "b h n d -> n b (h d)")
 
         attn = self.out_proj(attn)
