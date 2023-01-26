@@ -32,3 +32,7 @@ def test_config():
     assert params["run"][0]["optimizer"].param_groups[0]["params"] == list(
         params["runner"].model.parameters()
     )
+
+    for batch in params["dataset"].loaders["train"]:
+        res = params["model"](batch)
+        isinstance(res, dict)

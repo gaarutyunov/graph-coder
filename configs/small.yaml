@@ -16,6 +16,7 @@ dataset:
       pad_token_id: &pad_token_id 1
       eos_token_id: &eos_token_id 0
       _mode_: call
+    _mode_: call
   random_seed: 42
 
 model:

@@ -15,7 +15,7 @@
 from functools import partial
 from pathlib import Path
 
-import torch.nn as nn
+from torch import nn as nn
 from torch.utils.data import DataLoader
 
 from graph_coder.data import collate_ast
@@ -42,6 +42,90 @@ def test_tokengt_encoder():
         encoder_ffn_embed_dim=128,
         lap_node_id=True,
         type_id=True,
+    )
+
+    for batch in loader:
+        encoded = encoder(batch)
+        assert encoded.size(-1) == 128
+
+
+def test_sign_flip():
+    tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
+    dataset = AstDataset(
+        root=Path(__file__).parent / "./data",
+    )
+    loader = DataLoader(
+        dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer), batch_size=2
+    )
+    embedding = nn.Embedding(
+        len(tokenizer.vocab), 128, padding_idx=tokenizer.pad_token_id
+    )
+
+    encoder = TokenGTEncoder(
+        embedding=embedding,
+        encoder_embed_dim=128,
+        encoder_ffn_embed_dim=128,
+        lap_node_id=True,
+        type_id=True,
+        lap_node_id_sign_flip=True,
+        lap_node_id_eig_dropout=0.1,
+    )
+
+    for batch in loader:
+        encoded = encoder(batch)
+        assert encoded.size(-1) == 128
+
+
+def test_performer():
+    tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
+    dataset = AstDataset(
+        root=Path(__file__).parent / "./data",
+    )
+    loader = DataLoader(
+        dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer), batch_size=2
+    )
+    embedding = nn.Embedding(
+        len(tokenizer.vocab), 128, padding_idx=tokenizer.pad_token_id
+    )
+
+    encoder = TokenGTEncoder(
+        embedding=embedding,
+        encoder_embed_dim=128,
+        encoder_ffn_embed_dim=128,
+        lap_node_id=True,
+        type_id=True,
+        performer=True,
+        attention_dropout=0.0,  # necessary for performer
+        causal=True,
+    )
+
+    for batch in loader:
+        encoded = encoder(batch)
+        assert encoded.size(-1) == 128
+
+
+def test_graphormer_init():
+    tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
+    dataset = AstDataset(
+        root=Path(__file__).parent / "./data",
+    )
+    loader = DataLoader(
+        dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer), batch_size=2
+    )
+    embedding = nn.Embedding(
+        len(tokenizer.vocab), 128, padding_idx=tokenizer.pad_token_id
+    )
+
+    encoder = TokenGTEncoder(
+        embedding=embedding,
+        encoder_embed_dim=128,
+        encoder_ffn_embed_dim=128,
+        lap_node_id=True,
+        type_id=True,
+        performer=True,
+        attention_dropout=0.0,  # necessary for performer
+        causal=True,
+        apply_graphormer_init=True,
     )
 
     for batch in loader:
