@@ -26,5 +26,4 @@ __all__ = (
     "summary",
     "partial",
     "filter_has_docstring",
-    "get_collator"
 )
