@@ -28,7 +28,7 @@ model:
       _var_: tokenizer
     _mode_: call
   eos_token_id: *eos_token_id
-  hidden_size: &hidden_size 64
+  hidden_size: &hidden_size 128
   embedding:
     _target_: torch.nn.Embedding
     _var_: embedding
@@ -42,7 +42,7 @@ model:
       _target_: torch.nn.TransformerEncoderLayer
       d_model: *hidden_size
       nhead: 4
-      dim_feedforward: 128
+      dim_feedforward: 512
       dropout: 0.1
       activation: relu
     num_layers: 6
@@ -53,7 +53,7 @@ model:
     lap_node_id: true
     type_id: true
     encoder_embed_dim: *hidden_size
-    encoder_ffn_embed_dim: 128
+    encoder_ffn_embed_dim: 512
     causal: true
     encoder_layers: 6
     encoder_attention_heads: 4
@@ -66,7 +66,7 @@ model:
       _target_: torch.nn.TransformerDecoderLayer
       d_model: *hidden_size
       nhead: 4
-      dim_feedforward: 128
+      dim_feedforward: 512
       dropout: 0.1
       activation: relu
     num_layers: 6
