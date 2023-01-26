@@ -31,4 +31,4 @@ chmod +x ./scripts/prepare.sh
 source ./scripts/prepare.sh
 
 # Compile dependencies
-pip install pytorch-fast-transformers-0.4.0.tar.gz -f .wheels --no-index --no-deps
+pip install pytorch-fast-transformers-0.4.0.tar.gz -f ./.wheels --no-index --no-deps
