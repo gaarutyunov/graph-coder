@@ -22,13 +22,13 @@
 #SBATCH --output="logs/slurm/compile/"%j.out
 #SBATCH --error="logs/slurm/compile/"%j.err
 #SBATCH --constraint="type_a|type_b|type_c"
-#SBATCH --gpus=1
-#SBATCH --cpus-per-gpu=4
-#SBATCH --time=0-1:0
+#SBATCH --time=0-0:15
 
 # Load modules and activate virtual environment
 chmod +x ./scripts/prepare.sh
 source ./scripts/prepare.sh
 
 # Compile dependencies
+# Download first with:
+# pip download pytorch-fast-transformers -d .wheels
 pip install .wheels/pytorch-fast-transformers-0.4.0.tar.gz --no-index --no-deps
