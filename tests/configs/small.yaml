@@ -3,12 +3,11 @@ dataset:
   _var_: dataset
   root: ./tests/data
   batch_size: &batch_size 4
-  max_length: &max_length 32
   collate_fn:
     _target_: graph_coder.utils.partial
     func:
       _target_: graph_coder.data.collate_ast
-    max_length: *max_length
+    max_length: &max_length 32
     tokenizer:
       _target_: graph_coder.utils.get_pretrained_tokenizer
       _var_: tokenizer
@@ -94,11 +93,12 @@ run:
       ignore_index: *pad_token_id
 
     optimizer:
-      _target_: torch.optim.Adam
+      _target_: torch.optim.AdamW
       _var_: optimizer
       params:
         _var_: model.parameters
       lr: 0.02
+      weight_decay: 0.01
 
     scheduler:
       _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
@@ -121,3 +121,6 @@ run:
         loader_key: *loader_key
         metric_key: *metric_key
         minimize: *minimize
+      - _target_: catalyst.callbacks.scheduler.SchedulerCallback
+        loader_key: *loader_key
+        metric_key: *metric_key

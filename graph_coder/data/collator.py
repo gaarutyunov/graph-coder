@@ -1,16 +1,16 @@
 #  Copyright 2023 German Arutyunov
 #
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
 #
-#         http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 from functools import partial
 
 import torch
@@ -70,6 +70,7 @@ def collate_ast(
     batch: List[AstExample],
     tokenizer: PreTrainedTokenizerFast,
     max_length: int = 64,
+    max_seq_length: int = 8192,
     device: torch.device = get_device(),
 ) -> GraphCoderBatch:
     """Collate a batch of examples into a batch of tensors."""
@@ -124,12 +125,22 @@ def collate_ast(
             [F.pad(i, (0, max_n - i.size(1)), value=float("0")) for i in lap_eigvecs]
         ),
         source_=tokenizer(
-            sources, padding=True, return_tensors="pt", return_attention_mask=True
+            sources,
+            padding=True,
+            return_tensors="pt",
+            return_attention_mask=True,
+            truncation=True,
+            max_length=max_seq_length,
         )
         .to(device)
         .convert_to_tensors(),
         docstring_=tokenizer(
-            docstrings, padding=True, return_tensors="pt", return_attention_mask=True
+            docstrings,
+            padding=True,
+            return_tensors="pt",
+            return_attention_mask=True,
+            truncation=True,
+            max_length=max_seq_length,
         )
         .to(device)
         .convert_to_tensors(),

@@ -3,12 +3,12 @@ dataset:
   _var_: dataset
   root: ~/git-py/raw/python
   batch_size: &batch_size 4
-  max_length: &max_length 32
   collate_fn:
     _target_: graph_coder.utils.partial
     func:
       _target_: graph_coder.data.collate_ast
-    max_length: *max_length
+    max_length: &max_length 32
+    max_seq_length: &max_seq_length 4096
     tokenizer:
       _target_: graph_coder.utils.get_pretrained_tokenizer
       _var_: tokenizer
@@ -34,18 +34,17 @@ model:
     _var_: embedding
     num_embeddings: *vocab_size
     embedding_dim: *hidden_size
-    padding_idx: *pad_token_id
+    padding_idx:
+      _var_: tokenizer.pad_token_id
   encoder:
-    _target_: torch.nn.TransformerEncoder
+    _target_: graph_coder.modules.PerformerEncoder
     _var_: encoder
-    encoder_layer:
-      _target_: torch.nn.TransformerEncoderLayer
-      d_model: *hidden_size
-      nhead: 4
-      dim_feedforward: 512
-      dropout: 0.1
-      activation: relu
-    num_layers: 6
+    dim: *hidden_size
+    depth: 6
+    heads: 4
+    causal: true
+    dim_head: 32
+    max_seq_len: *max_seq_length
   graph_encoder:
     _target_: graph_coder.modules.TokenGTEncoder
     embedding:
@@ -73,10 +72,10 @@ model:
 
 runner:
   _target_: graph_coder.runners.GraphCoderGeneratorRunner
-  model:
-    _var_: model
   eos_token_id: *eos_token_id
   vocab_size: *vocab_size
+  model:
+    _var_: model
 
 run:
   - _call_: train

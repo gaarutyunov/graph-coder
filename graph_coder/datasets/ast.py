@@ -1,16 +1,16 @@
 #  Copyright 2023 German Arutyunov
 #
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
 #
-#         http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 
 import ast
 import datetime
@@ -90,7 +90,6 @@ class AstDataset(BaseDataset):
         root: typing.Union[os.PathLike, str],
         collate_fn: Optional[typing.Callable] = None,
         min_nodes: int = 10,
-        max_length: int = 64,
         index_file: str = "index.jsonl",
         random_seed: Optional[int] = None,
         test_size: float = 0.2,
@@ -116,7 +115,6 @@ class AstDataset(BaseDataset):
                 os.truncate(self.log_file, 0)
         self.min_nodes = min_nodes
         self.random_seed = random_seed
-        self.max_length = max_length
         self.refactoring_tool = MultiprocessRefactoringTool(
             get_fixers_from_package("lib2to3.fixes")
         )

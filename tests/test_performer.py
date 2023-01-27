@@ -4,7 +4,7 @@
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,19 +15,21 @@
 from functools import partial
 from pathlib import Path
 
-import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
+from catalyst.contrib.scripts.run import process_configs
+from catalyst.registry import REGISTRY
+
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
-from graph_coder.models import GraphCoderDocumenter
-from graph_coder.modules import TokenGTEncoder
-from graph_coder.runners import GraphCoderDocumenterRunner
+from graph_coder.models import GraphCoderGenerator
+from graph_coder.modules import TokenGTEncoder, PerformerEncoder
 from graph_coder.utils import get_pretrained_tokenizer
+from graph_coder.runners import GraphCoderGeneratorRunner
 
 
-def test_documenter():
+def test_performer():
     tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
     dataset = AstDataset(
         collate_fn=partial(
@@ -50,15 +52,22 @@ def test_documenter():
         encoder_ffn_embed_dim=128,
         lap_node_id=True,
         type_id=True,
+        performer=True,
+        causal=True,
+        attention_dropout=0.0
     )
-    text_encoder = nn.TransformerEncoder(
-        encoder_layer=nn.TransformerEncoderLayer(d_model=128, nhead=8), num_layers=6
+    text_encoder = PerformerEncoder(
+        dim=128,
+        depth=6,
+        heads=8,
+        max_seq_len=8192,
+        causal=True,
     )
     decoder = nn.TransformerDecoder(
         decoder_layer=nn.TransformerDecoderLayer(d_model=128, nhead=8), num_layers=6
     )
 
-    generator = GraphCoderDocumenter(
+    generator = GraphCoderGenerator(
         embedding=embedding,
         encoder=text_encoder,
         graph_encoder=encoder,
@@ -74,63 +83,27 @@ def test_documenter():
             assert decoded["docstring"].size(-1) == len(tokenizer.vocab)
         if "graph" in decoded:
             assert (
-                decoded["graph"].size(-1) == len(tokenizer.vocab) * 64
+                    decoded["graph"].size(-1) == len(tokenizer.vocab) * 64
             )
         if "source" in decoded:
             assert decoded["source"].size(-1) == len(tokenizer.vocab)
 
 
-def test_documenter_runner():
-    tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
-    dataset = AstDataset(
-        collate_fn=partial(
-            collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
-        ),
-        root=Path(__file__).parent / "./data",
-        batch_size=2,
-    )
-    embedding = nn.Embedding(
-        len(tokenizer.vocab), 128, padding_idx=tokenizer.pad_token_id
-    )
+def test_config_performer():
+    configs = [f'{Path(__file__).parent / "./configs/small_performer.yaml"}']
+    configs = process_configs(configs)
+    params = REGISTRY.get_from_params(**configs)
 
-    encoder = TokenGTEncoder(
-        embedding=embedding,
-        encoder_embed_dim=128,
-        encoder_ffn_embed_dim=128,
-        lap_node_id=True,
-        type_id=True,
+    assert isinstance(params["runner"], GraphCoderGeneratorRunner)
+    assert (
+            params["runner"].model.embedding
+            == params["runner"].model.graph_encoder.graph_encoder.graph_feature.embedding
     )
-    text_encoder = nn.TransformerEncoder(
-        encoder_layer=nn.TransformerEncoderLayer(d_model=128, nhead=8), num_layers=6
+    assert params["run"][0]["optimizer"].param_groups[0]["params"] == list(
+        params["runner"].model.parameters()
     )
-    decoder = nn.TransformerDecoder(
-        decoder_layer=nn.TransformerDecoderLayer(d_model=128, nhead=8), num_layers=6
-    )
+    assert isinstance(params["model"].encoder, PerformerEncoder)
 
-    generator = GraphCoderDocumenter(
-        embedding=embedding,
-        encoder=text_encoder,
-        graph_encoder=encoder,
-        decoder=decoder,
-        hidden_size=128,
-        vocab_size=len(tokenizer.vocab),
-        eos_token_id=tokenizer.eos_token_id,
-    )
-
-    runner = GraphCoderDocumenterRunner(
-        generator,
-        vocab_size=len(tokenizer.vocab),
-        eos_token_id=tokenizer.eos_token_id,
-    )
-    runner._loaders = dataset.loaders
-    runner.criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
-
-    runner._print_summary()
-
-    loader = DataLoader(
-        dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer), batch_size=2
-    )
-
-    for batch in loader:
-        loss = runner._calc_loss(batch)
-        assert torch.is_floating_point(loss)
+    for batch in params["dataset"].loaders["train"]:
+        res = params["model"](batch)
+        assert isinstance(res, dict)
