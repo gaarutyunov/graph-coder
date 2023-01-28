@@ -74,7 +74,7 @@ def run_model(
 
     If root is a path to a file, it will be used as the config file."""
     _add_all_to_registry()
-    configs_path = Path("configs")
+    configs_path = Path(root)
     experiment_params = None
 
     if configs_path.exists():
