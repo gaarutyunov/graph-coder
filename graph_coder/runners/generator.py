@@ -69,7 +69,8 @@ class GraphCoderGeneratorRunner(GraphCoderRunnerBase):
                 [
                     batch.node_data_attn_mask.view(-1),
                     batch.edge_data_attn_mask.view(-1),
-                ]
+                ],
+                dim=1,
             ).bool()
             try:
                 lm_logits.append(

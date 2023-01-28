@@ -98,7 +98,7 @@ optimizer:
   params:
     _var_: model.parameters
   weight_decay: 0.01
-  
+
 scheduler:
   _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
   _var_: scheduler
