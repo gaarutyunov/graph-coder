@@ -1,0 +1,6 @@
+scheduler:
+  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+  _var_: scheduler
+  optimizer:
+    _var_: optimizer
+  patience: 10

@@ -73,7 +73,11 @@ def test_encoding():
         introspect=True,
     )
 
-    assert sorted(dataset.index["encoding"].unique().tolist()) == ['big5', 'utf-16', 'utf-8']
+    assert sorted(dataset.index["encoding"].unique().tolist()) == [
+        "big5",
+        "utf-16",
+        "utf-8",
+    ]
 
 
 def test_error():

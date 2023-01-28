@@ -11,10 +11,14 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from functools import partial
-from typing import Callable
-
+from catalyst.contrib.scripts.run import (
+    run_from_params,
+)
+from catalyst.registry import REGISTRY
 from transformers import AutoTokenizer, PreTrainedTokenizerFast
+
+from graph_coder.config import ConfigBuilder
+from typing import Optional
 
 
 def get_pretrained_tokenizer(
@@ -33,3 +37,35 @@ def get_pretrained_tokenizer(
 
 def get_vocab_size(tokenizer: PreTrainedTokenizerFast) -> int:
     return tokenizer._tokenizer.get_vocab_size(with_added_tokens=True)
+
+
+def _add_all_to_registry():
+    """Add all graph-coder modules to registry."""
+    import graph_coder.data
+    import graph_coder.datasets
+    import graph_coder.models
+    import graph_coder.modules
+    import graph_coder.runners
+    import graph_coder.utils
+
+    REGISTRY.add_from_module(graph_coder.data)
+    REGISTRY.add_from_module(graph_coder.datasets)
+    REGISTRY.add_from_module(graph_coder.models)
+    REGISTRY.add_from_module(graph_coder.modules)
+    REGISTRY.add_from_module(graph_coder.runners)
+    REGISTRY.add_from_module(graph_coder.utils)
+
+
+def run_model(
+    root: str,
+    name: Optional[str] = None,
+    size: Optional[str] = None,
+    arch: Optional[str] = None,
+):
+    """Run a model from a config directory with the specified name, size and arch.
+
+    If root is a path to a file, it will be used as the config file."""
+    _add_all_to_registry()
+    experiment_params = ConfigBuilder(root, name, size, arch).load().build()
+
+    run_from_params(experiment_params)

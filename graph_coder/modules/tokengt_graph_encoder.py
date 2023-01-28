@@ -257,7 +257,7 @@ class TokenGTGraphEncoder(nn.Module):
         qn_block_size,
         layernorm_style,
         return_attention,
-        causal: bool = False
+        causal: bool = False,
     ):
         return TokenGTGraphEncoderLayer(
             embedding_dim=embedding_dim,

@@ -214,9 +214,7 @@ class AstDataset(BaseDataset):
                 "encoding": encoding,
             }
 
-    async def _try_open(
-        self, file: Path
-    ) -> Tuple[Optional[str], Optional[str]]:
+    async def _try_open(self, file: Path) -> Tuple[Optional[str], Optional[str]]:
         lines = []
         detector = chardet.UniversalDetector()
 
@@ -251,7 +249,9 @@ class AstDataset(BaseDataset):
 
         return source, encoding
 
-    async def _try_encodings(self, file: Path, lines: List[bytearray]) -> Tuple[Optional[str], Optional[str]]:
+    async def _try_encodings(
+        self, file: Path, lines: List[bytearray]
+    ) -> Tuple[Optional[str], Optional[str]]:
         for encoding in self.encodings:
             try:
                 return b"".join(lines).decode(encoding), encoding

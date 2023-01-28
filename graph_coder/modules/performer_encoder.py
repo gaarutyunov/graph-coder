@@ -44,6 +44,7 @@ class PerformerEncoder(nn.Module):
     """Encoder layer using Performer attention.
 
     This module is a modified :class:`performer_pytorch.performer_pytorch.PerformerLM`"""
+
     def __init__(
         self,
         *,

@@ -1,0 +1,6 @@
+embedding:
+  _target_: torch.nn.Embedding
+  _var_: embedding
+  num_embeddings: 50277
+  embedding_dim: 64
+  padding_idx: 0

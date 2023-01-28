@@ -1,0 +1,5 @@
+criterion:
+  _target_: torch.nn.CrossEntropyLoss
+  _var_: criterion
+  ignore_index:
+    _var_: tokenizer.pad_token_id

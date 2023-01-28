@@ -1,0 +1,7 @@
+optimizer:
+  _target_: torch.optim.AdamW
+  _var_: optimizer
+  params:
+    _var_: model.parameters
+  lr: 0.02
+  weight_decay: 0.01

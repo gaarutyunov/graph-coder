@@ -21,6 +21,7 @@ from torch.utils.data import DataLoader
 from catalyst.contrib.scripts.run import process_configs
 from catalyst.registry import REGISTRY
 
+from graph_coder.config import ConfigBuilder
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
 from graph_coder.models import GraphCoderGenerator
@@ -54,7 +55,7 @@ def test_performer():
         type_id=True,
         performer=True,
         causal=True,
-        attention_dropout=0.0
+        attention_dropout=0.0,
     )
     text_encoder = PerformerEncoder(
         dim=128,
@@ -82,22 +83,18 @@ def test_performer():
         if "docstring" in decoded:
             assert decoded["docstring"].size(-1) == len(tokenizer.vocab)
         if "graph" in decoded:
-            assert (
-                    decoded["graph"].size(-1) == len(tokenizer.vocab) * 64
-            )
+            assert decoded["graph"].size(-1) == len(tokenizer.vocab) * 64
         if "source" in decoded:
             assert decoded["source"].size(-1) == len(tokenizer.vocab)
 
 
 def test_config_performer():
-    configs = [f'{Path(__file__).parent / "./configs/small_performer.yaml"}']
-    configs = process_configs(configs)
-    params = REGISTRY.get_from_params(**configs)
+    params = ConfigBuilder(Path(__file__).parent / "./configs/small_performer.yaml").load().build()
 
     assert isinstance(params["runner"], GraphCoderGeneratorRunner)
     assert (
-            params["runner"].model.embedding
-            == params["runner"].model.graph_encoder.graph_encoder.graph_feature.embedding
+        params["runner"].model.embedding
+        == params["runner"].model.graph_encoder.graph_encoder.graph_feature.embedding
     )
     assert params["run"][0]["optimizer"].param_groups[0]["params"] == list(
         params["runner"].model.parameters()

@@ -1,0 +1,37 @@
+run:
+  - _call_: train
+    logdir: logs
+    num_epochs: 100
+    valid_loader: valid
+    valid_metric: loss
+    minimize_valid_metric: true
+    verbose: true
+    timeit: true
+
+    criterion:
+      _var_: criterion
+
+    optimizer:
+      _var_: optimizer
+
+    scheduler:
+      _var_: scheduler
+
+    loaders:
+      _var_: dataset.loaders
+
+    callbacks:
+      - _target_: catalyst.callbacks.checkpoint.CheckpointCallback
+        topk: 2
+        logdir: logs
+        loader_key: &loader_key valid
+        metric_key: &metric_key loss
+        minimize: &minimize true
+      - _target_: catalyst.callbacks.misc.EarlyStoppingCallback
+        patience: 20
+        loader_key: *loader_key
+        metric_key: *metric_key
+        minimize: *minimize
+      - _target_: catalyst.callbacks.scheduler.SchedulerCallback
+        loader_key: *loader_key
+        metric_key: *loader_key

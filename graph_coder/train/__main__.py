@@ -12,29 +12,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import click
-from catalyst.contrib.scripts.run import run_from_config
-from catalyst.registry import REGISTRY
 
-import graph_coder.data
-import graph_coder.datasets
-import graph_coder.models
-import graph_coder.modules
-import graph_coder.runners
-import graph_coder.utils
-
-
-REGISTRY.add_from_module(graph_coder.data)
-REGISTRY.add_from_module(graph_coder.datasets)
-REGISTRY.add_from_module(graph_coder.models)
-REGISTRY.add_from_module(graph_coder.modules)
-REGISTRY.add_from_module(graph_coder.runners)
-REGISTRY.add_from_module(graph_coder.utils)
+from graph_coder.utils import run_model
+from typing import Optional
 
 
 @click.command()
-@click.option("--config", default="configs/small.yaml", help="Path to config file")
-def main(config: str):
-    run_from_config(configs=[config])
+@click.option("--root", default="configs", help="Config directory")
+@click.option("--name", default="generator", help="Model name")
+@click.option("--size", default="size", help="Model size")
+@click.option("--arch", default=None, help="Model architecture")
+def main(root: str, name: Optional[str] = None, size: Optional[str] = None, arch: Optional[str] = None):
+    run_model(root, name, size, arch)
 
 
 if __name__ == "__main__":
