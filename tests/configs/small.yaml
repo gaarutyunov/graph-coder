@@ -9,7 +9,7 @@ dataset:
       _target_: graph_coder.data.collate_ast
     max_length: &max_length 32
     tokenizer:
-      _target_: graph_coder.utils.get_pretrained_tokenizer
+      _target_: graph_coder.config.F.get_pretrained_tokenizer
       _var_: tokenizer
       name: EleutherAI/gpt-neox-20b
       pad_token_id: &pad_token_id 1
@@ -22,7 +22,7 @@ model:
   _target_: graph_coder.models.GraphCoderGenerator
   _var_: model
   vocab_size: &vocab_size
-    _target_: graph_coder.utils.get_vocab_size
+    _target_: graph_coder.config.F.get_vocab_size
     tokenizer:
       _var_: tokenizer
     _mode_: call

@@ -13,5 +13,6 @@
 #  limitations under the License.
 
 from .config_builder import ConfigBuilder
+import graph_coder.config.functional as F
 
-__all__ = ["ConfigBuilder"]
+__all__ = ("ConfigBuilder", "F")

@@ -1,5 +1,5 @@
 tokenizer:
-  _target_: graph_coder.utils.get_pretrained_tokenizer
+  _target_: graph_coder.config.F.get_pretrained_tokenizer
   _var_: tokenizer
   name: EleutherAI/gpt-neox-20b
   pad_token_id: 1

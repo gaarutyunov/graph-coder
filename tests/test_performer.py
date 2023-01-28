@@ -26,7 +26,7 @@ from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
 from graph_coder.models import GraphCoderGenerator
 from graph_coder.modules import TokenGTEncoder, PerformerEncoder
-from graph_coder.utils import get_pretrained_tokenizer
+from graph_coder.config.functional import get_pretrained_tokenizer
 from graph_coder.runners import GraphCoderGeneratorRunner
 
 

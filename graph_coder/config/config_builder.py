@@ -14,10 +14,12 @@
 from collections import OrderedDict
 from os import PathLike
 from pathlib import Path
-from typing import Union, Optional
+from typing import Union, Optional, Dict, Any
 
-from catalyst.contrib.scripts.run import process_configs
+import yaml
 from catalyst.registry import REGISTRY
+
+from .functional import process_configs
 
 
 class ConfigBuilder:
@@ -74,6 +76,53 @@ class ConfigBuilder:
 
         return self
 
+    def save(self, path: Optional[Union[str, PathLike]] = None):
+        if self.root.is_file():
+            return
+        root: Optional[Path] = None
+
+        if path is not None:
+            path = Path(path).expanduser()
+            if path.is_dir():
+                root = path
+
+        if root is None:
+            root = self.root
+
+        if path is None or path.is_dir():
+            parts = []
+            if self.name is not None:
+                parts.append(self.name)
+            if self.size is not None:
+                parts.append(self.size)
+            if self.arch is not None:
+                parts.append(self.arch)
+            if len(parts) == 0:
+                parts.append("config")
+
+            path = root / ("_".join(parts) + ".yaml")
+
+        configs = self._process_configs()
+
+        with open(path, "w") as f:
+            yaml.dump(configs, f)
+
+    def build(self):
+        config = self._process_configs()
+        experiment_params = REGISTRY.get_from_params(**config)
+
+        return experiment_params
+
+    def _process_configs(self) -> Dict[str, Any]:
+        if self.root.is_file():
+            config = process_configs([str(self.root)])
+        else:
+            config = process_configs(
+                (str(self.root / path) for path in self.configs.values())
+            )
+
+        return config
+
     def _add(self, config: Path):
         if not config.is_file() and not config.suffix == ".yaml":
             return
@@ -81,14 +130,3 @@ class ConfigBuilder:
             return
 
         self.configs[config.stem] = str(config.relative_to(self.root))
-
-    def build(self):
-        if self.root.is_file():
-            config = process_configs([str(self.root)])
-        else:
-            config = process_configs(
-                (str(self.root / path) for path in self.configs.values())
-            )
-        experiment_params = REGISTRY.get_from_params(**config)
-
-        return experiment_params

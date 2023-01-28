@@ -20,7 +20,8 @@ import torch
 
 from graph_coder.data import collate_ast, pad
 from graph_coder.datasets import AstDataset
-from graph_coder.utils import get_pretrained_tokenizer, filter_has_docstring
+from graph_coder.utils import filter_has_docstring
+from graph_coder.config.functional import get_pretrained_tokenizer
 
 
 def test_dataset():

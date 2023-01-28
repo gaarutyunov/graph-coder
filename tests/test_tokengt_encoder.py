@@ -21,7 +21,7 @@ from torch.utils.data import DataLoader
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
 from graph_coder.modules import TokenGTEncoder
-from graph_coder.utils import get_pretrained_tokenizer
+from graph_coder.config.functional import get_pretrained_tokenizer
 
 
 def test_tokengt_encoder():
