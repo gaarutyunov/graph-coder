@@ -17,7 +17,6 @@ from typing import Optional
 from catalyst.contrib.scripts.run import run_from_params
 
 from graph_coder.config import ConfigBuilder
-from graph_coder.utils.env import _add_all_to_registry
 
 
 def run_model(
@@ -29,7 +28,6 @@ def run_model(
     """Run a model from a config directory with the specified name, size and arch.
 
     If root is a path to a file, it will be used as the config file."""
-    _add_all_to_registry()
     experiment_params = ConfigBuilder(root, name, size, arch).load().build()
 
     run_from_params(experiment_params)
