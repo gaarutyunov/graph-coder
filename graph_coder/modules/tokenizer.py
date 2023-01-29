@@ -267,7 +267,10 @@ class GraphFeatureTokenizer(nn.Module):
             lap_index_embed = self.get_index_embed(
                 lap_node_id, node_mask, padded_index
             )  # [B, T, 2Dl]
-            padded_feature = padded_feature + self.lap_encoder(lap_index_embed)
+            try:
+                padded_feature = padded_feature + self.lap_encoder(lap_index_embed)
+            except Exception as e:
+                raise Exception(f"Could not encode laplacian for {batched_data.idx.tolist()}") from e
 
         if self.type_id:
             padded_feature = padded_feature + self.get_type_embed(padded_index)
