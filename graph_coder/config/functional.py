@@ -11,15 +11,17 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from typing import Iterable, Dict
+from collections import OrderedDict
+from typing import Iterable, Dict, Any
 from catalyst import utils
 from transformers import PreTrainedTokenizerFast, AutoTokenizer
 
 
-def process_configs(configs: Iterable[str], ordered: bool = False) -> Dict:
+def process_configs(configs: Iterable[str], ordered: bool = False) -> Dict[str, Any]:
     """Merges YAML configs and prepares env."""
 
-    config = {}
+    config: Dict[str, Any] = OrderedDict() if ordered else {}  # type: ignore[assignment]
+
     for config_path in configs:
         config_part = utils.load_config(config_path, ordered=ordered)
         config = utils.merge_dicts(config, config_part)

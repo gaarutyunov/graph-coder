@@ -13,13 +13,8 @@
 #  limitations under the License.
 
 import sys
-from pathlib import Path
-from typing import Optional
 
-from catalyst.contrib.scripts.run import run_from_params
 from catalyst.registry import REGISTRY
-
-from graph_coder.config import ConfigBuilder
 
 
 def check_ipython() -> bool:
@@ -62,29 +57,3 @@ def _add_all_to_registry():
     REGISTRY.add_from_module(graph_coder.modules)
     REGISTRY.add_from_module(graph_coder.runners)
     REGISTRY.add_from_module(graph_coder.utils)
-
-
-def run_model(
-    root: str,
-    name: Optional[str] = None,
-    size: Optional[str] = None,
-    arch: Optional[str] = None,
-):
-    """Run a model from a config directory with the specified name, size and arch.
-
-    If root is a path to a file, it will be used as the config file."""
-    _add_all_to_registry()
-    configs_path = Path(root)
-    experiment_params = None
-
-    if configs_path.exists():
-        parts = [name, size, arch]
-        parts = [part for part in parts if part is not None]
-        config_path = configs_path / ("_".join(parts) + ".yaml")
-        if config_path.exists():
-            experiment_params = ConfigBuilder(config_path).load().build()
-
-    if experiment_params is None:
-        experiment_params = ConfigBuilder(root, name, size, arch).load().build()
-
-    run_from_params(experiment_params)

@@ -11,30 +11,25 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+
 from typing import Optional
 
-import click
+from catalyst.contrib.scripts.run import run_from_params
 
 from graph_coder.config import ConfigBuilder
+from graph_coder.utils.env import _add_all_to_registry
 
 
-@click.command()
-@click.option("--root", default="setup", help="Config directory")
-@click.option("--name", default="generator", help="Model name")
-@click.option("--size", default="small", help="Model size")
-@click.option("--arch", default="performer", help="Model architecture")
-@click.option("--output", default="configs", help="Output file or directory")
-def main(
+def run_model(
     root: str,
     name: Optional[str] = None,
     size: Optional[str] = None,
     arch: Optional[str] = None,
-    output: Optional[str] = None,
 ):
-    builder = ConfigBuilder(root, name, size, arch).load()
-    assert builder.build() is not None
-    builder.save(output)
+    """Run a model from a config directory with the specified name, size and arch.
 
+    If root is a path to a file, it will be used as the config file."""
+    _add_all_to_registry()
+    experiment_params = ConfigBuilder(root, name, size, arch).load().build()
 
-if __name__ == "__main__":
-    main()
+    run_from_params(experiment_params)

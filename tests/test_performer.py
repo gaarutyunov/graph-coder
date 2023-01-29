@@ -89,7 +89,11 @@ def test_performer():
 
 
 def test_config_performer():
-    params = ConfigBuilder(Path(__file__).parent / "./configs/small_performer.yaml").load().build()
+    params = (
+        ConfigBuilder(Path(__file__).parent / "./configs/small_performer.yaml")
+        .load()
+        .build()
+    )
 
     assert isinstance(params["runner"], GraphCoderGeneratorRunner)
     assert (

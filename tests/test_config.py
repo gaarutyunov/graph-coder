@@ -26,7 +26,9 @@ from graph_coder.runners import GraphCoderGeneratorRunner
 
 
 def test_config():
-    params = ConfigBuilder(Path(__file__).parent / "./configs/small.yaml").load().build()
+    params = (
+        ConfigBuilder(Path(__file__).parent / "./configs/small.yaml").load().build()
+    )
 
     assert isinstance(params["runner"], GraphCoderGeneratorRunner)
     assert (

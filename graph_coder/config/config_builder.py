@@ -32,7 +32,7 @@ class ConfigBuilder:
         common_dir: str = "_common",
     ):
         self.root = Path(root).expanduser()
-        self.configs = OrderedDict()
+        self.configs: Dict[str, Any] = OrderedDict()
 
         if self.root.is_file():
             return
@@ -44,22 +44,23 @@ class ConfigBuilder:
         self.dirs = [self.root]
 
         if name is not None:
-            assert (self.root / name).exists(), f"Model {name} does not exist"
-            self.dirs.append(self.root / name)
+            path = self.root / str(name)
+            assert path.exists(), f"Model {name} does not exist"
+            self.dirs.append(path)
 
         if size is not None:
-            assert (
-                self.root / name / size
-            ).exists(), f"Model {name} does not have size {size}"
-            self.dirs.append(self.root / name / size)
+            path = self.root / str(name) / str(size)
+            assert (path).exists(), f"Model {name} does not have size {size}"
+            self.dirs.append(path)
 
         if arch is not None:
+            path = self.root / str(name) / str(size) / str(arch)
             assert (
-                self.root / name / size / arch
+                path
             ).exists(), (
                 f"Model {name} does not have size {size} and architecture {arch}"
             )
-            self.dirs.append(self.root / name / size / arch)
+            self.dirs.append(path)
 
         self.dirs.reverse()
 
@@ -69,9 +70,9 @@ class ConfigBuilder:
             return self
         for d in self.dirs:
             if (d / self.common_dir).exists():
-                for cfg in (d / self.common_dir).iterdir():
+                for cfg in sorted((d / self.common_dir).iterdir()):
                     self._add(cfg)
-            for cfg in d.iterdir():
+            for cfg in sorted(d.iterdir()):
                 self._add(cfg)
 
         return self
@@ -109,19 +110,21 @@ class ConfigBuilder:
 
     def build(self):
         config = self._process_configs()
+        REGISTRY._vars_dict = {}
         experiment_params = REGISTRY.get_from_params(**config)
 
         return experiment_params
 
     def _process_configs(self) -> Dict[str, Any]:
         if self.root.is_file():
-            config = process_configs([str(self.root)])
+            configs = [str(self.root)]
         else:
-            config = process_configs(
-                (str(self.root / path) for path in self.configs.values())
-            )
+            configs = [str(self.root / path) for path in self.configs.values()]
 
-        return config
+        return process_configs(
+            configs,
+            ordered=True,
+        )
 
     def _add(self, config: Path):
         if not config.is_file() and not config.suffix == ".yaml":

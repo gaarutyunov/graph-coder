@@ -17,6 +17,7 @@ from .env import *
 from .summary import *
 from .functools import *
 from .filters import *
+from .run import *
 
 __all__ = (
     "GraphNodeVisitor",
@@ -24,5 +25,5 @@ __all__ = (
     "summary",
     "partial",
     "filter_has_docstring",
-    "run_model"
+    "run_model",
 )

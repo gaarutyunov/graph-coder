@@ -4,6 +4,7 @@ model:
   vocab_size: 50277
   eos_token_id: 1
   hidden_size: 64
+  max_length: 32
   embedding:
     _var_: embedding
   encoder:

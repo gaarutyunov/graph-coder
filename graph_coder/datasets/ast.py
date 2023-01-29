@@ -219,9 +219,9 @@ class AstDataset(BaseDataset):
         detector = chardet.UniversalDetector()
 
         try:
-            encoding = "utf-8"
+            encoding: Optional[str] = "utf-8"
             async with aiofiles.open(file, "r", encoding=encoding) as f:
-                source = await f.read()
+                source: Optional[str] = await f.read()
                 return source, encoding
         except Exception as e:
             await self.log(
@@ -231,7 +231,7 @@ class AstDataset(BaseDataset):
             pass
 
         async with aiofiles.open(file, "rb") as f:
-            encoding: Optional[str] = None
+            encoding = None
 
             for line in await f.readlines():
                 lines.append(line)
@@ -250,7 +250,7 @@ class AstDataset(BaseDataset):
         return source, encoding
 
     async def _try_encodings(
-        self, file: Path, lines: List[bytearray]
+        self, file: Path, lines: List[bytes]
     ) -> Tuple[Optional[str], Optional[str]]:
         for encoding in self.encodings:
             try:

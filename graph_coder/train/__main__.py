@@ -13,8 +13,9 @@
 #  limitations under the License.
 import click
 
-from graph_coder.utils import run_model
 from typing import Optional
+
+from graph_coder.utils import run_model
 
 
 @click.command()
@@ -22,7 +23,12 @@ from typing import Optional
 @click.option("--name", default="generator", help="Model name")
 @click.option("--size", default="small", help="Model size")
 @click.option("--arch", default="performer", help="Model architecture")
-def main(root: str, name: Optional[str] = None, size: Optional[str] = None, arch: Optional[str] = None):
+def main(
+    root: str,
+    name: Optional[str] = None,
+    size: Optional[str] = None,
+    arch: Optional[str] = None,
+):
     run_model(root, name, size, arch)
 
 
