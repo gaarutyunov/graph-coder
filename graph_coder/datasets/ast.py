@@ -75,13 +75,6 @@ def node_to_graph(node: ast.AST) -> Tuple[ast.AST, nx.Graph]:
     return node, visitor.graph
 
 
-def parse_graph(code: str) -> Tuple[ast.AST, nx.Graph]:
-    mod = ast.parse(code)
-    node = mod.body[0]
-
-    return node_to_graph(node)
-
-
 class AstDataset(BaseDataset):
     index: Optional[pandas.DataFrame]
 
@@ -137,13 +130,28 @@ class AstDataset(BaseDataset):
 
         code = self._get_source(path, encoding)
         graph_source = "".join(code[lineno - 1 : end_lineno])
-        node, graph = parse_graph(graph_source)
+        node, graph = self.parse_graph(graph_source, path)
 
         return AstExample(
             source=graph_source,
             graph=graph_to_data(index, graph),
             docstring=get_docstring(node),
         )
+
+    def parse_graph(self, source: str, name: str) -> Tuple[ast.AST, nx.Graph]:
+        if not source.endswith("\n"):
+            source += "\n"
+
+        try:
+            source_ = self.refactoring_tool.refactor_string(source, name)
+            source = str(source_)
+        except:  # noqa: E722
+            pass
+
+        mod = ast.parse(source)
+        node = mod.body[0]
+
+        return node_to_graph(node)
 
     @lru_cache(maxsize=16)
     def _get_source(self, path: str, encoding: str = "utf-8") -> List[str]:
