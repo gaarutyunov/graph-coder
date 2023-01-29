@@ -44,6 +44,7 @@ def run_async(func):
 
 def _add_all_to_registry():
     """Add all graph-coder modules to registry."""
+    import graph_coder.config
     import graph_coder.data
     import graph_coder.datasets
     import graph_coder.models
@@ -51,6 +52,7 @@ def _add_all_to_registry():
     import graph_coder.runners
     import graph_coder.utils
 
+    REGISTRY.add_from_module(graph_coder.config)
     REGISTRY.add_from_module(graph_coder.data)
     REGISTRY.add_from_module(graph_coder.datasets)
     REGISTRY.add_from_module(graph_coder.models)

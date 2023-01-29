@@ -96,7 +96,7 @@ def test_error():
             "[WARN]   Refactoring error_001.py: bad input: type=0, value='', context=('', (2, 0))\n"
         )
         assert lines[-1].endswith(
-            "[ERROR]  Parsing error_001.py: expected an indented block (<unknown>, line 1)\n"
+            "[ERROR]  Parsing error_001.py: expected an indented block (error_001.py, line 1)\n"
         )
 
 

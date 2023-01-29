@@ -26,52 +26,14 @@ import pandas as pd
 from functools import lru_cache
 from typing import Union, AsyncGenerator, Optional, Tuple, List, Dict
 
-from astmonkey import transformers as ast_transformers
 from pathlib import Path
 from tqdm.auto import tqdm
 from lib2to3.refactor import MultiprocessRefactoringTool, get_fixers_from_package
 
-from graph_coder.data import AstData
 from graph_coder.data import AstExample
 from graph_coder.datasets.base import BaseDataset
-from graph_coder.utils import run_async, GraphNodeVisitor
-
-
-def graph_to_data(idx: int, graph: nx.Graph) -> AstData:
-    x = []
-    edge_index = []
-    edge_attr = []
-    graph = nx.convert_node_labels_to_integers(graph, label_attribute="label")
-
-    for node, label in graph.nodes(data="label"):
-        x.append(label)
-
-    for u, v, label in graph.edges(data="label"):
-        edge_index.append((u, v))
-        edge_attr.append(label)
-
-    return AstData(
-        idx=idx,
-        x=x,
-        edge_index=edge_index,
-        edge_attr=edge_attr,
-    )
-
-
-def get_docstring(node: ast.AST) -> str:
-    try:
-        doc = ast.get_docstring(node)
-        return doc if doc is not None else ""
-    except TypeError:
-        return ""
-
-
-def node_to_graph(node: ast.AST) -> Tuple[ast.AST, nx.Graph]:
-    node = ast_transformers.ParentChildNodeTransformer().visit(node)
-    visitor = GraphNodeVisitor()
-    visitor.visit(node)
-
-    return node, visitor.graph
+from graph_coder.utils import run_async
+from graph_coder.ast import F
 
 
 class AstDataset(BaseDataset):
@@ -128,34 +90,19 @@ class AstDataset(BaseDataset):
         ]
 
         code = self._get_source(path, encoding)
-        graph_source = "".join(code[lineno - 1 : end_lineno])
-        node, graph = self.parse_graph(graph_source, path)
+        graph_source = "\n".join(code[lineno - 1 : end_lineno])
+        node, graph = F.parse_graph(graph_source, path)
 
         return AstExample(
             source=graph_source,
-            graph=graph_to_data(index, graph),
-            docstring=get_docstring(node),
+            graph=F.graph_to_data(index, graph),
+            docstring=F.get_docstring(node),
         )
-
-    def parse_graph(self, source: str, name: str) -> Tuple[ast.AST, nx.Graph]:
-        if not source.endswith("\n"):
-            source += "\n"
-
-        try:
-            source_ = self.refactoring_tool.refactor_string(source, name)
-            source = str(source_)
-        except:  # noqa: E722
-            pass
-
-        mod = ast.parse(source, filename=name, feature_version=9)
-        node = mod.body[0]
-
-        return node_to_graph(node)
 
     @lru_cache(maxsize=16)
     def _get_source(self, path: str, encoding: str = "utf-8") -> List[str]:
         with open(self.root / path, "r", encoding=encoding) as f:
-            return f.readlines()
+            return self._refactor(f.read(), self.root / path).splitlines()
 
     def introspect(self):
         if not self.index_file.exists():
@@ -190,11 +137,8 @@ class AstDataset(BaseDataset):
         if source is None:
             return
 
-        if not source.endswith("\n"):
-            source += "\n"
         try:
-            source_ = self.refactoring_tool.refactor_string(source, str(file))
-            source = str(source_)
+            source = self._refactor(source, file.relative_to(self.root))
         except Exception as e:
             await self.log("WARN", f"Refactoring {file.relative_to(self.root)}: {e}")
 
@@ -205,8 +149,7 @@ class AstDataset(BaseDataset):
             return
 
         for node in mod.body:
-            node, graph = node_to_graph(node)  # type: ignore[assignment]
-
+            _, graph = F.node_to_graph(node)
             nodes = graph.number_of_nodes()
 
             if self.min_nodes > nodes:
@@ -217,9 +160,14 @@ class AstDataset(BaseDataset):
                 "end_lineno": node.end_lineno,
                 "nodes": nodes,
                 "edges": graph.number_of_edges(),
-                "has_docstring": get_docstring(node) != "",
+                "has_docstring": F.get_docstring(node) != "",
                 "encoding": encoding,
             }
+
+    def _refactor(self, source: str, name: Union[str, os.PathLike]) -> str:
+        if not source.endswith("\n"):
+            source += "\n"
+        return str(self.refactoring_tool.refactor_string(source, str(name)))
 
     async def _try_open(self, file: Path) -> Tuple[Optional[str], Optional[str]]:
         lines = []
