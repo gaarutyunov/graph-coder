@@ -14,8 +14,6 @@
 
 import sys
 
-from catalyst.registry import REGISTRY
-
 
 def check_ipython() -> bool:
     try:
@@ -40,22 +38,3 @@ def run_async(func):
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(func)
-
-
-def _add_all_to_registry():
-    """Add all graph-coder modules to registry."""
-    import graph_coder.config
-    import graph_coder.data
-    import graph_coder.datasets
-    import graph_coder.models
-    import graph_coder.modules
-    import graph_coder.runners
-    import graph_coder.utils
-
-    REGISTRY.add_from_module(graph_coder.config)
-    REGISTRY.add_from_module(graph_coder.data)
-    REGISTRY.add_from_module(graph_coder.datasets)
-    REGISTRY.add_from_module(graph_coder.models)
-    REGISTRY.add_from_module(graph_coder.modules)
-    REGISTRY.add_from_module(graph_coder.runners)
-    REGISTRY.add_from_module(graph_coder.utils)

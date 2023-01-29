@@ -102,7 +102,12 @@ class AstDataset(BaseDataset):
     @lru_cache(maxsize=16)
     def _get_source(self, path: str, encoding: str = "utf-8") -> List[str]:
         with open(self.root / path, "r", encoding=encoding) as f:
-            return self._refactor(f.read(), self.root / path).splitlines()
+            source = f.read()
+            try:
+                source = self._refactor(source, path)
+            except:
+                pass
+            return source.splitlines()
 
     def introspect(self):
         if not self.index_file.exists():
