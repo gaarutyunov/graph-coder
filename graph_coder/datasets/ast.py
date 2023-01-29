@@ -26,7 +26,6 @@ import pandas as pd
 from functools import lru_cache
 from typing import Union, AsyncGenerator, Optional, Tuple, List, Dict
 
-from aiofiles.threadpool.text import AsyncTextIOWrapper
 from astmonkey import transformers as ast_transformers
 from pathlib import Path
 from tqdm.auto import tqdm
@@ -148,7 +147,7 @@ class AstDataset(BaseDataset):
         except:  # noqa: E722
             pass
 
-        mod = ast.parse(source)
+        mod = ast.parse(source, filename=name, feature_version=9)
         node = mod.body[0]
 
         return node_to_graph(node)
@@ -200,7 +199,7 @@ class AstDataset(BaseDataset):
             await self.log("WARN", f"Refactoring {file.relative_to(self.root)}: {e}")
 
         try:
-            mod = ast.parse(source)
+            mod = ast.parse(source, filename=str(file))
         except Exception as e:
             await self.log("ERROR", f"Parsing {file.relative_to(self.root)}: {e}")
             return
