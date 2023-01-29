@@ -11,7 +11,6 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from pathlib import Path
 from typing import Mapping, Any
 
 import torch
@@ -76,46 +75,7 @@ class GraphCoderGeneratorRunner(GraphCoderRunnerBase):
                 .view(-1)
                 .bool()
             )
-            try:
-                lm_logits.append(
-                    result["graph"].view(-1, self.vocab_size)[masks, :]
-                )  # TODO: check this for [23496, 38958, 10398, 14494]
-            except Exception as e:
-                debug_path = Path("debug")
-                debug_path.mkdir(exist_ok=True)
-                log_txt = debug_path / "log.txt"
-                with open(log_txt, "w") as f:
-                    print(f"Masks shape: {masks.shape}\n", file=f)
-                    print(f'Graph shape: {result["graph"].shape}\n', file=f)
-                    print(f"Node data shape: {batch.node_data.shape}\n", file=f)
-                    print(f"Edge data shape: {batch.edge_data.shape}\n", file=f)
-                    print(
-                        f"Node data attn mask shape: {batch.node_data_attn_mask.shape}\n",
-                        file=f,
-                    )
-                    print(
-                        f"Edge data attn mask shape: {batch.edge_data_attn_mask.shape}\n",
-                        file=f,
-                    )
-                    print(f"Node data device: {batch.node_data.device}\n", file=f)
-                    print(f"Edge data device: {batch.edge_data.device}\n", file=f)
-                    print(f"Masks device: {masks.device}\n", file=f)
-                    print(f'Graph device: {result["graph"].device}\n', file=f)
-                torch.save(batch.node_data.cpu(), debug_path / "node_data.pt")
-                torch.save(batch.edge_data.cpu(), debug_path / "edge_data.pt")
-                torch.save(
-                    batch.node_data_attn_mask.cpu(),
-                    debug_path / "node_data_attn_mask.pt",
-                )
-                torch.save(
-                    batch.edge_data_attn_mask.cpu(),
-                    debug_path / "edge_data_attn_mask.pt",
-                )
-                torch.save(masks.cpu(), debug_path / "masks.pt")
-                torch.save(result["graph"].cpu(), debug_path / "graph.pt")
-                raise Exception(
-                    f"Error in loss calculation for {batch.idx.tolist()}"
-                ) from e
+            lm_logits.append(result["graph"].view(-1, self.vocab_size)[masks, :])
             # add eos token
             device = batch.node_data.device
             target_ids.append(torch.tensor([self.eos_token_id], device=device))
