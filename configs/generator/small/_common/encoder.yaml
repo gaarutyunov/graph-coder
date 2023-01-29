@@ -3,9 +3,9 @@ encoder:
   _var_: encoder
   encoder_layer:
     _target_: torch.nn.TransformerEncoderLayer
-    d_model: 64
+    d_model: 32
     nhead: 4
-    dim_feedforward: 128
+    dim_feedforward: 64
     dropout: 0.1
     activation: relu
-  num_layers: 6
+  num_layers: 2
