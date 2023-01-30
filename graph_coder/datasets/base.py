@@ -116,7 +116,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
 
     async def _process(self):
         i = 0
-        p_bar = tqdm(total=len(self), desc="Processing dataset")
+        p_bar = tqdm(total=len(self), desc="Processing dataset", unit="files")
         while i < len(self):
             try:
                 item = self[i]
