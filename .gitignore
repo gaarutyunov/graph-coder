@@ -12,3 +12,4 @@ logs
 log.txt
 index.jsonl
 poetry.lock
+__processed__

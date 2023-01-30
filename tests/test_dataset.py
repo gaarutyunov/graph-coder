@@ -14,6 +14,7 @@
 import math
 from functools import partial
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 import torch
@@ -153,3 +154,17 @@ def test_pad():
     assert padded["attention_mask"].shape == (2, 3, 64)
     assert torch.all(padded["input_ids"][0, -1] == 1)
     assert padded["attention_mask"][0, -1].sum() == 0
+
+
+def test_preprocess():
+    dataset = AstDataset(
+        root=Path(__file__).parent / "./data",
+    )
+    dataset.process()
+    assert dataset.is_processed
+    with patch.object(dataset, "_get_processed", wraps=dataset._get_processed) as mock:
+        _ = dataset[0]
+        mock.assert_called_with(0)
+    with patch.object(dataset, "_process", wraps=dataset._process) as mock:
+        dataset.process()
+        mock.assert_not_called()

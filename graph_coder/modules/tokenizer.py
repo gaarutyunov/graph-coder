@@ -270,7 +270,9 @@ class GraphFeatureTokenizer(nn.Module):
             try:
                 padded_feature = padded_feature + self.lap_encoder(lap_index_embed)
             except Exception as e:
-                raise Exception(f"Could not encode laplacian for {batched_data.idx.tolist()}") from e
+                raise Exception(
+                    f"Could not encode laplacian for {batched_data.idx.tolist()}"
+                ) from e
 
         if self.type_id:
             padded_feature = padded_feature + self.get_type_embed(padded_index)

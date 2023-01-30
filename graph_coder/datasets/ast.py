@@ -13,7 +13,6 @@
 #  limitations under the License.
 
 import ast
-import datetime
 import json
 import os
 import typing
@@ -32,13 +31,12 @@ from lib2to3.refactor import MultiprocessRefactoringTool, get_fixers_from_packag
 
 from graph_coder.data import AstExample
 from graph_coder.datasets.base import BaseDataset
+from graph_coder.logger import AsyncLogger
 from graph_coder.utils import run_async
 from graph_coder.ast import F
 
 
-class AstDataset(BaseDataset):
-    index: Optional[pandas.DataFrame]
-
+class AstDataset(BaseDataset[AstExample]):
     def __init__(
         self,
         root: typing.Union[os.PathLike, str],
@@ -52,16 +50,23 @@ class AstDataset(BaseDataset):
         log_file: str = "log.txt",
         introspect: bool = False,
         filter_index: Optional[typing.Callable[[pd.DataFrame], pd.DataFrame]] = None,
+        processed_dir: Optional[typing.Union[os.PathLike, str]] = None,
     ) -> None:
+        self.root = Path(root).expanduser()
+        self.log_file = self.root / log_file
         super().__init__(
+            AsyncLogger(self.log_file),
             collate_fn,
             random_seed,
             test_size,
             val_size,
             batch_size,
         )
-        self.root = Path(root).expanduser()
-        self.log_file = self.root / log_file
+        if processed_dir is not None:
+            self._processed_dir = Path(processed_dir).expanduser()
+        else:
+            self._processed_dir = self.root / "__processed__"
+        self._processed_dir.mkdir(exist_ok=True)
         self.index_file = self.root / index_file
         if introspect and self.index_file.exists():
             os.remove(self.index_file)
@@ -78,10 +83,16 @@ class AstDataset(BaseDataset):
         self.introspect()
         self.split()
 
+    @property
+    def processed_dir(self) -> typing.Union[os.PathLike, str]:
+        return self._processed_dir
+
     def __len__(self):
         return len(self.index)
 
     def __getitem__(self, index: int) -> AstExample:
+        if self.is_processed:
+            return self._get_processed(index)
         assert (
             self.index is not None
         ), "Dataset is not introspected yet, call .introspect()"
@@ -145,12 +156,12 @@ class AstDataset(BaseDataset):
         try:
             source = self._refactor(source, file.relative_to(self.root))
         except Exception as e:
-            await self.log("WARN", f"Refactoring {file.relative_to(self.root)}: {e}")
+            await self._logger.warn(f"Refactoring {file.relative_to(self.root)}: {e}")
 
         try:
             mod = ast.parse(source, filename=str(file))
         except Exception as e:
-            await self.log("ERROR", f"Parsing {file.relative_to(self.root)}: {e}")
+            await self._logger.error(f"Parsing {file.relative_to(self.root)}: {e}")
             return
 
         for node in mod.body:
@@ -184,8 +195,7 @@ class AstDataset(BaseDataset):
                 source: Optional[str] = await f.read()
                 return source, encoding
         except Exception as e:
-            await self.log(
-                "WARN",
+            await self._logger.warn(
                 f"Opening {file.relative_to(self.root)} as utf-8: {e}",
             )
             pass
@@ -216,13 +226,6 @@ class AstDataset(BaseDataset):
             try:
                 return b"".join(lines).decode(encoding), encoding
             except Exception as e:
-                await self.log("ERROR", f"Decoding {file.relative_to(self.root)}: {e}")
+                await self._logger.error(f"Decoding {file.relative_to(self.root)}: {e}")
 
         return None, None
-
-    async def log(self, level: str, msg: str):
-        level = f"[{level}]"
-        async with aiofiles.open(self.log_file, "a") as log:
-            await log.write(
-                f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {level:8s} {msg}\n"
-            )
