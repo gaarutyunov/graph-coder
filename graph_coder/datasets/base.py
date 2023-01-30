@@ -24,6 +24,8 @@ import torch
 from torch.utils.data import DataLoader, random_split, Dataset
 from typing import Dict
 
+from tqdm.auto import tqdm
+
 from graph_coder.logger import ILogger
 from graph_coder.utils import run_async
 
@@ -114,6 +116,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
 
     async def _process(self):
         i = 0
+        p_bar = tqdm(total=len(self), desc="Processing dataset")
         while i < len(self):
             try:
                 item = self[i]
@@ -125,3 +128,4 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
                 await self._logger.error(f"Processing item {i}: {e}")
             finally:
                 i += 1
+                p_bar.update(1)
