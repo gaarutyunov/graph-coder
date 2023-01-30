@@ -69,10 +69,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
         if self._is_processed is None:
             try:
                 _ = next(iter(Path(self.processed_dir).iterdir()))
-                self._is_processed = (
-                    max(Path(self.processed_dir).iterdir(), key=lambda x: int(x.stem))
-                    == len(self) - 1
-                )
+                self._is_processed = self._last_processed_idx == len(self) - 1
             except:
                 self._is_processed = False
 
@@ -82,7 +79,14 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
     def loaders(self) -> Dict[str, DataLoader]:
         return self._loaders
 
+    @property
+    def _last_processed_idx(self) -> int:
+        return int(
+            max(Path(self.processed_dir).iterdir(), key=lambda x: int(x.stem)).stem
+        )
+
     def split(self):
+        """Splits the dataset into train, test and validation sets using `random_seed`"""
         train_size = 1.0 - self.test_size - self.val_size
         datasets = random_split(
             self,
@@ -105,6 +109,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
         )
 
     def process(self):
+        """Preprocesses the dataset by getting each item and saving it into `processed_dir`"""
         if not self.is_processed:
             run_async(self._process())
             self._is_processed = True
@@ -115,8 +120,14 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
             return pickle.load(f)
 
     async def _process(self):
-        i = 0
-        p_bar = tqdm(total=len(self), desc="Processing dataset", unit="files")
+        try:
+            _ = next(iter(Path(self.processed_dir).iterdir()))
+            i = self._last_processed_idx + 1
+        except:
+            i = 0
+        p_bar = tqdm(
+            total=len(self), desc="Processing dataset", unit="files", initial=i
+        )
         while i < len(self):
             try:
                 item = self[i]

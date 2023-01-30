@@ -24,9 +24,17 @@ from graph_coder.datasets import AstDataset
     is_flag=True,
     help="Introspect dataset before processing",
 )
-def main(root: str, introspect: bool):
+@click.option(
+    "--process",
+    default=False,
+    is_flag=True,
+    help="Process dataset after introspection",
+)
+def main(root: str, introspect: bool, process: bool):
     dataset = AstDataset(root=root, introspect=introspect)
-    dataset.process()
+    if process:
+        dataset.process()
+    dataset.summary()
 
 
 if __name__ == "__main__":

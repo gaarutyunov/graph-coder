@@ -13,6 +13,7 @@
 #  limitations under the License.
 import math
 from functools import partial
+from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
@@ -21,8 +22,7 @@ import torch
 
 from graph_coder.data import collate_ast, pad
 from graph_coder.datasets import AstDataset
-from graph_coder.utils import filter_has_docstring
-from graph_coder.config.functional import get_pretrained_tokenizer
+from graph_coder.config.functional import get_pretrained_tokenizer, filter_has_docstring, filter_is_processed
 
 
 def test_dataset():
@@ -159,6 +159,7 @@ def test_pad():
 def test_preprocess():
     dataset = AstDataset(
         root=Path(__file__).parent / "./data",
+        introspect=True,
     )
     dataset.process()
     assert dataset.is_processed
@@ -168,3 +169,19 @@ def test_preprocess():
     with patch.object(dataset, "_process", wraps=dataset._process) as mock:
         dataset.process()
         mock.assert_not_called()
+    dataset = AstDataset(
+        root=Path(__file__).parent / "./data",
+        filter_index=filter_is_processed,
+    )
+    assert dataset.index.shape[0] == len(dataset)
+    summary = """Dataset summary for AstDataset:
+
+- Number of graphs: 12
+- Avg. number of nodes: 22
+- Avg. number of edges: 26
+- Number of documented graphs: 8
+- Number of processed graphs: 12
+"""
+    io = StringIO()
+    dataset._print_summary(io)
+    assert io.getvalue() == summary

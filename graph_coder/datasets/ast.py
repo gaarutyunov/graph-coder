@@ -121,12 +121,22 @@ class AstDataset(BaseDataset[AstExample]):
             return source.splitlines()
 
     def introspect(self):
+        """Introspects the dataset by discovering and indexing all the graphs in the source files.
+
+        Checks whether the files are already processed.
+
+        Finally, applies filter provided by the `filter_index` property."""
         if not self.index_file.exists():
             self.index_file.touch()
             run_async(self._introspect())
         self.index = pandas.read_json(self.index_file, lines=True)
+        if "processed" not in self.index.columns.tolist():
+            self.index["processed"] = self.index.index.map(self.is_item_processed)
         if self.filter_index is not None:
             self.index = self.filter_index(self.index)
+
+    def is_item_processed(self, idx: int) -> bool:
+        return (self._processed_dir / str(idx)).exists()
 
     async def _introspect(self):
         async for graph_meta in self._parse_root():
@@ -229,3 +239,16 @@ class AstDataset(BaseDataset[AstExample]):
                 await self._logger.error(f"Decoding {file.relative_to(self.root)}: {e}")
 
         return None, None
+
+    def summary(self):
+        """Prints a summary of the dataset."""
+        self._print_summary()
+
+    def _print_summary(self, out: Optional[typing.TextIO] = None):
+        assert self.index is not None, "Run .introspect() first"
+        print(f"Dataset summary for {self.__class__.__name__}:\n", file=out)
+        print(f"- Number of graphs: {len(self.index):,}", file=out)
+        print(f"- Avg. number of nodes: {self.index['nodes'].mean():.0f}", file=out)
+        print(f"- Avg. number of edges: {self.index['edges'].mean():.0f}", file=out)
+        print(f"- Number of documented graphs: {self.index['has_docstring'].sum():,}", file=out)
+        print(f"- Number of processed graphs: {self.index['processed'].sum():,}", file=out)

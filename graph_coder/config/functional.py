@@ -13,13 +13,14 @@
 #  limitations under the License.
 from collections import OrderedDict
 from typing import Iterable, Dict, Any
+
+import pandas as pd
 from catalyst import utils
 from transformers import PreTrainedTokenizerFast, AutoTokenizer
 
 
 def process_configs(configs: Iterable[str], ordered: bool = False) -> Dict[str, Any]:
     """Merges YAML configs and prepares env."""
-
     config: Dict[str, Any] = OrderedDict() if ordered else {}  # type: ignore[assignment]
 
     for config_path in configs:
@@ -32,6 +33,7 @@ def process_configs(configs: Iterable[str], ordered: bool = False) -> Dict[str, 
 def get_pretrained_tokenizer(
     name: str, pad_token_id: int = 1, eos_token_id: int = 0
 ) -> PreTrainedTokenizerFast:
+    """Get a pretrained tokenizer with pad and eos tokens"""
     tokenizer = AutoTokenizer.from_pretrained(name)
 
     if tokenizer.pad_token_id is None:
@@ -44,4 +46,15 @@ def get_pretrained_tokenizer(
 
 
 def get_vocab_size(tokenizer: PreTrainedTokenizerFast) -> int:
+    """Get the size of the vocabulary with added tokens"""
     return tokenizer._tokenizer.get_vocab_size(with_added_tokens=True)
+
+
+def filter_has_docstring(index: pd.DataFrame) -> pd.DataFrame:
+    """Filters out rows that don't have docstrings"""
+    return index[index.has_docstring].dropna(axis=0)
+
+
+def filter_is_processed(index: pd.DataFrame) -> pd.DataFrame:
+    """Filters out rows that are not processed"""
+    return index[index.processed].dropna(axis=0)
