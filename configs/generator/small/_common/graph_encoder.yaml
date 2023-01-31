@@ -4,7 +4,7 @@ graph_encoder:
   embedding:
     _var_: embedding
   lap_node_id: true
-  lap_node_id_k: 4
+  lap_node_id_k: 50
   type_id: true
   encoder_embed_dim: 32
   encoder_ffn_embed_dim: 64
