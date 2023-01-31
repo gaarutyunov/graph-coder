@@ -8,8 +8,5 @@ collator:
   tokenizer:
     _var_: tokenizer
   device:
-    _target_: graph_coder.config.F.get_device
     _var_: device
-    name: "cuda:0"
-    _mode_: call
   _mode_: call
