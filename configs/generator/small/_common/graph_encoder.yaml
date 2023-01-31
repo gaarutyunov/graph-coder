@@ -7,7 +7,7 @@ graph_encoder:
   type_id: true
   encoder_embed_dim: 32
   encoder_ffn_embed_dim: 64
-  causal: true
+  causal: false
   encoder_layers: 2
   encoder_attention_heads: 4
   performer: true
