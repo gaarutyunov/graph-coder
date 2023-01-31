@@ -4,3 +4,6 @@ runner:
     _var_: model
   eos_token_id: 1
   vocab_size: 50277
+  device:
+    _target_: graph_coder.config.F.get_device
+    name: "cuda:0"

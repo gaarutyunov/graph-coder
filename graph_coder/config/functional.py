@@ -15,6 +15,7 @@ from collections import OrderedDict
 from typing import Iterable, Dict, Any
 
 import pandas as pd
+import torch
 from catalyst import utils
 from transformers import PreTrainedTokenizerFast, AutoTokenizer
 
@@ -58,3 +59,8 @@ def filter_has_docstring(index: pd.DataFrame) -> pd.DataFrame:
 def filter_is_processed(index: pd.DataFrame) -> pd.DataFrame:
     """Filters out rows that are not processed"""
     return index[index.processed].dropna(axis=0)
+
+
+def get_device(name: str) -> torch.device:
+    """Get device by name"""
+    return torch.device(name)
