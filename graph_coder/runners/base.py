@@ -18,6 +18,7 @@ from typing import Dict
 import torch
 from catalyst import dl
 from catalyst.core import IRunner
+from catalyst.utils import get_device
 from torch import nn
 
 from graph_coder.data import GraphCoderBatch
@@ -30,11 +31,12 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
     def __init__(
         self,
         model: nn.Module,
+        device: torch.device = get_device(),
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
-        self.model = model
+        self.model = model.to(device)
 
     def on_batch_start(self, runner: IRunner) -> None:
         # noinspection PyTypeChecker
