@@ -37,6 +37,7 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
     ):
         super().__init__(*args, **kwargs)
         self.model = model.to(device)
+        self.device = device
 
     def on_batch_start(self, runner: IRunner) -> None:
         # noinspection PyTypeChecker
@@ -66,6 +67,7 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
         """Prints summary about the model"""
         sample_batch = next(iter(self.get_loaders()["train"]))
         summary(self.model, input_data=sample_batch)
+        print(f"Device: {self.device}")
 
     @abc.abstractmethod
     def _calc_loss(self, batch: GraphCoderBatch) -> torch.Tensor:
