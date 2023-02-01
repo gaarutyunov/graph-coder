@@ -277,7 +277,7 @@ class GraphFeatureTokenizer(nn.Module):
             except Exception as e:
                 debug_path = Path('debug')
                 debug_path.mkdir(exist_ok=True)
-                with open(debug_path / 'log.txt') as f:
+                with open(debug_path / 'log.txt', mode='w') as f:
                     print(f'eigvec shape: {eigvec.shape}', file=f)
                     print(f'lap_node_id shape: {lap_node_id.shape}', file=f)
                     print(f'lap_index_embed shape: {lap_index_embed.shape}', file=f)
