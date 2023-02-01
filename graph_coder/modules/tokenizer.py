@@ -93,6 +93,7 @@ class GraphFeatureTokenizer(nn.Module):
     ):
         seq_len = [n + e for n, e in zip(node_num, edge_num)]
         b = len(seq_len)
+        d = node_feature.size(-1)
         max_len = max(seq_len)
         max_n = max(node_num)
         device = edge_index.device
@@ -250,9 +251,6 @@ class GraphFeatureTokenizer(nn.Module):
             node_num, node_feature.device
         )  # [B, max(n_node)]
 
-        if self.type_id:
-            padded_feature = padded_feature + self.get_type_embed(padded_index)
-
         if self.lap_node_id:
             lap_dim = lap_eigvec.size(-1)
             if self.lap_node_id_k > lap_dim:
@@ -287,6 +285,9 @@ class GraphFeatureTokenizer(nn.Module):
                 raise Exception(
                     f"Could not encode laplacian for {batched_data.idx.tolist()}"
                 ) from e
+
+        if self.type_id:
+            padded_feature = padded_feature + self.get_type_embed(padded_index)
 
         padded_feature = padded_feature.masked_fill(padding_mask[..., None], float("0"))
 
