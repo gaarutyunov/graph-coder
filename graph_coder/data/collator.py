@@ -96,7 +96,7 @@ def collate_ast(
             .contiguous()
         )
         lap_eigval, lap_eigvec = lap_eig(edge_index_, len(graph_data.x))
-        lap_eigval = lap_eigval[None, :].expand_as(lap_eigvec)
+        lap_eigval = lap_eigval[None, :].expand_as(lap_eigvec).contiguous()
         lap_eigvals.append(lap_eigval)
         lap_eigvecs.append(lap_eigvec)
 
