@@ -25,6 +25,7 @@
 #  limitations under the License.
 
 import math
+from pathlib import Path
 
 import torch
 import torch.nn as nn
@@ -249,6 +250,9 @@ class GraphFeatureTokenizer(nn.Module):
             node_num, node_feature.device
         )  # [B, max(n_node)]
 
+        if self.type_id:
+            padded_feature = padded_feature + self.get_type_embed(padded_index)
+
         if self.lap_node_id:
             lap_dim = lap_eigvec.size(-1)
             if self.lap_node_id_k > lap_dim:
@@ -271,12 +275,18 @@ class GraphFeatureTokenizer(nn.Module):
                 # TODO: investigate why this one fails with [3942, 24782, 65052, 24364, 62966, 11474, 19765, 56872]
                 padded_feature = padded_feature + self.lap_encoder(lap_index_embed)
             except Exception as e:
+                debug_path = Path('debug')
+                debug_path.mkdir(exist_ok=True)
+                with open(debug_path / 'log.txt') as f:
+                    print(f'eigvec shape: {eigvec.shape}', file=f)
+                    print(f'lap_node_id shape: {lap_node_id.shape}', file=f)
+                    print(f'lap_index_embed shape: {lap_index_embed.shape}', file=f)
+                    print(f'padded_feature shape: {padded_feature.shape}', file=f)
+                    print(f'node_mask shape: {node_mask.shape}', file=f)
+                    print(f'padded_index shape: {padded_index.shape}', file=f)
                 raise Exception(
                     f"Could not encode laplacian for {batched_data.idx.tolist()}"
                 ) from e
-
-        if self.type_id:
-            padded_feature = padded_feature + self.get_type_embed(padded_index)
 
         padded_feature = padded_feature.masked_fill(padding_mask[..., None], float("0"))
 
