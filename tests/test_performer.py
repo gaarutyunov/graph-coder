@@ -18,9 +18,6 @@ from pathlib import Path
 from torch import nn
 from torch.utils.data import DataLoader
 
-from catalyst.contrib.scripts.run import process_configs
-from catalyst.registry import REGISTRY
-
 from graph_coder.config import ConfigBuilder
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
