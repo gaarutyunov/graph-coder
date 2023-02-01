@@ -74,10 +74,9 @@ class GraphCoderDocumenterRunner(GraphCoderRunnerBase):
                     dim=1,
                 )
                 .view(-1)
-                .contiguous()
                 .bool()
             )
-            lm_logits.append(result["graph"].view(-1, self.vocab_size).contiguous()[masks, :])
+            lm_logits.append(result["graph"].view(-1, self.vocab_size)[masks, :])
             # add eos token
             device = batch.node_data.device
             target_ids.append(torch.tensor([self.eos_token_id], device=device))

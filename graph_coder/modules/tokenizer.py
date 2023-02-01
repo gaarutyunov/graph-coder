@@ -268,6 +268,7 @@ class GraphFeatureTokenizer(nn.Module):
                 lap_node_id, node_mask, padded_index
             )  # [B, T, 2Dl]
             try:
+                # TODO: investigate why this one fails with [3942, 24782, 65052, 24364, 62966, 11474, 19765, 56872]
                 padded_feature = padded_feature + self.lap_encoder(lap_index_embed)
             except Exception as e:
                 raise Exception(
