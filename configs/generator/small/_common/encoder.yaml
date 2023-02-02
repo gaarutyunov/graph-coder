@@ -8,4 +8,4 @@ encoder:
     dim_feedforward: 32
     dropout: 0.1
     activation: relu
-  num_layers: 2
+  num_layers: 1

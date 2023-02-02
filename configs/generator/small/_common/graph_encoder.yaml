@@ -8,7 +8,7 @@ graph_encoder:
   encoder_embed_dim: 16
   encoder_ffn_embed_dim: 32
   causal: true
-  encoder_layers: 2
+  encoder_layers: 1
   encoder_attention_heads: 4
   performer: true
   attention_dropout: 0
