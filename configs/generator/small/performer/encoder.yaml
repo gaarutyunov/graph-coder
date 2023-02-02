@@ -1,8 +1,8 @@
 encoder:
   _target_: graph_coder.modules.PerformerEncoder
   _var_: encoder
-  dim: 16
-  depth: 1
-  heads: 4
+  dim: 32
+  depth: 4
+  heads: 8
   causal: true
-  max_seq_len: 1024
+  max_seq_len: 2048

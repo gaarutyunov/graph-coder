@@ -28,7 +28,7 @@ function print() {
     printf '%s\n\n' "$1"
 }
 
-source ~/.bashrc
+source ~/.bashrc || print 'No ~/.bashrc'
 module restore default || print 'Not running in slurm environment'
 source activate graph-coder || print 'No env graph-coder'
 
@@ -42,7 +42,7 @@ type python
 
 separator
 
-print 'Conda environment graph-coder:'
+print 'Conda environment:'
 conda list || print 'No conda available'
 
 separator
@@ -54,5 +54,10 @@ separator
 
 print 'PyTorch environment:'
 python -m torch.utils.collect_env
+
+separator
+
+print 'DeepSpeed report:'
+ds_report || print 'No deepspeed available'
 
 separator

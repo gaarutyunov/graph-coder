@@ -1,6 +1,6 @@
 scheduler:
-  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+  _target_: accelerate.utils.DummyScheduler
   _var_: scheduler
   optimizer:
     _var_: optimizer
-  patience: 10
+  warmup_num_steps: 10000

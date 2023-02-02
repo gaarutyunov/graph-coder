@@ -41,6 +41,9 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
         self.dense = nn.Linear(hidden_size, hidden_size)
         self.lm_head = nn.Linear(hidden_size, vocab_size, bias=False)
         self.lm_graph_head = nn.Linear(hidden_size, vocab_size * max_length, bias=False)
+        self.config = {
+            "hidden_size": hidden_size,
+        }  # for accelerator (deepspeed)
 
     def forward(self, batch: GraphCoderBatch) -> Dict[str, torch.Tensor]:
         x = []

@@ -17,6 +17,9 @@ run:
     scheduler:
       _var_: scheduler
 
+    engine:
+      _var_: engine
+
     loaders:
       _var_: dataset.loaders
 

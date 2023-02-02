@@ -3,8 +3,8 @@ model:
   _var_: model
   vocab_size: 50277
   eos_token_id: 0
-  hidden_size: 16
-  max_length: 8
+  hidden_size: 32
+  max_length: 32
   embedding:
     _var_: embedding
   encoder:

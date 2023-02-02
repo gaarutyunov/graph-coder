@@ -22,7 +22,7 @@
 #SBATCH --error="logs/slurm/train/"%j.err
 #SBATCH --constraint="type_a|type_b|type_c"
 #SBATCH --gpus=1
-#SBATCH --cpus-per-gpu=4
+#SBATCH --cpus-per-gpu=8
 #SBATCH --time=7-0:0
 
 # Load modules and activate virtual environment
