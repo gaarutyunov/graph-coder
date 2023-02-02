@@ -250,5 +250,10 @@ class AstDataset(BaseDataset[AstExample]):
         print(f"- Number of graphs: {len(self.index):,}", file=out)
         print(f"- Avg. number of nodes: {self.index['nodes'].mean():.0f}", file=out)
         print(f"- Avg. number of edges: {self.index['edges'].mean():.0f}", file=out)
-        print(f"- Number of documented graphs: {self.index['has_docstring'].sum():,}", file=out)
-        print(f"- Number of processed graphs: {self.index['processed'].sum():,}", file=out)
+        print(
+            f"- Number of documented graphs: {self.index['has_docstring'].sum():,}",
+            file=out,
+        )
+        print(
+            f"- Number of processed graphs: {self.index['processed'].sum():,}", file=out
+        )

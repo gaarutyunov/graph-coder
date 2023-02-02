@@ -22,7 +22,11 @@ import torch
 
 from graph_coder.data import collate_ast, pad
 from graph_coder.datasets import AstDataset
-from graph_coder.config.functional import get_pretrained_tokenizer, filter_has_docstring, filter_is_processed
+from graph_coder.config.functional import (
+    get_pretrained_tokenizer,
+    filter_has_docstring,
+    filter_is_processed,
+)
 
 
 def test_dataset():
@@ -146,14 +150,29 @@ def test_pad():
         This is not a test, but a fifth test. This is some huge text. It is needed to test the truncation.
         This is not a test, but a fifth test. This is some huge text. It is needed to test the truncation.""",
     ]
+
+    other_texts = [
+        "This is a test",
+        "This is a fourth test",
+        """This is not a test, but a fifth test. This is some huge text. It is needed to test the truncation.
+        This is not a test, but a fifth test. This is some huge text. It is needed to test the truncation.
+        This is not a test, but a fifth test. This is some huge text. It is needed to test the truncation.
+        This is not a test, but a fifth test. This is some huge text. It is needed to test the truncation.""",
+    ]
     num = [2, 3]
+    other_num = [1, 2]
 
-    padded = pad(texts, num, tokenizer)
+    padded, other_padded = pad(texts + other_texts, [num, other_num], tokenizer)
 
-    assert padded["input_ids"].shape == (2, 3, 64)
-    assert padded["attention_mask"].shape == (2, 3, 64)
-    assert torch.all(padded["input_ids"][0, -1] == 1)
-    assert padded["attention_mask"][0, -1].sum() == 0
+    assert padded["input_ids"].shape == (5, 64)
+    assert padded["attention_mask"].shape == (5, 64)
+    assert torch.all(padded["input_ids"][-1] != 1)
+    assert torch.all(padded["attention_mask"][-1] == 1)
+
+    assert other_padded["input_ids"].shape == (3, 64)
+    assert other_padded["attention_mask"].shape == (3, 64)
+    assert torch.all(other_padded["input_ids"][-1] != 1)
+    assert torch.all(other_padded["attention_mask"][-1] == 1)
 
 
 def test_preprocess():

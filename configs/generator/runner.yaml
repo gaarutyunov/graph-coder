@@ -2,7 +2,7 @@ runner:
   _target_: graph_coder.runners.GraphCoderGeneratorRunner
   model:
     _var_: model
-  eos_token_id: 1
+  eos_token_id: 0
   vocab_size: 50277
   device:
     _target_: catalyst.utils.get_device

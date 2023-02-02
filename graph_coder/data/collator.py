@@ -27,11 +27,11 @@ from catalyst.utils import get_device
 
 def pad(
     batch: List[str],
-    num: List[int],
+    num: List[List[int]],
     tokenizer: PreTrainedTokenizerFast,
     max_length: int = 64,
     device: torch.device = get_device(),
-) -> Dict[str, torch.Tensor]:
+) -> List[Dict[str, torch.Tensor]]:
     """Pad a batch of strings restoring the original packs."""
     encoding = (
         tokenizer(
@@ -49,20 +49,24 @@ def pad(
 
     start = 0
 
-    for n in num:
-        end = start + n
-        inputs_ids.append(encoding["input_ids"][start:end])
-        attention_mask.append(encoding["attention_mask"][start:end])
-        start = end
+    for g in num:
+        inputs_ids_ = []
+        attention_mask_ = []
+        for n in g:
+            end = start + n
+            inputs_ids_.append(encoding["input_ids"][start:end])
+            attention_mask_.append(encoding["attention_mask"][start:end])
+            start = end
+        inputs_ids.append(inputs_ids_)
+        attention_mask.append(attention_mask_)
 
-    return {
-        "input_ids": pad_sequence(
-            inputs_ids, batch_first=True, padding_value=tokenizer.pad_token_id
-        ),
-        "attention_mask": pad_sequence(
-            attention_mask, batch_first=True, padding_value=False
-        ),
-    }
+    return [
+        {
+            "input_ids": torch.cat(inputs_ids),
+            "attention_mask": torch.cat(attention_mask),
+        }
+        for inputs_ids, attention_mask in zip(inputs_ids, attention_mask)
+    ]
 
 
 @torch.no_grad()
@@ -111,7 +115,13 @@ def collate_ast(
 
     max_n = max(node_num)
 
-    pad_ = partial(pad, max_length=max_length, device=device)
+    node_data_, edge_data_ = pad(
+        batch=node_data + edge_data,
+        num=[node_num, edge_num],
+        max_length=max_length,
+        device=device,
+        tokenizer=tokenizer,
+    )
 
     return GraphCoderBatch(
         idx=torch.tensor(idx, dtype=torch.long, device=device),
@@ -144,6 +154,6 @@ def collate_ast(
         )
         .to(device)
         .convert_to_tensors(),
-        edge_data_=pad_(edge_data, edge_num, tokenizer),
-        node_data_=pad_(node_data, node_num, tokenizer),
+        node_data_=node_data_,
+        edge_data_=edge_data_,
     )

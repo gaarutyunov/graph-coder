@@ -2,7 +2,7 @@ model:
   _target_: graph_coder.models.GraphCoderGenerator
   _var_: model
   vocab_size: 50277
-  eos_token_id: 1
+  eos_token_id: 0
   hidden_size: 32
   max_length: 16
   embedding:

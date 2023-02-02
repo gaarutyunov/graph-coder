@@ -45,6 +45,7 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
     def forward(self, batch: GraphCoderBatch) -> Dict[str, torch.Tensor]:
         x = []
         tgt = []
+        result = {}
 
         if batch.has_docstring:
             emb = self.embedding(batch.docstring)
@@ -62,17 +63,19 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
             graph_encoded = self.graph_encoder(batch)
             device = graph_encoded.device
             x.append(graph_encoded)
-            tgt.append(
-                self.embedding(
-                    torch.cat(
-                        [
-                            batch.node_data,
-                            batch.edge_data,
-                        ],
-                        dim=1,
-                    )
-                ).sum(-2)
+            (
+                _,
+                padded_feature,
+                padding_mask,
+                result["padded_node_mask"],
+                result["padded_edge_mask"],
+            ) = self.graph_encoder.graph_encoder.graph_feature.process_batch(  # type: ignore[union-attr]
+                batch
+            )  # type: ignore[operator]
+            padded_feature = padded_feature.masked_fill(
+                padding_mask[..., None], float("0")
             )
+            tgt.append(padded_feature)
             # add eos token
             eos = torch.tensor(
                 [self.eos_token_id], device=device, dtype=torch.float
@@ -97,8 +100,6 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
 
         out = self.decoder(tgt_, x_)
         hidden_states = torch.tanh(self.dense(out)).contiguous()
-
-        result = {}
 
         if batch.has_docstring:
             result["docstring"] = self.lm_head(hidden_states[:, : batch.docstring_size])

@@ -64,18 +64,20 @@ class GraphCoderGeneratorRunner(GraphCoderRunnerBase):
                     batch.edge_data[batch.edge_data_attn_mask.bool()],
                 ]
             )
-            masks = (
-                torch.cat(
-                    [
-                        batch.node_data_attn_mask,
-                        batch.edge_data_attn_mask,
-                    ],
-                    dim=1,
-                )
-                .view(-1)
-                .bool()
+            lm_logits.append(
+                result["graph"][result["padded_node_mask"].bool()]
+                .view(batch.node_data_attn_mask.size(0), -1, self.vocab_size)[
+                    batch.node_data_attn_mask.bool()
+                ]
+                .view(-1, self.vocab_size)
             )
-            lm_logits.append(result["graph"].view(-1, self.vocab_size)[masks, :])
+            lm_logits.append(
+                result["graph"][result["padded_edge_mask"].bool()]
+                .view(batch.edge_data_attn_mask.size(0), -1, self.vocab_size)[
+                    batch.edge_data_attn_mask.bool()
+                ]
+                .view(-1, self.vocab_size)
+            )
             # add eos token
             device = batch.node_data.device
             target_ids.append(torch.tensor([self.eos_token_id], device=device))

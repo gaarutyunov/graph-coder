@@ -18,7 +18,7 @@ from typing import Tuple
 
 
 def lap_eig(
-    edge_index: torch.LongTensor, num_nodes: int
+    edge_index: torch.Tensor, num_nodes: int
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """Computes Laplacian eigenvalues and eigenvectors with symmetric normalization."""
     dense_adj = torch.zeros(

@@ -26,6 +26,7 @@
 
 import math
 from pathlib import Path
+from typing import Tuple, Optional
 
 import torch
 import torch.nn as nn
@@ -82,6 +83,23 @@ class GraphFeatureTokenizer(nn.Module):
 
         self.apply(lambda module: init_params(module, n_layers=n_layers))
 
+    def process_batch(
+        self, batch: GraphCoderBatch, perturb: Optional[torch.Tensor] = None
+    ) -> Tuple[torch.Tensor, ...]:
+        node_feature = self.embedding(batch.node_data).sum(
+            -2
+        )  # [sum(node_num), D] TODO: investigate if it is a good idea to sum
+        edge_feature = self.embedding(batch.edge_data).sum(-2)
+
+        return self.get_batch(
+            node_feature,
+            batch.edge_index,
+            edge_feature,
+            batch.node_num,
+            batch.edge_num,
+            perturb,
+        )
+
     @staticmethod
     def get_batch(
         node_feature: torch.Tensor,
@@ -89,7 +107,7 @@ class GraphFeatureTokenizer(nn.Module):
         edge_feature: torch.Tensor,
         node_num: torch.Tensor,
         edge_num: torch.Tensor,
-        perturb=None,
+        perturb: Optional[torch.Tensor] = None,
     ):
         seq_len = [n + e for n, e in zip(node_num, edge_num)]
         b = len(seq_len)
@@ -135,9 +153,11 @@ class GraphFeatureTokenizer(nn.Module):
                 node_feature.dtype
             )  # [sum(node_num), D]
 
-        padded_feature = torch.cat(
-            [node_feature, edge_feature], dim=1
-        )  # [B, sum(node_num) + sum(edge_num), D]
+        padded_feature = torch.zeros(
+            b, max_len, d, device=device, dtype=node_feature.dtype
+        )  # [B, T, D]
+        padded_feature[padded_node_mask, :] = node_feature
+        padded_feature[padded_edge_mask, :] = edge_feature
 
         padding_mask = torch.greater_equal(token_pos, seq_len_)  # [B, T]
         return (
@@ -215,50 +235,22 @@ class GraphFeatureTokenizer(nn.Module):
         order_embed = self.order_encoder(order)
         return order_embed
 
-    def forward(self, batched_data: GraphCoderBatch, perturb=None):
-        (
-            node_data,
-            node_num,
-            lap_eigvec,
-            lap_eigval,
-            edge_index,
-            edge_data,
-            edge_num,
-        ) = (
-            batched_data.node_data,
-            batched_data.node_num,
-            batched_data.lap_eigvec,
-            batched_data.lap_eigval,
-            batched_data.edge_index,
-            batched_data.edge_data,
-            batched_data.edge_num,
-        )
-
-        node_feature = self.embedding(node_data).sum(
-            -2
-        )  # [sum(node_num), D] TODO: investigate if it is a good idea to sum
-        edge_feature = self.embedding(edge_data).sum(-2)  # [sum(edge_num), D]
-
-        padded_index, padded_feature, padding_mask, _, _ = self.get_batch(
-            node_feature,
-            edge_index,
-            edge_feature,
-            node_num,
-            edge_num,
-            perturb,
-        )
+    def forward(self, batch: GraphCoderBatch, perturb=None):
+        padded_index, padded_feature, padding_mask, _, _ = self.process_batch(batch)
         node_mask = self.get_node_mask(
-            node_num, node_feature.device
+            batch.node_num, padded_feature.device
         )  # [B, max(n_node)]
 
         if self.lap_node_id:
-            lap_dim = lap_eigvec.size(-1)
+            lap_dim = batch.lap_eigvec.size(-1)
             if self.lap_node_id_k > lap_dim:
                 eigvec = F.pad(
-                    lap_eigvec, (0, self.lap_node_id_k - lap_dim), value=float("0")
+                    batch.lap_eigvec,
+                    (0, self.lap_node_id_k - lap_dim),
+                    value=float("0"),
                 )  # [sum(n_node), Dl]
             else:
-                eigvec = lap_eigvec[:, : self.lap_node_id_k]  # [sum(n_node), Dl]
+                eigvec = batch.lap_eigvec[:, : self.lap_node_id_k]  # [sum(n_node), Dl]
             if self.lap_eig_dropout is not None:
                 eigvec = self.lap_eig_dropout(eigvec[..., None, None]).view(
                     eigvec.size()
@@ -269,22 +261,7 @@ class GraphFeatureTokenizer(nn.Module):
             lap_index_embed = self.get_index_embed(
                 lap_node_id, node_mask, padded_index
             )  # [B, T, 2Dl]
-            try:
-                # TODO: investigate why this one fails with [3942, 24782, 65052, 24364, 62966, 11474, 19765, 56872]
-                padded_feature = padded_feature + self.lap_encoder(lap_index_embed)
-            except Exception as e:
-                debug_path = Path('debug')
-                debug_path.mkdir(exist_ok=True)
-                with open(debug_path / 'log.txt', mode='w') as f:
-                    print(f'eigvec shape: {eigvec.shape}', file=f)
-                    print(f'lap_node_id shape: {lap_node_id.shape}', file=f)
-                    print(f'lap_index_embed shape: {lap_index_embed.shape}', file=f)
-                    print(f'padded_feature shape: {padded_feature.shape}', file=f)
-                    print(f'node_mask shape: {node_mask.shape}', file=f)
-                    print(f'padded_index shape: {padded_index.shape}', file=f)
-                raise Exception(
-                    f"Could not encode laplacian for {batched_data.idx.tolist()}"
-                ) from e
+            padded_feature = padded_feature + self.lap_encoder(lap_index_embed)
 
         if self.type_id:
             padded_feature = padded_feature + self.get_type_embed(padded_index)
