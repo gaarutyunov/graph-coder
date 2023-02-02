@@ -5,8 +5,8 @@ graph_encoder:
     _var_: embedding
   lap_node_id: true
   type_id: true
-  encoder_embed_dim: 32
-  encoder_ffn_embed_dim: 64
+  encoder_embed_dim: 16
+  encoder_ffn_embed_dim: 32
   causal: true
   encoder_layers: 2
   encoder_attention_heads: 4
