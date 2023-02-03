@@ -30,7 +30,7 @@ chmod +x ./scripts/prepare.sh
 source ./scripts/prepare.sh
 
 # Train model
-python -m graph_coder.train --root "$1" \
+ACCELERATE_LOG_LEVEL=DEBUG python -m graph_coder.train --root "$1" \
                             --name "$2" \
                             --size "$3" \
                             --arch "$4"
