@@ -1,5 +1,5 @@
 optimizer:
-  _target_: accelerate.utils.DummyOptim
+  _target_: accelerate.utils.deepspeed.DummyOptim
   _var_: optimizer
   params:
     _var_: model.parameters

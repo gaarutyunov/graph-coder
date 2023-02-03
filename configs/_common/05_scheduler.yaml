@@ -1,5 +1,5 @@
 scheduler:
-  _target_: accelerate.utils.DummyScheduler
+  _target_: accelerate.utils.deepspeed.DummyScheduler
   _var_: scheduler
   optimizer:
     _var_: optimizer
