@@ -1,7 +1,6 @@
 engine:
   _target_: catalyst.engines.torch.GPUEngine
   _var_: engine
-  port: 93746
   kwargs:
     hf_ds_config:
       train_micro_batch_size_per_gpu: auto # `accelerator` configures this parameter from the `batch_size` from the `dataset` config
