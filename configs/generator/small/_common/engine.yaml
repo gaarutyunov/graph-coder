@@ -37,3 +37,7 @@ engine:
             amsgrad: false
         scheduler:
           type: WarmupLR # other params are configures by `accelerator` from the `optimizer` and `scheduler` configs
+          params:
+            warmup_min_lr: 0
+            warmup_max_lr: 0.02
+            warmup_num_steps: 10000
