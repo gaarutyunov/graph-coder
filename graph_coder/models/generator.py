@@ -11,6 +11,8 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import dataclasses
+from dataclasses import field
 
 import torch
 from torch import nn
@@ -18,6 +20,11 @@ from typing import Dict
 
 from graph_coder.data import GraphCoderBatch
 from graph_coder.models.base import GraphCoderBase
+
+
+@dataclasses.dataclass
+class Config:
+    hidden_size: int
 
 
 class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
@@ -41,9 +48,7 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
         self.dense = nn.Linear(hidden_size, hidden_size)
         self.lm_head = nn.Linear(hidden_size, vocab_size, bias=False)
         self.lm_graph_head = nn.Linear(hidden_size, vocab_size * max_length, bias=False)
-        self.config = {
-            "hidden_size": hidden_size,
-        }  # for accelerator (deepspeed)
+        self.config = Config(hidden_size=hidden_size)  # for accelerator (deepspeed)
 
     def forward(self, batch: GraphCoderBatch) -> Dict[str, torch.Tensor]:
         x = []
