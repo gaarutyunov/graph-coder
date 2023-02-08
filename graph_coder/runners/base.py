@@ -32,12 +32,14 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
         self,
         model: nn.Module,
         device: torch.device = get_device(),
+        print_summary: bool = True,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.model = model.to(device)
         self.device = device
+        self.print_summary = print_summary
 
     def on_batch_start(self, runner: IRunner) -> None:
         # noinspection PyTypeChecker
@@ -65,8 +67,9 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
 
     def _print_summary(self):
         """Prints summary about the model"""
-        sample_batch = next(iter(self.get_loaders()["train"]))
-        summary(self.model, input_data=sample_batch)
+        if self.print_summary:
+            sample_batch = next(iter(self.get_loaders()["train"]))
+            summary(self.model, input_data=sample_batch)
         print(f"Device: {self.device}")
 
     @abc.abstractmethod
