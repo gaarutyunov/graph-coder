@@ -1,10 +1,17 @@
 engine:
   _target_: catalyst.engines.torch.GPUEngine
   _var_: engine
-  kwargs:
+  gradient_accumulation_steps: 1
+  fp16: true
+  deepspeed_plugin:
+    _target_: accelerate.utils.dataclasses.DeepSpeedPlugin
+    zero_stage: 3
+    offload_optimizer_device: cpu
+    offload_param_device: cpu
+    zero3_init_flag: true
+    zero3_save_16bit_model: false
     hf_ds_config:
       train_micro_batch_size_per_gpu: auto # `accelerator` configures this parameter from the `batch_size` from the `dataset` config
-      gradient_accumulation_steps: 1
       zero_optimization: # `accelerator` configures some parameters from the `hidden_size` from the `model` config
         stage: 3
         offload_optimizer:
