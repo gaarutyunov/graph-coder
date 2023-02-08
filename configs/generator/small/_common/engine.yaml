@@ -6,33 +6,34 @@ engine:
   deepspeed_plugin:
     _target_: accelerate.utils.dataclasses.DeepSpeedPlugin
     hf_ds_config:
-      _target_: dict
-      train_micro_batch_size_per_gpu: 8
-      zero_optimization: # `accelerator` configures some parameters from the `hidden_size` from the `model` config
-        stage: 3
-        offload_optimizer:
-          device: cpu
-        offload_param:
-          device: cpu
-        contiguous_gradients: true
-        overlap_comm: true
-      fp16:
-        enabled: true
-        loss_scale: 0
-        initial_scale_power: 16
-        loss_scale_window: 1000
-        hysteresis: 2
-        min_loss_scale: 1
-      activation_checkpointing:
-        partition_activations: true
-        contiguous_memory_optimization: true
-        cpu_checkpointing: true
-        number_checkpoints: 1
-      optimizer:
-        type: Adam
-        params: # other params are configures by `accelerator` from the `optimizer` config
-          betas: [0.9, 0.999]
-          eps: 1e-08
-          amsgrad: false
-      scheduler:
-        type: WarmupLR # other params are configures by `accelerator` from the `optimizer` and `scheduler` configs
+      _target_: accelerate.utils.deepspeed.HfDeepSpeedConfig
+      config_file_or_dict:
+        train_micro_batch_size_per_gpu: 8
+        zero_optimization: # `accelerator` configures some parameters from the `hidden_size` from the `model` config
+          stage: 3
+          offload_optimizer:
+            device: cpu
+          offload_param:
+            device: cpu
+          contiguous_gradients: true
+          overlap_comm: true
+        fp16:
+          enabled: true
+          loss_scale: 0
+          initial_scale_power: 16
+          loss_scale_window: 1000
+          hysteresis: 2
+          min_loss_scale: 1
+        activation_checkpointing:
+          partition_activations: true
+          contiguous_memory_optimization: true
+          cpu_checkpointing: true
+          number_checkpoints: 1
+        optimizer:
+          type: Adam
+          params: # other params are configures by `accelerator` from the `optimizer` config
+            betas: [0.9, 0.999]
+            eps: 1e-08
+            amsgrad: false
+        scheduler:
+          type: WarmupLR # other params are configures by `accelerator` from the `optimizer` and `scheduler` configs
