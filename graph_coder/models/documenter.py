@@ -54,7 +54,7 @@ class GraphCoderDocumenter(GraphCoderBase):
             tgt.append(emb)
             # add eos token
             eos = torch.tensor(
-                [self.eos_token_id], device=source_encoded.device, dtype=torch.float
+                [self.eos_token_id], device=source_encoded.device
             ).repeat(source_encoded.size(0), 1, source_encoded.size(-1))
             x.append(eos)
             tgt.append(eos)
@@ -78,7 +78,7 @@ class GraphCoderDocumenter(GraphCoderBase):
             tgt.append(padded_feature)
             # add eos token
             eos = torch.tensor(
-                [self.eos_token_id], device=device, dtype=torch.float
+                [self.eos_token_id], device=device
             ).repeat(graph_encoded.size(0), 1, graph_encoded.size(-1))
             x.append(eos)
             tgt.append(eos)
@@ -91,7 +91,7 @@ class GraphCoderDocumenter(GraphCoderBase):
             tgt.append(emb)
             # add eos token
             eos = torch.tensor(
-                [self.eos_token_id], device=device, dtype=torch.float
+                [self.eos_token_id], device=device
             ).repeat(docstring_encoded.size(0), 1, docstring_encoded.size(-1))
             x.append(eos)
             tgt.append(eos)

@@ -1,7 +1,6 @@
 engine:
   _target_: catalyst.engines.torch.GPUEngine
   _var_: engine
-  mixed_precision: fp16
   deepspeed_plugin:
     _target_: accelerate.utils.dataclasses.DeepSpeedPlugin
     hf_ds_config:
