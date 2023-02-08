@@ -1,6 +1,0 @@
-scheduler:
-  _target_: accelerate.utils.deepspeed.DummyScheduler
-  _var_: scheduler
-  optimizer:
-    _var_: optimizer
-  warmup_num_steps: 10000

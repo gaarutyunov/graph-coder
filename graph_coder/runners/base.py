@@ -41,6 +41,10 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
         self.device = device
         self.print_summary = print_summary
 
+    def run(self) -> "IRunner":
+        with self.engine.autocast():
+            return super().run()
+
     def on_batch_start(self, runner: IRunner) -> None:
         # noinspection PyTypeChecker
         batch: GraphCoderBatch = self.batch  # type: ignore

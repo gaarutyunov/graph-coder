@@ -1,6 +1,7 @@
 engine:
   _target_: catalyst.engines.torch.GPUEngine
   _var_: engine
+  mixed_precision: fp16
   deepspeed_plugin:
     _target_: accelerate.utils.dataclasses.DeepSpeedPlugin
     hf_ds_config:
@@ -19,6 +20,13 @@ engine:
           reduce_bucket_size: 1024
           stage3_prefetch_bucket_size: 921.6
           stage3_param_persistence_threshold: 320
+        fp16:
+          enabled: true
+          loss_scale: 0
+          initial_scale_power: 16
+          loss_scale_window: 1000
+          hysteresis: 2
+          min_loss_scale: 1
         activation_checkpointing:
           partition_activations: true
           contiguous_memory_optimization: true

@@ -11,9 +11,6 @@ run:
     criterion:
       _var_: criterion
 
-    scheduler:
-      _var_: scheduler
-
     engine:
       _var_: engine
 
@@ -32,6 +29,3 @@ run:
         loader_key: *loader_key
         metric_key: *metric_key
         minimize: *minimize
-      - _target_: catalyst.callbacks.scheduler.SchedulerCallback
-        loader_key: *loader_key
-        metric_key: *loader_key
