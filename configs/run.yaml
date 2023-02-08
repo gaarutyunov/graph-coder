@@ -11,9 +11,6 @@ run:
     criterion:
       _var_: criterion
 
-    optimizer:
-      _var_: optimizer
-
     scheduler:
       _var_: scheduler
 
