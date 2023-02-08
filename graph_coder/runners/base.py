@@ -62,8 +62,9 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
 
         if self.is_train_loader:
             self.engine.backward(loss)
-            self.optimizer.step()
-            self.optimizer.zero_grad()
+            if self.optimizer is not None:
+                self.optimizer.step()
+                self.optimizer.zero_grad()
 
     def _print_summary(self):
         """Prints summary about the model"""
