@@ -5,16 +5,15 @@ engine:
   mixed_precision: fp16
   deepspeed_plugin:
     _target_: accelerate.utils.dataclasses.DeepSpeedPlugin
-    zero_stage: 3
-    offload_optimizer_device: cpu
-    offload_param_device: cpu
-    zero3_init_flag: true
-    zero3_save_16bit_model: false
-    gradient_clipping: 1.0
     hf_ds_config:
-      train_batch_size: auto
-      train_micro_batch_size_per_gpu: auto # `accelerator` configures this parameter from the `batch_size` from the `dataset` config
+      _target_: dict
+      train_micro_batch_size_per_gpu: 8
       zero_optimization: # `accelerator` configures some parameters from the `hidden_size` from the `model` config
+        stage: 3
+        offload_optimizer:
+          device: cpu
+        offload_param:
+          device: cpu
         contiguous_gradients: true
         overlap_comm: true
       fp16:
