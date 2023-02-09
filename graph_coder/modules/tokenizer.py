@@ -265,12 +265,16 @@ class GraphFeatureTokenizer(nn.Module):
                 padded_feature = padded_feature + self.lap_encoder(lap_index_embed)
             except Exception as e:
                 from pathlib import Path
+
                 debug_file = Path("debug/log.txt")
                 with open(debug_file, mode="w") as f:
                     print(f"padded_feature dtype: {padded_feature.dtype}", file=f)
                     print(f"eigvec dtype: {eigvec.dtype}", file=f)
                     print(f"lap_node_id dtype: {lap_node_id.dtype}", file=f)
-                    print(f"lap_encoder weight dtype: {self.lap_encoder.weight.dtype}", file=f)
+                    print(
+                        f"lap_encoder weight dtype: {self.lap_encoder.weight.dtype}",
+                        file=f,
+                    )
                     print(f"lap_index_embed dtype: {lap_index_embed.dtype}", file=f)
                 raise Exception("Error in lap_encoder") from e
 

@@ -39,8 +39,7 @@ def pad(
             return_tensors="pt",
             truncation=True,
             max_length=max_length,
-        )
-        .to(device)
+        ).to(device)
     ).data
     inputs_ids = []
     attention_mask = []
@@ -122,23 +121,31 @@ def collate_ast(
         tokenizer=tokenizer,
     )
 
-    source_ = tokenizer(
-        sources,
-        padding=True,
-        return_tensors="pt",
-        return_attention_mask=True,
-        truncation=True,
-        max_length=max_seq_length,
-    ).to(device).data
+    source_ = (
+        tokenizer(
+            sources,
+            padding=True,
+            return_tensors="pt",
+            return_attention_mask=True,
+            truncation=True,
+            max_length=max_seq_length,
+        )
+        .to(device)
+        .data
+    )
 
-    docstring_ = tokenizer(
-        docstrings,
-        padding=True,
-        return_tensors="pt",
-        return_attention_mask=True,
-        truncation=True,
-        max_length=max_seq_length,
-    ).to(device).data
+    docstring_ = (
+        tokenizer(
+            docstrings,
+            padding=True,
+            return_tensors="pt",
+            return_attention_mask=True,
+            truncation=True,
+            max_length=max_seq_length,
+        )
+        .to(device)
+        .data
+    )
 
     return GraphCoderBatch(
         idx=torch.tensor(idx, dtype=torch.long, device=device),

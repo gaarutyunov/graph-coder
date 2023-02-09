@@ -65,18 +65,14 @@ class GraphCoderGeneratorRunner(GraphCoderRunnerBase):
                 ]
             )
             lm_logits.append(
-                result["graph"][result["padded_node_mask"].bool()]
-                .view(batch.node_data_attn_mask.size(0), -1, self.vocab_size)[
+                result["graph"][result["padded_node_mask"].bool()][
                     batch.node_data_attn_mask.bool()
                 ]
-                .view(-1, self.vocab_size)
             )
             lm_logits.append(
-                result["graph"][result["padded_edge_mask"].bool()]
-                .view(batch.edge_data_attn_mask.size(0), -1, self.vocab_size)[
+                result["graph"][result["padded_edge_mask"].bool()][
                     batch.edge_data_attn_mask.bool()
                 ]
-                .view(-1, self.vocab_size)
             )
             # add eos token
             device = batch.node_data.device

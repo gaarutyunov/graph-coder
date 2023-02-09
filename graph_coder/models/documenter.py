@@ -40,7 +40,9 @@ class GraphCoderDocumenter(GraphCoderBase):
         self.vocab_size = vocab_size
         self.dense = nn.Linear(hidden_size, hidden_size)
         self.lm_head = nn.Linear(hidden_size, vocab_size, bias=False)
-        self.lm_graph_head = nn.Linear(hidden_size, vocab_size * max_length, bias=False)
+        self.lm_graph_head = nn.Linear(
+            hidden_size, hidden_size * max_length, bias=False
+        )
 
     def forward(self, batch: GraphCoderBatch) -> Dict[str, torch.Tensor]:
         x = []
@@ -77,9 +79,9 @@ class GraphCoderDocumenter(GraphCoderBase):
             )
             tgt.append(padded_feature)
             # add eos token
-            eos = torch.tensor(
-                [self.eos_token_id], device=device
-            ).repeat(graph_encoded.size(0), 1, graph_encoded.size(-1))
+            eos = torch.tensor([self.eos_token_id], device=device).repeat(
+                graph_encoded.size(0), 1, graph_encoded.size(-1)
+            )
             x.append(eos)
             tgt.append(eos)
 
@@ -90,9 +92,9 @@ class GraphCoderDocumenter(GraphCoderBase):
             x.append(docstring_encoded)
             tgt.append(emb)
             # add eos token
-            eos = torch.tensor(
-                [self.eos_token_id], device=device
-            ).repeat(docstring_encoded.size(0), 1, docstring_encoded.size(-1))
+            eos = torch.tensor([self.eos_token_id], device=device).repeat(
+                docstring_encoded.size(0), 1, docstring_encoded.size(-1)
+            )
             x.append(eos)
             tgt.append(eos)
 
@@ -113,7 +115,13 @@ class GraphCoderDocumenter(GraphCoderBase):
                 end = batch.docstring_size + 1
             else:
                 end = 0
-            result["graph"] = self.lm_graph_head(hidden_states[:, start : -end - 1])
+            graph_states = hidden_states[:, start : -end - 1]
+            graph = self.lm_graph_head(graph_states)
+            graph = graph.view(graph.size(0), -1, self.hidden_size)
+            graph = self.lm_head(graph)
+            result["graph"] = graph.view(
+                graph.size(0), graph_states.size(1), -1, self.vocab_size
+            )
 
         if batch.has_docstring:
             result["docstring"] = self.lm_head(

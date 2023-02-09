@@ -73,7 +73,7 @@ def test_documenter():
         if "docstring" in decoded:
             assert decoded["docstring"].size(-1) == len(tokenizer.vocab)
         if "graph" in decoded:
-            assert decoded["graph"].size(-1) == len(tokenizer.vocab) * 64
+            assert decoded["graph"].size(-1) == len(tokenizer.vocab)
         if "source" in decoded:
             assert decoded["source"].size(-1) == len(tokenizer.vocab)
 

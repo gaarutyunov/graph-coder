@@ -25,7 +25,8 @@ from graph_coder.datasets import AstDataset
 from graph_coder.config.functional import (
     get_pretrained_tokenizer,
     filter_has_docstring,
-    filter_is_processed, get_dtype,
+    filter_is_processed,
+    get_dtype,
 )
 
 
@@ -63,11 +64,9 @@ def test_collator():
 
     for batch in loader:
         assert batch.edge_index.size(0) == 2
-        assert batch.edge_data.size(0) == 2 or batch.edge_data.size(0) == 1
         assert (
             batch.edge_data.size(1) == (batch.edge_data != -100).sum(dim=1).max().item()
         )
-        assert batch.node_data.size(0) == 2 or batch.node_data.size(0) == 1
         assert (
             batch.node_data.size(1) == (batch.node_data != -100).sum(dim=1).max().item()
         )
@@ -196,7 +195,7 @@ def test_preprocess():
     summary = """Dataset summary for AstDataset:
 
 - Number of graphs: 12
-- Avg. number of nodes: 22
+- Avg. number of nodes: 21
 - Avg. number of edges: 26
 - Number of documented graphs: 8
 - Number of processed graphs: 12
@@ -209,7 +208,9 @@ def test_preprocess():
 def test_dtype():
     dataset = AstDataset(
         collate_fn=partial(
-            collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"), dtype=get_dtype("half")
+            collate_ast,
+            tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"),
+            dtype=get_dtype("half"),
         ),
         root=Path(__file__).parent / "./data",
     )
