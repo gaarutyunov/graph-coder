@@ -261,7 +261,15 @@ class GraphFeatureTokenizer(nn.Module):
             lap_index_embed = self.get_index_embed(
                 lap_node_id, node_mask, padded_index
             )  # [B, T, 2Dl]
-            padded_feature = padded_feature + self.lap_encoder(lap_index_embed)
+            try:
+                padded_feature = padded_feature + self.lap_encoder(lap_index_embed)
+            except Exception as e:
+                from pathlib import Path
+                debug_file = Path("debug/log.txt")
+                with open(debug_file, mode="w") as f:
+                    print(f"lap_encoder weight dtype: {self.lap_encoder.weight.dtype}", file=f)
+                    print(f"lap_index_embed dtype: {lap_index_embed.dtype}", file=f)
+                raise Exception("Error in lap_encoder") from e
 
         if self.type_id:
             padded_feature = padded_feature + self.get_type_embed(padded_index)
