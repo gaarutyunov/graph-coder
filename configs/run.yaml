@@ -37,8 +37,12 @@ run:
           with_stack: true
           with_flops: true
           activities:
-            - _target_: torch.profiler.ProfilerActivity.CPU
-            - _target_: torch.profiler.ProfilerActivity.CUDA
+            - _target_: graph_coder.config.F.get_activity
+              idx: 0 # CPU
+              _mode_: call
+            - _target_: graph_coder.config.F.get_activity
+              idx: 1 # CUDA
+              _mode_: call
         tensorboard_path: logs/profiler
         export_chrome_trace_path: logs/profiler/chrome_trace.json
         export_stacks_kwargs:

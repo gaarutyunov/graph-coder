@@ -11,11 +11,13 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+from collections import OrderedDict
 from pathlib import Path
 
 import torch
 from catalyst.contrib.scripts.run import process_configs
 from catalyst.registry import REGISTRY
+from torch._C._profiler import ProfilerActivity
 from torch.nn import TransformerDecoder
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
@@ -62,3 +64,17 @@ def test_parse_config():
     assert isinstance(params["run"][0]["criterion"], torch.nn.CrossEntropyLoss)
     assert isinstance(params["run"][0]["callbacks"], list)
     assert isinstance(params["run"][0]["loaders"], dict)
+
+
+def test_get_activity():
+    config = OrderedDict(
+        activities=[
+            OrderedDict(_target_="graph_coder.config.F.get_activity", idx=0, _mode_="call"),
+            OrderedDict(_target_="graph_coder.config.F.get_activity", idx=1, _mode_="call"),
+        ]
+    )
+
+    activities = REGISTRY.get_from_params(**config)
+
+    assert activities["activities"][0] == ProfilerActivity.CPU
+    assert activities["activities"][1] == ProfilerActivity.CUDA

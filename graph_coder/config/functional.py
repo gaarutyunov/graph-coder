@@ -17,6 +17,7 @@ from typing import Iterable, Dict, Any
 import pandas as pd
 import torch
 from catalyst import utils
+from torch._C._profiler import ProfilerActivity
 from transformers import PreTrainedTokenizerFast, AutoTokenizer
 
 
@@ -69,3 +70,8 @@ def get_device(name: str) -> torch.device:
 def get_dtype(name: str) -> torch.dtype:
     """Get dtype by name"""
     return getattr(torch, name)
+
+
+def get_activity(idx: int) -> ProfilerActivity:
+    """Get profiler activity by index"""
+    return ProfilerActivity(idx)
