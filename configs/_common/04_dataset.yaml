@@ -2,7 +2,7 @@ dataset:
   _target_: graph_coder.datasets.AstDataset
   _var_: dataset
   root: ~/git-py/raw/python
-  batch_size: 8
+  batch_size: 4
   collate_fn:
     _var_: collator
   random_seed: 42
