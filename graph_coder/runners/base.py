@@ -41,16 +41,6 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
         self.device = device
         self.print_summary = print_summary
 
-    def on_batch_start(self, runner: IRunner) -> None:
-        # noinspection PyTypeChecker
-        batch: GraphCoderBatch = self.batch  # type: ignore
-        self.batch_size = batch.batch_size
-        self.batch_step += self.engine.num_processes
-        self.loader_batch_step += self.engine.num_processes
-        self.sample_step += self.batch_size * self.engine.num_processes
-        self.loader_sample_step += self.batch_size * self.engine.num_processes
-        self.batch_metrics: Dict[str, float] = defaultdict(None)
-
     def on_experiment_start(self, runner: "IRunner"):
         super().on_experiment_start(runner)
         self._print_summary()
