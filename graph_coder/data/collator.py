@@ -30,7 +30,6 @@ def pad(
     tokenizer: PreTrainedTokenizerFast,
     max_length: int = 64,
     device: torch.device = get_device(),
-    dtype: torch.dtype = torch.float,
 ) -> List[Dict[str, torch.Tensor]]:
     """Pad a batch of strings restoring the original packs."""
     encoding = (
@@ -61,8 +60,8 @@ def pad(
 
     return [
         {
-            "input_ids": torch.cat(inputs_ids).type(dtype),
-            "attention_mask": torch.cat(attention_mask).type(dtype),
+            "input_ids": torch.cat(inputs_ids),
+            "attention_mask": torch.cat(attention_mask),
         }
         for inputs_ids, attention_mask in zip(inputs_ids, attention_mask)
     ]
@@ -121,7 +120,6 @@ def collate_ast(
         max_length=max_length,
         device=device,
         tokenizer=tokenizer,
-        dtype=dtype,
     )
 
     source_ = tokenizer(
@@ -154,12 +152,12 @@ def collate_ast(
             [F.pad(i, (0, max_n - i.size(1)), value=float("0")) for i in lap_eigvecs]
         ),
         source_={
-            "input_ids": source_["input_ids"].type(dtype),
-            "attention_mask": source_["attention_mask"].type(dtype),
+            "input_ids": source_["input_ids"].type(torch.long),
+            "attention_mask": source_["attention_mask"].type(torch.long),
         },
         docstring_={
-            "input_ids": docstring_["input_ids"].type(dtype),
-            "attention_mask": docstring_["attention_mask"].type(dtype),
+            "input_ids": docstring_["input_ids"].type(torch.long),
+            "attention_mask": docstring_["attention_mask"].type(torch.long),
         },
         node_data_=node_data_,
         edge_data_=edge_data_,

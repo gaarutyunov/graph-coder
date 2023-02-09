@@ -215,7 +215,9 @@ def test_dtype():
     )
 
     for batch in dataset.loaders["train"]:
-        assert batch.node_data.dtype == torch.half
-        assert batch.edge_data.dtype == torch.half
-        assert batch.docstring.dtype == torch.half
-        assert batch.source.dtype == torch.half
+        assert batch.node_data.dtype == torch.long
+        assert batch.edge_data.dtype == torch.long
+        assert batch.docstring.dtype == torch.long
+        assert batch.source.dtype == torch.long
+        assert batch.lap_eigval.dtype == torch.half
+        assert batch.lap_eigvec.dtype == torch.half
