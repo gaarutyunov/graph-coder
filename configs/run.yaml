@@ -34,12 +34,11 @@ run:
         num_batches: 100
         profiler_kwargs:
           profile_memory: true
-          record_shapes: true
-          use_cuda: true
           with_stack: true
+          with_flops: true
           activities:
-            - 0 # cpu
-            - 1 # cuda
+            - _target: torch.profiler.ProfilerActivity.CPU
+            - _target: torch.profiler.ProfilerActivity.CUDA
         tensorboard_path: logs/profiler
         export_chrome_trace_path: logs/profiler/chrome_trace.json
         export_stacks_kwargs:
