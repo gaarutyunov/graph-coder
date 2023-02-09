@@ -29,4 +29,23 @@ run:
         loader_key: *loader_key
         metric_key: *metric_key
         minimize: *minimize
+      - _target_: catalyst.callbacks.profiler.ProfilerCallback
+        epoch: 1
+        num_batches: 100
+        profiler_kwargs:
+          profile_memory: true
+          with_stack: true
+          with_flops: true
+          activities:
+            - _target_: graph_coder.config.F.get_activity
+              idx: 0 # CPU
+              _mode_: call
+            - _target_: graph_coder.config.F.get_activity
+              idx: 1 # CUDA
+              _mode_: call
+        tensorboard_path: logs/profiler
+        export_chrome_trace_path: logs/profiler/chrome_trace.json
+        export_stacks_kwargs:
+          path: logs/profiler/stacks.txt
+          metric: self_cuda_time_total
 
