@@ -47,5 +47,5 @@ run:
         export_chrome_trace_path: logs/profiler/chrome_trace.json
         export_stacks_kwargs:
           path: logs/profiler/stacks.txt
-          metric: self_cuda_memory_usage
+          metric: self_cuda_time_total
 
