@@ -25,7 +25,7 @@ from graph_coder.datasets import AstDataset
 from graph_coder.config.functional import (
     get_pretrained_tokenizer,
     filter_has_docstring,
-    filter_is_processed,
+    filter_is_processed, get_dtype,
 )
 
 
@@ -204,3 +204,18 @@ def test_preprocess():
     io = StringIO()
     dataset._print_summary(io)
     assert io.getvalue() == summary
+
+
+def test_dtype():
+    dataset = AstDataset(
+        collate_fn=partial(
+            collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"), dtype=get_dtype("half")
+        ),
+        root=Path(__file__).parent / "./data",
+    )
+
+    for batch in dataset.loaders["train"]:
+        assert batch.node_data.dtype == torch.half
+        assert batch.edge_data.dtype == torch.half
+        assert batch.docstring.dtype == torch.half
+        assert batch.source.dtype == torch.half

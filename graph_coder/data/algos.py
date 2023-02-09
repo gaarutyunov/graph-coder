@@ -18,7 +18,7 @@ from typing import Tuple
 
 
 def lap_eig(
-    edge_index: torch.Tensor, num_nodes: int
+    edge_index: torch.Tensor, num_nodes: int, dtype: torch.dtype = torch.float
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """Computes Laplacian eigenvalues and eigenvectors with symmetric normalization."""
     dense_adj = torch.zeros(
@@ -28,6 +28,7 @@ def lap_eig(
     in_degree = dense_adj.float().sum(dim=1).view(-1)
     A = dense_adj.float()
     D = torch.diag(in_degree.clip(1).pow(-0.5))
-    L = torch.eye(num_nodes, device=edge_index.device) - D @ A @ D
+    L = torch.eye(num_nodes, device=edge_index.device, dtype=dtype) - D @ A @ D
 
-    return eigh(L)
+    lap_eigval, lap_eigvec = eigh(L)
+    return lap_eigval.type(dtype), lap_eigvec.type(dtype)

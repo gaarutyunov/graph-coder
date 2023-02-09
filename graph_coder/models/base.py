@@ -39,4 +39,5 @@ class GraphCoderBase(nn.Module, Generic[T], abc.ABC):
 
     @abc.abstractmethod
     def forward(self, batch: GraphCoderBatch) -> T:
+        # TODO: replace custom type with tensors for deepspeed offload compatibility
         pass

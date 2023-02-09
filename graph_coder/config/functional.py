@@ -64,3 +64,8 @@ def filter_is_processed(index: pd.DataFrame) -> pd.DataFrame:
 def get_device(name: str) -> torch.device:
     """Get device by name"""
     return torch.device(name)
+
+
+def get_dtype(name: str) -> torch.dtype:
+    """Get dtype by name"""
+    return getattr(torch, name)

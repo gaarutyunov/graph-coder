@@ -14,7 +14,6 @@
 from functools import partial
 
 import torch
-from torch.nn.utils.rnn import pad_sequence
 from torch.functional import F
 from transformers import PreTrainedTokenizerFast
 from typing import List, Dict
@@ -31,6 +30,7 @@ def pad(
     tokenizer: PreTrainedTokenizerFast,
     max_length: int = 64,
     device: torch.device = get_device(),
+    dtype: torch.dtype = torch.float,
 ) -> List[Dict[str, torch.Tensor]]:
     """Pad a batch of strings restoring the original packs."""
     encoding = (
@@ -42,8 +42,7 @@ def pad(
             max_length=max_length,
         )
         .to(device)
-        .convert_to_tensors()
-    )
+    ).data
     inputs_ids = []
     attention_mask = []
 
@@ -62,8 +61,8 @@ def pad(
 
     return [
         {
-            "input_ids": torch.cat(inputs_ids),
-            "attention_mask": torch.cat(attention_mask),
+            "input_ids": torch.cat(inputs_ids).type(dtype),
+            "attention_mask": torch.cat(attention_mask).type(dtype),
         }
         for inputs_ids, attention_mask in zip(inputs_ids, attention_mask)
     ]
@@ -76,6 +75,7 @@ def collate_ast(
     max_length: int = 64,
     max_seq_length: int = 8192,
     device: torch.device = get_device(),
+    dtype: torch.dtype = torch.float,
 ) -> GraphCoderBatch:
     """Collate a batch of examples into a batch of tensors."""
     idx = []
@@ -99,7 +99,7 @@ def collate_ast(
             .t()
             .contiguous()
         )
-        lap_eigval, lap_eigvec = lap_eig(edge_index_, len(graph_data.x))
+        lap_eigval, lap_eigvec = lap_eig(edge_index_, len(graph_data.x), dtype=dtype)
         lap_eigval = lap_eigval[None, :].expand_as(lap_eigvec)
         lap_eigvals.append(lap_eigval)
         lap_eigvecs.append(lap_eigvec)
@@ -121,7 +121,26 @@ def collate_ast(
         max_length=max_length,
         device=device,
         tokenizer=tokenizer,
+        dtype=dtype,
     )
+
+    source_ = tokenizer(
+        sources,
+        padding=True,
+        return_tensors="pt",
+        return_attention_mask=True,
+        truncation=True,
+        max_length=max_seq_length,
+    ).to(device).data
+
+    docstring_ = tokenizer(
+        docstrings,
+        padding=True,
+        return_tensors="pt",
+        return_attention_mask=True,
+        truncation=True,
+        max_length=max_seq_length,
+    ).to(device).data
 
     return GraphCoderBatch(
         idx=torch.tensor(idx, dtype=torch.long, device=device),
@@ -134,26 +153,14 @@ def collate_ast(
         lap_eigvec=torch.cat(
             [F.pad(i, (0, max_n - i.size(1)), value=float("0")) for i in lap_eigvecs]
         ),
-        source_=tokenizer(
-            sources,
-            padding=True,
-            return_tensors="pt",
-            return_attention_mask=True,
-            truncation=True,
-            max_length=max_seq_length,
-        )
-        .to(device)
-        .convert_to_tensors(),
-        docstring_=tokenizer(
-            docstrings,
-            padding=True,
-            return_tensors="pt",
-            return_attention_mask=True,
-            truncation=True,
-            max_length=max_seq_length,
-        )
-        .to(device)
-        .convert_to_tensors(),
+        source_={
+            "input_ids": source_["input_ids"].type(dtype),
+            "attention_mask": source_["attention_mask"].type(dtype),
+        },
+        docstring_={
+            "input_ids": docstring_["input_ids"].type(dtype),
+            "attention_mask": docstring_["attention_mask"].type(dtype),
+        },
         node_data_=node_data_,
         edge_data_=edge_data_,
     )
