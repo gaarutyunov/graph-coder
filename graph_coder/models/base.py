@@ -14,9 +14,8 @@
 import abc
 from typing import TypeVar, Generic
 
+import torch
 from torch import nn
-
-from graph_coder.data import GraphCoderBatch
 
 T = TypeVar("T")
 
@@ -38,6 +37,5 @@ class GraphCoderBase(nn.Module, Generic[T], abc.ABC):
         self.decoder = decoder
 
     @abc.abstractmethod
-    def forward(self, batch: GraphCoderBatch) -> T:
-        # TODO: replace custom type with tensors for deepspeed offload compatibility
+    def forward(self, **kwargs: torch.Tensor) -> T:
         pass

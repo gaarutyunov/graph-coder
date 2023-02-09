@@ -35,6 +35,14 @@ def main(
 
 
 if __name__ == "__main__":
-    warnings.filterwarnings("ignore", message=".*is a private function and will be deprecated.*", category=UserWarning)
-    warnings.filterwarnings("ignore", message=".*the loss during ``runner.handle_batch``?.*", category=UserWarning)
+    warnings.filterwarnings(
+        "ignore",
+        message=".*is a private function and will be deprecated.*",
+        category=UserWarning,
+    )
+    warnings.filterwarnings(
+        "ignore",
+        message=".*the loss during ``runner.handle_batch``?.*",
+        category=UserWarning,
+    )
     main()

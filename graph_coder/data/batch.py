@@ -98,3 +98,48 @@ class GraphCoderBatch:
     @property
     def has_graph(self) -> bool:
         return self.node_data is not None and self.node_data.size(-2) > 0
+
+    def to_dict(self) -> Dict[str, torch.Tensor]:
+        return {
+            "idx": self.idx,
+            "source": self.source,
+            "source_attn_mask": self.source_attn_mask,
+            "docstring": self.docstring,
+            "docstring_attn_mask": self.docstring_attn_mask,
+            "edge_index": self.edge_index,
+            "edge_data": self.edge_data,
+            "edge_data_attn_mask": self.edge_data_attn_mask,
+            "node_data": self.node_data,
+            "node_data_attn_mask": self.node_data_attn_mask,
+            "node_num": self.node_num,
+            "edge_num": self.edge_num,
+            "lap_eigval": self.lap_eigval,
+            "lap_eigvec": self.lap_eigvec,
+        }
+
+    @staticmethod
+    def from_dict(obj: Dict[str, torch.Tensor]) -> "GraphCoderBatch":
+        return GraphCoderBatch(
+            idx=obj["idx"],
+            source_={
+                "input_ids": obj["source"],
+                "attention_mask": obj["source_attn_mask"],
+            },
+            docstring_={
+                "input_ids": obj["docstring"],
+                "attention_mask": obj["docstring_attn_mask"],
+            },
+            edge_index=obj["edge_index"],
+            edge_data_={
+                "input_ids": obj["edge_data"],
+                "attention_mask": obj["edge_data_attn_mask"],
+            },
+            node_data_={
+                "input_ids": obj["node_data"],
+                "attention_mask": obj["node_data_attn_mask"],
+            },
+            node_num=obj["node_num"],
+            edge_num=obj["edge_num"],
+            lap_eigval=obj["lap_eigval"],
+            lap_eigvec=obj["lap_eigvec"],
+        )

@@ -64,6 +64,7 @@ class TokenGTEncoder(nn.Module):
         activation_fn: str = "gelu",
         return_attention: bool = False,
         causal: bool = False,
+        last_state_only: bool = True,
     ):
         super().__init__()
         self.encoder_layers = encoder_layers
@@ -103,6 +104,7 @@ class TokenGTEncoder(nn.Module):
             apply_graphormer_init=apply_graphormer_init,
             activation_fn=activation_fn,
             return_attention=return_attention,
+            last_state_only=last_state_only,
         )
 
         self.share_input_output_embed = share_encoder_input_output_embed
@@ -121,26 +123,13 @@ class TokenGTEncoder(nn.Module):
         if self.embed_out is not None:
             self.embed_out.reset_parameters()
 
-    def forward(self, batched_data, perturb=None, masked_tokens=None, **unused):
-        inner_states, graph_rep, attn_dict = self.graph_encoder(
-            batched_data, perturb=perturb
-        )
+    def forward(self, **kwargs: torch.Tensor):
+        inner_states, graph_rep, attn_dict = self.graph_encoder(**kwargs)
 
         x = inner_states[-1].transpose(0, 1)  # B x T x C
 
-        # project masked tokens only
-        if masked_tokens is not None:
-            raise NotImplementedError
-
         x = self.layer_norm(self.activation_fn(self.lm_head_transform_weight(x)))
 
-        # project back to size of vocabulary
-        if self.share_input_output_embed and hasattr(
-            self.graph_encoder.embed_tokens, "weight"
-        ):
-            x = F.linear(x, self.graph_encoder.embed_tokens.weight)
-        elif self.embed_out is not None:
-            x = self.embed_out(x)
         if self.lm_output_learned_bias is not None:
             x = x + self.lm_output_learned_bias
 

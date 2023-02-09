@@ -74,7 +74,7 @@ def collate_ast(
     max_seq_length: int = 8192,
     device: torch.device = get_device(),
     dtype: torch.dtype = torch.float,
-) -> GraphCoderBatch:
+) -> Dict[str, torch.Tensor]:
     """Collate a batch of examples into a batch of tensors."""
     idx = []
     edge_index = []
@@ -168,4 +168,4 @@ def collate_ast(
         },
         node_data_=node_data_,
         edge_data_=edge_data_,
-    )
+    ).to_dict()

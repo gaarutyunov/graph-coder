@@ -26,7 +26,7 @@
 
 import math
 from pathlib import Path
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict
 
 import torch
 import torch.nn as nn
@@ -235,7 +235,8 @@ class GraphFeatureTokenizer(nn.Module):
         order_embed = self.order_encoder(order)
         return order_embed
 
-    def forward(self, batch: GraphCoderBatch, perturb=None):
+    def forward(self, **kwargs: torch.Tensor):
+        batch = GraphCoderBatch.from_dict(kwargs)
         padded_index, padded_feature, padding_mask, _, _ = self.process_batch(batch)
         node_mask = self.get_node_mask(
             batch.node_num, padded_feature.device

@@ -24,7 +24,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from typing import Optional
+from typing import Optional, Dict
 
 import torch
 import torch.nn as nn
@@ -98,8 +98,8 @@ class TokenGTGraphEncoder(nn.Module):
         qn_block_size: int = 8,
         return_attention: bool = False,
         causal: bool = False,
+        last_state_only: bool = True,
     ) -> None:
-
         super().__init__()
         self.dropout_module = FairseqDropout(
             dropout, module_name=self.__class__.__name__
@@ -110,6 +110,7 @@ class TokenGTGraphEncoder(nn.Module):
         self.traceable = traceable
         self.performer = performer
         self.performer_finetune = performer_finetune
+        self.last_state_only = last_state_only
 
         self.graph_feature = GraphFeatureTokenizer(
             embedding=embedding,
@@ -282,19 +283,12 @@ class TokenGTGraphEncoder(nn.Module):
 
     def forward(
         self,
-        batched_data,
-        perturb=None,
-        last_state_only: bool = False,
-        token_embeddings: Optional[torch.Tensor] = None,
-        attn_mask: Optional[torch.Tensor] = None,
+        **kwargs: torch.Tensor,
     ):
         if self.performer and self.performer_auto_check_redraw:
             self.performer_proj_updater.redraw_projections()
 
-        if token_embeddings is not None:
-            raise NotImplementedError
-        else:
-            x, padding_mask, padded_index = self.graph_feature(batched_data, perturb)
+        x, padding_mask, padded_index = self.graph_feature(**kwargs)
 
         # x: B x T x C
 
@@ -315,11 +309,8 @@ class TokenGTGraphEncoder(nn.Module):
         x = x.transpose(0, 1)
 
         inner_states = []
-        if not last_state_only:
+        if not self.last_state_only:
             inner_states.append(x)
-
-        if attn_mask is not None:
-            raise NotImplementedError
 
         attn_dict = {"maps": {}, "padded_index": padded_index}
         for i in range(len(self.layers)):
@@ -327,16 +318,14 @@ class TokenGTGraphEncoder(nn.Module):
             x, attn = layer(
                 x,
                 self_attn_padding_mask=padding_mask,
-                self_attn_mask=attn_mask,
-                self_attn_bias=None,
             )
-            if not last_state_only:
+            if not self.last_state_only:
                 inner_states.append(x)
             attn_dict["maps"][i] = attn
 
         graph_rep = x[0, :, :]
 
-        if last_state_only:
+        if self.last_state_only:
             inner_states = [x]
 
         if self.traceable:

@@ -43,7 +43,8 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
             hidden_size, hidden_size * max_length, bias=False
         )
 
-    def forward(self, batch: GraphCoderBatch) -> Dict[str, torch.Tensor]:
+    def forward(self, **kwargs: torch.Tensor) -> Dict[str, torch.Tensor]:
+        batch = GraphCoderBatch.from_dict(kwargs)  # TODO: remove this
         x = []
         tgt = []
         result = {}
@@ -61,7 +62,7 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
             tgt.append(eos)
 
         if batch.has_graph:
-            graph_encoded = self.graph_encoder(batch)
+            graph_encoded = self.graph_encoder(**kwargs)
             device = graph_encoded.device
             x.append(graph_encoded)
             (

@@ -55,8 +55,8 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
         super().on_experiment_start(runner)
         self._print_summary()
 
-    def handle_batch(self, batch: GraphCoderBatch) -> None:
-        loss = self._calc_loss(batch)
+    def handle_batch(self, batch: Dict[str, torch.Tensor]) -> None:
+        loss = self._calc_loss(**batch)
 
         self.batch_metrics["loss"] = loss.item()
 
@@ -74,6 +74,6 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
         print(f"Device: {self.device}")
 
     @abc.abstractmethod
-    def _calc_loss(self, batch: GraphCoderBatch) -> torch.Tensor:
+    def _calc_loss(self, **kwargs: torch.Tensor) -> torch.Tensor:
         """Method that calculates loss for a batch."""
         pass
