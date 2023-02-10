@@ -4,8 +4,8 @@ decoder:
   decoder_layer:
     _target_: torch.nn.TransformerDecoderLayer
     d_model: 64
-    nhead: 12
+    nhead: 16
     dim_feedforward: 512
     dropout: 0.1
     activation: relu
-  num_layers: 12
+  num_layers: 8

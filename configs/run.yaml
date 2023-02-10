@@ -17,6 +17,9 @@ run:
     loaders:
       _var_: dataset.loaders
 
+    loggers:
+      _var_: loggers
+
     callbacks:
       - _target_: catalyst.callbacks.checkpoint.CheckpointCallback
         topk: 2

@@ -7,7 +7,7 @@ graph_encoder:
   type_id: true
   encoder_embed_dim: 64
   encoder_ffn_embed_dim: 512
-  encoder_layers: 12
-  encoder_attention_heads: 12
+  encoder_layers: 8
+  encoder_attention_heads: 16
   attention_dropout: 0.1
   apply_graphormer_init: true
