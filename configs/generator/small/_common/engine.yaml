@@ -16,9 +16,11 @@ engine:
             device: cpu
           contiguous_gradients: true
           overlap_comm: true
-          reduce_bucket_size: 1024
-          stage3_prefetch_bucket_size: 921.6
-          stage3_param_persistence_threshold: 320
+          allgather_bucket_size: 5e8
+          reduce_bucket_size: 5e8
+          stage3_max_reuse_distance: 1e9
+          stage3_prefetch_bucket_size: 5e8
+          stage3_param_persistence_threshold: 1e6
         fp16:
           enabled: true
           auto_cast: true
