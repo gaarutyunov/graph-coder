@@ -13,6 +13,7 @@
 #  limitations under the License.
 
 import ast
+import inspect
 import json
 import os
 import typing
@@ -36,6 +37,9 @@ from graph_coder.utils import run_async
 from graph_coder.ast import F
 
 
+FilterFn = typing.Callable[[pd.DataFrame], pd.DataFrame]
+
+
 class AstDataset(BaseDataset[AstExample]):
     def __init__(
         self,
@@ -49,7 +53,7 @@ class AstDataset(BaseDataset[AstExample]):
         batch_size: int = 1,
         log_file: str = "log.txt",
         introspect: bool = False,
-        filter_index: Optional[typing.Callable[[pd.DataFrame], pd.DataFrame]] = None,
+        filter_index: Optional[Union[typing.Iterable[FilterFn], FilterFn]] = None,
         processed_dir: Optional[typing.Union[os.PathLike, str]] = None,
     ) -> None:
         self.root = Path(root).expanduser()
@@ -133,7 +137,11 @@ class AstDataset(BaseDataset[AstExample]):
         if "processed" not in self.index.columns.tolist():
             self.index["processed"] = self.index.index.map(self.is_item_processed)
         if self.filter_index is not None:
-            self.index = self.filter_index(self.index)
+            if inspect.isfunction(self.filter_index):
+                self.index = self.filter_index(self.index)
+            else:
+                for fn in self.filter_index:
+                    self.index = fn(self.index)
 
     def is_item_processed(self, idx: int) -> bool:
         return (self._processed_dir / str(idx)).exists()

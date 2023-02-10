@@ -62,6 +62,11 @@ def filter_is_processed(index: pd.DataFrame) -> pd.DataFrame:
     return index[index.processed].dropna(axis=0)
 
 
+def filter_max_nodes(index: pd.DataFrame, max_nodes: int = 1000) -> pd.DataFrame:
+    """Filters out rows that have more than `max_nodes` nodes"""
+    return index[index.nodes <= max_nodes].dropna(axis=0)
+
+
 def get_device(name: str) -> torch.device:
     """Get device by name"""
     return torch.device(name)

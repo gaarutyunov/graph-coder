@@ -69,8 +69,12 @@ def test_parse_config():
 def test_get_activity():
     config = OrderedDict(
         activities=[
-            OrderedDict(_target_="graph_coder.config.F.get_activity", idx=0, _mode_="call"),
-            OrderedDict(_target_="graph_coder.config.F.get_activity", idx=1, _mode_="call"),
+            OrderedDict(
+                _target_="graph_coder.config.F.get_activity", idx=0, _mode_="call"
+            ),
+            OrderedDict(
+                _target_="graph_coder.config.F.get_activity", idx=1, _mode_="call"
+            ),
         ]
     )
 

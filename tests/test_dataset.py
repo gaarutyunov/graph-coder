@@ -27,6 +27,7 @@ from graph_coder.config.functional import (
     filter_has_docstring,
     filter_is_processed,
     get_dtype,
+    filter_max_nodes,
 )
 
 
@@ -116,6 +117,19 @@ def test_filter_index():
 
     assert len(dataset.index[dataset.index["path"] == "function_003.py"]) == 0
     assert len(dataset.index[dataset.index["path"] == "multi_class_001.py"]) == 0
+
+
+def test_filters_index():
+    dataset = AstDataset(
+        Path(__file__).parent / "./data",
+        collate_fn=partial(
+            collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
+        ),
+        batch_size=2,
+        filter_index=[filter_has_docstring, partial(filter_max_nodes, max_nodes=13)],
+    )
+
+    assert len(dataset.index) == 3
 
 
 def test_loaders():
