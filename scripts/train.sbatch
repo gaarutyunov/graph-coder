@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-#SBATCH --mail-user=gaarutyunov@edu.hse.ru
+#SBATCH --mail-user=germanarutyunov@gmail.com
 #SBATCH --mail-type=ALL
 #SBATCH --job-name=gc-train
 #SBATCH --output="logs/slurm/train/"%j.out

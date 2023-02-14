@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-#SBATCH --mail-user=gaarutyunov@edu.hse.ru
+#SBATCH --mail-user=germanarutyunov@gmail.com
 #SBATCH --mail-type=ALL
 #SBATCH --job-name=gc-prep
 #SBATCH --output="logs/slurm/preprocess/"%j.out
