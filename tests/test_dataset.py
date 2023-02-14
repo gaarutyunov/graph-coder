@@ -20,7 +20,7 @@ from unittest.mock import patch
 import numpy as np
 import torch
 
-from graph_coder.data import collate_ast, pad
+from graph_coder.data import collate_ast, pad, GraphCoderBatch
 from graph_coder.datasets import AstDataset
 from graph_coder.config.functional import (
     get_pretrained_tokenizer,
@@ -64,6 +64,7 @@ def test_collator():
     loader = dataset.loaders["train"]
 
     for batch in loader:
+        batch = GraphCoderBatch.from_dict(batch)
         assert batch.edge_index.size(0) == 2
         assert (
             batch.edge_data.size(1) == (batch.edge_data != -100).sum(dim=1).max().item()
@@ -230,6 +231,8 @@ def test_dtype():
     )
 
     for batch in dataset.loaders["train"]:
+        batch = GraphCoderBatch.from_dict(batch)
+
         assert batch.node_data.dtype == torch.long
         assert batch.edge_data.dtype == torch.long
         assert batch.docstring.dtype == torch.long

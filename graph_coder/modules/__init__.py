@@ -26,5 +26,6 @@
 
 from .tokengt_encoder import TokenGTEncoder
 from .performer_encoder import PerformerEncoder
+from .token_embedding import TokenEmbedding
 
-__all__ = ("TokenGTEncoder", "PerformerEncoder")
+__all__ = ("TokenGTEncoder", "PerformerEncoder", "TokenEmbedding")

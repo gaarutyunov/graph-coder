@@ -22,7 +22,7 @@ from graph_coder.config import ConfigBuilder
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
 from graph_coder.models import GraphCoderGenerator
-from graph_coder.modules import TokenGTEncoder, PerformerEncoder
+from graph_coder.modules import TokenGTEncoder, PerformerEncoder, TokenEmbedding
 from graph_coder.config.functional import get_pretrained_tokenizer
 from graph_coder.runners import GraphCoderGeneratorRunner
 
@@ -44,8 +44,13 @@ def test_performer():
         len(tokenizer.vocab), 128, padding_idx=tokenizer.pad_token_id
     )
 
-    encoder = TokenGTEncoder(
+    graph_embedding = TokenEmbedding(
         embedding=embedding,
+        ff=nn.Linear(64, 1, bias=False),
+    )
+
+    encoder = TokenGTEncoder(
+        embedding=graph_embedding,
         encoder_embed_dim=128,
         encoder_ffn_embed_dim=128,
         lap_node_id=True,
@@ -76,7 +81,7 @@ def test_performer():
     )
 
     for batch in loader:
-        decoded = generator(batch)
+        decoded = generator(**batch)
         if "docstring" in decoded:
             assert decoded["docstring"].size(-1) == len(tokenizer.vocab)
         if "graph" in decoded:
@@ -95,7 +100,9 @@ def test_config_performer():
     assert isinstance(params["runner"], GraphCoderGeneratorRunner)
     assert (
         params["runner"].model.embedding
-        == params["runner"].model.graph_encoder.graph_encoder.graph_feature.embedding
+        == params[
+            "runner"
+        ].model.graph_encoder.graph_encoder.graph_feature.embedding.embedding
     )
     assert params["run"][0]["optimizer"].param_groups[0]["params"] == list(
         params["runner"].model.parameters()
@@ -103,5 +110,5 @@ def test_config_performer():
     assert isinstance(params["model"].encoder, PerformerEncoder)
 
     for batch in params["dataset"].loaders["train"]:
-        res = params["model"](batch)
+        res = params["model"](**batch)
         assert isinstance(res, dict)

@@ -22,7 +22,7 @@ from torch.utils.data import DataLoader
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
 from graph_coder.models import GraphCoderGenerator
-from graph_coder.modules import TokenGTEncoder
+from graph_coder.modules import TokenGTEncoder, TokenEmbedding
 from graph_coder.runners import GraphCoderGeneratorRunner
 from graph_coder.config.functional import get_pretrained_tokenizer
 
@@ -44,8 +44,13 @@ def test_generator():
         len(tokenizer.vocab), 128, padding_idx=tokenizer.pad_token_id
     )
 
-    encoder = TokenGTEncoder(
+    graph_embedding = TokenEmbedding(
         embedding=embedding,
+        ff=nn.Linear(64, 1, bias=False),
+    )
+
+    encoder = TokenGTEncoder(
+        embedding=graph_embedding,
         encoder_embed_dim=128,
         encoder_ffn_embed_dim=128,
         lap_node_id=True,
@@ -69,7 +74,7 @@ def test_generator():
     )
 
     for batch in loader:
-        decoded = generator(batch)
+        decoded = generator(**batch)
         if "docstring" in decoded:
             assert decoded["docstring"].size(-1) == len(tokenizer.vocab)
         if "graph" in decoded:
@@ -91,8 +96,13 @@ def test_generator_runner():
         len(tokenizer.vocab), 128, padding_idx=tokenizer.pad_token_id
     )
 
-    encoder = TokenGTEncoder(
+    graph_embedding = TokenEmbedding(
         embedding=embedding,
+        ff=nn.Linear(64, 1, bias=False),
+    )
+
+    encoder = TokenGTEncoder(
+        embedding=graph_embedding,
         encoder_embed_dim=128,
         encoder_ffn_embed_dim=128,
         lap_node_id=True,
@@ -130,5 +140,5 @@ def test_generator_runner():
     )
 
     for batch in loader:
-        loss = runner._calc_loss(batch)
+        loss = runner._calc_loss(**batch)
         assert torch.is_floating_point(loss)

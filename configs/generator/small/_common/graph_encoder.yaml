@@ -2,7 +2,7 @@ graph_encoder:
   _target_: graph_coder.modules.TokenGTEncoder
   _var_: graph_encoder
   embedding:
-    _var_: embedding
+    _var_: token_embedding
   lap_node_id: true
   type_id: true
   encoder_embed_dim: 64

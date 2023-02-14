@@ -47,7 +47,14 @@ model:
   graph_encoder:
     _target_: graph_coder.modules.TokenGTEncoder
     embedding:
-      _var_: embedding
+      _target_: graph_coder.modules.TokenEmbedding
+      _var_: token_embedding
+      embedding:
+        _var_: embedding
+      ff:
+        _target_: torch.nn.Linear
+        in_features: *max_length
+        out_features: 1
     lap_node_id: true
     type_id: true
     encoder_embed_dim: *hidden_size

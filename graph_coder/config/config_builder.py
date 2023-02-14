@@ -19,7 +19,7 @@ from typing import Union, Optional, Dict, Any
 import yaml
 from catalyst.registry import REGISTRY
 
-from .functional import process_configs
+from .utils import process_configs
 
 
 class ConfigBuilder:
@@ -103,7 +103,7 @@ class ConfigBuilder:
 
             path = root / ("_".join(parts) + ".yaml")
 
-        configs = self._process_configs()
+        configs = self._process_configs(False)
 
         with open(path, "w") as f:
             yaml.dump(configs, f)
@@ -115,7 +115,7 @@ class ConfigBuilder:
 
         return experiment_params
 
-    def _process_configs(self) -> Dict[str, Any]:
+    def _process_configs(self, ordered: bool = True) -> Dict[str, Any]:
         if self.root.is_file():
             configs = [str(self.root)]
         else:
@@ -123,7 +123,7 @@ class ConfigBuilder:
 
         return process_configs(
             configs,
-            ordered=True,
+            ordered=ordered,
         )
 
     def _add(self, config: Path):

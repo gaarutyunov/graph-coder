@@ -15,12 +15,13 @@
 from functools import partial
 from pathlib import Path
 
+import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
-from graph_coder.modules import TokenGTEncoder
+from graph_coder.modules import TokenGTEncoder, TokenEmbedding
 from graph_coder.config.functional import get_pretrained_tokenizer
 
 
@@ -32,8 +33,9 @@ def test_tokengt_encoder():
     loader = DataLoader(
         dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer), batch_size=2
     )
-    embedding = nn.Embedding(
-        len(tokenizer.vocab), 128, padding_idx=tokenizer.pad_token_id
+    embedding = TokenEmbedding(
+        embedding=nn.Embedding(len(tokenizer.vocab), 128, padding_idx=1),
+        ff=nn.Linear(64, 1, bias=False),
     )
 
     encoder = TokenGTEncoder(
@@ -45,7 +47,7 @@ def test_tokengt_encoder():
     )
 
     for batch in loader:
-        encoded = encoder(batch)
+        encoded = encoder(**batch)
         assert encoded.size(-1) == 128
 
 
@@ -57,8 +59,9 @@ def test_sign_flip():
     loader = DataLoader(
         dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer), batch_size=2
     )
-    embedding = nn.Embedding(
-        len(tokenizer.vocab), 128, padding_idx=tokenizer.pad_token_id
+    embedding = TokenEmbedding(
+        embedding=nn.Embedding(len(tokenizer.vocab), 128, padding_idx=1),
+        ff=nn.Linear(64, 1, bias=False),
     )
 
     encoder = TokenGTEncoder(
@@ -72,7 +75,7 @@ def test_sign_flip():
     )
 
     for batch in loader:
-        encoded = encoder(batch)
+        encoded = encoder(**batch)
         assert encoded.size(-1) == 128
 
 
@@ -84,8 +87,9 @@ def test_performer():
     loader = DataLoader(
         dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer), batch_size=2
     )
-    embedding = nn.Embedding(
-        len(tokenizer.vocab), 128, padding_idx=tokenizer.pad_token_id
+    embedding = TokenEmbedding(
+        embedding=nn.Embedding(len(tokenizer.vocab), 128, padding_idx=1),
+        ff=nn.Linear(64, 1, bias=False),
     )
 
     encoder = TokenGTEncoder(
@@ -100,7 +104,7 @@ def test_performer():
     )
 
     for batch in loader:
-        encoded = encoder(batch)
+        encoded = encoder(**batch)
         assert encoded.size(-1) == 128
 
 
@@ -112,8 +116,9 @@ def test_graphormer_init():
     loader = DataLoader(
         dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer), batch_size=2
     )
-    embedding = nn.Embedding(
-        len(tokenizer.vocab), 128, padding_idx=tokenizer.pad_token_id
+    embedding = TokenEmbedding(
+        embedding=nn.Embedding(len(tokenizer.vocab), 128, padding_idx=1),
+        ff=nn.Linear(64, 1, bias=False),
     )
 
     encoder = TokenGTEncoder(
@@ -129,5 +134,5 @@ def test_graphormer_init():
     )
 
     for batch in loader:
-        encoded = encoder(batch)
+        encoded = encoder(**batch)
         assert encoded.size(-1) == 128

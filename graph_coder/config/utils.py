@@ -12,8 +12,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from .config_builder import ConfigBuilder
-import graph_coder.config.functional as F  # noqa: N812
-from .utils import process_configs
+from collections import OrderedDict
+from typing import Iterable, Dict, Any
 
-__all__ = ("ConfigBuilder", "F", "process_configs")
+from catalyst import utils
+
+
+def process_configs(configs: Iterable[str], ordered: bool = False) -> Dict[str, Any]:
+    """Merges YAML configs and prepares env."""
+    config: Dict[str, Any] = OrderedDict() if ordered else {}  # type: ignore[assignment]
+
+    for config_path in configs:
+        config_part = utils.load_config(config_path, ordered=ordered)
+        config = utils.merge_dicts(config, config_part)
+
+    return config

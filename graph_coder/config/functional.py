@@ -11,25 +11,11 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from collections import OrderedDict
-from typing import Iterable, Dict, Any
-
+"""Functional utilities to use in config files"""
 import pandas as pd
 import torch
-from catalyst import utils
 from torch._C._profiler import ProfilerActivity
 from transformers import PreTrainedTokenizerFast, AutoTokenizer
-
-
-def process_configs(configs: Iterable[str], ordered: bool = False) -> Dict[str, Any]:
-    """Merges YAML configs and prepares env."""
-    config: Dict[str, Any] = OrderedDict() if ordered else {}  # type: ignore[assignment]
-
-    for config_path in configs:
-        config_part = utils.load_config(config_path, ordered=ordered)
-        config = utils.merge_dicts(config, config_part)
-
-    return config
 
 
 def get_pretrained_tokenizer(

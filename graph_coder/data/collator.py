@@ -30,6 +30,7 @@ def pad(
     tokenizer: PreTrainedTokenizerFast,
     max_length: int = 64,
     device: torch.device = get_device(),
+    dtype: torch.dtype = torch.long,
 ) -> List[Dict[str, torch.Tensor]]:
     """Pad a batch of strings restoring the original packs."""
     encoding = (
@@ -59,8 +60,8 @@ def pad(
 
     return [
         {
-            "input_ids": torch.cat(inputs_ids),
-            "attention_mask": torch.cat(attention_mask),
+            "input_ids": torch.cat(inputs_ids).type(dtype),
+            "attention_mask": torch.cat(attention_mask).type(dtype),
         }
         for inputs_ids, attention_mask in zip(inputs_ids, attention_mask)
     ]
@@ -74,6 +75,7 @@ def collate_ast(
     max_seq_length: int = 8192,
     device: torch.device = get_device(),
     dtype: torch.dtype = torch.float,
+    graph_dtype: torch.dtype = torch.long,
 ) -> Dict[str, torch.Tensor]:
     """Collate a batch of examples into a batch of tensors."""
     idx = []
@@ -119,6 +121,7 @@ def collate_ast(
         max_length=max_length,
         device=device,
         tokenizer=tokenizer,
+        dtype=graph_dtype,
     )
 
     source_ = (

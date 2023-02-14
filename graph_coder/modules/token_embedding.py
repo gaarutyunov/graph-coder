@@ -11,9 +11,21 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import torch
+from torch import nn
 
-from .config_builder import ConfigBuilder
-import graph_coder.config.functional as F  # noqa: N812
-from .utils import process_configs
 
-__all__ = ("ConfigBuilder", "F", "process_configs")
+class TokenEmbedding(nn.Module):
+    def __init__(self, embedding: nn.Module, ff: nn.Module) -> None:
+        super().__init__()
+        self.embedding = embedding
+        self.ff = ff
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        :param x: torch.Tensor [sum(num_tokens), D]
+        :returns: torch.Tensor [sum(num_tokens), T]
+        """
+        x = self.embedding(x)
+        x = self.ff(x.transpose(-1, -2))
+        return x

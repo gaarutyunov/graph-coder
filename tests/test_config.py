@@ -15,7 +15,6 @@ from collections import OrderedDict
 from pathlib import Path
 
 import torch
-from catalyst.contrib.scripts.run import process_configs
 from catalyst.registry import REGISTRY
 from torch._C._profiler import ProfilerActivity
 from torch.nn import TransformerDecoder
@@ -35,7 +34,9 @@ def test_config():
     assert isinstance(params["runner"], GraphCoderGeneratorRunner)
     assert (
         params["runner"].model.embedding
-        == params["runner"].model.graph_encoder.graph_encoder.graph_feature.embedding
+        == params[
+            "runner"
+        ].model.graph_encoder.graph_encoder.graph_feature.embedding.embedding
     )
     assert params["run"][0]["optimizer"].param_groups[0]["params"] == list(
         params["runner"].model.parameters()
