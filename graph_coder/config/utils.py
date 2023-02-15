@@ -18,12 +18,12 @@ from typing import Iterable, Dict, Any
 from catalyst import utils
 
 
-def process_configs(configs: Iterable[str], ordered: bool = False) -> Dict[str, Any]:
+def process_configs(configs: Iterable[str], ordered: bool = False, load_ordered: bool = False) -> Dict[str, Any]:
     """Merges YAML configs and prepares env."""
     config: Dict[str, Any] = OrderedDict() if ordered else {}  # type: ignore[assignment]
 
     for config_path in configs:
-        config_part = utils.load_config(config_path, ordered=ordered)
+        config_part = utils.load_config(config_path, ordered=load_ordered)
         config = utils.merge_dicts(config, config_part)
 
     return config

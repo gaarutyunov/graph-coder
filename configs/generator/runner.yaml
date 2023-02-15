@@ -6,6 +6,4 @@ runner:
   vocab_size: 50277
   print_summary: false
   device:
-    _target_: catalyst.utils.get_device
     _var_: device
-    _mode_: call

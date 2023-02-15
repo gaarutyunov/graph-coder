@@ -69,8 +69,8 @@ class ConfigBuilder:
             self._add(self.root)
             return self
         for d in self.dirs:
-            if (d / self.common_dir).exists():
-                for cfg in sorted((d / self.common_dir).iterdir()):
+            if (d.parent / self.common_dir).exists():
+                for cfg in sorted((d.parent / self.common_dir).iterdir()):
                     self._add(cfg)
             for cfg in sorted(d.iterdir()):
                 self._add(cfg)
@@ -103,10 +103,14 @@ class ConfigBuilder:
 
             path = root / ("_".join(parts) + ".yaml")
 
-        configs = self._process_configs(False)
+        configs = self._process_configs(ordered=True, load_ordered=False)
 
-        with open(path, "w") as f:
-            yaml.dump(configs, f)
+        with open(path, "a") as f:
+            f.truncate()
+            for key, config in configs.items():
+                yaml.dump({
+                    key: config
+                }, f)
 
     def build(self):
         config = self._process_configs()
@@ -115,16 +119,15 @@ class ConfigBuilder:
 
         return experiment_params
 
-    def _process_configs(self, ordered: bool = True) -> Dict[str, Any]:
+    def _process_configs(
+        self, ordered: bool = True, load_ordered: bool = True
+    ) -> Dict[str, Any]:
         if self.root.is_file():
             configs = [str(self.root)]
         else:
             configs = [str(self.root / path) for path in self.configs.values()]
 
-        return process_configs(
-            configs,
-            ordered=ordered,
-        )
+        return process_configs(configs, ordered=ordered, load_ordered=load_ordered)
 
     def _add(self, config: Path):
         if not config.is_file() and not config.suffix == ".yaml":
