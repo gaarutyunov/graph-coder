@@ -19,6 +19,7 @@ import os
 import typing
 import aiofiles
 import chardet
+import humanize
 import networkx as nx
 import pandas as pandas
 import pandas as pd
@@ -55,6 +56,7 @@ class AstDataset(BaseDataset[AstExample]):
         introspect: bool = False,
         preprocess: bool = False,
         in_memory: bool = False,
+        print_summary: bool = False,
         filter_index: Optional[Union[typing.Iterable[FilterFn], FilterFn]] = None,
         processed_dir: Optional[typing.Union[os.PathLike, str]] = None,
     ) -> None:
@@ -92,6 +94,8 @@ class AstDataset(BaseDataset[AstExample]):
         self.split()
         if self.preprocess:
             self.process()
+        if print_summary:
+            self._print_summary()
         if self.in_memory:
             self.load()
 
@@ -143,8 +147,8 @@ class AstDataset(BaseDataset[AstExample]):
             self.index_file.touch()
             run_async(self._introspect())
         self.index = pandas.read_json(self.index_file, lines=True)
-        if "processed" not in self.index.columns.tolist():
-            self.index["processed"] = self.index.index.map(self.is_item_processed)
+        self.index["processed"] = self.index.index.map(self.is_item_processed)
+        self.index["size"] = self.index.index.map(self.item_size)
         if self.filter_index is not None:
             if inspect.isfunction(self.filter_index):
                 self.index = self.filter_index(self.index)
@@ -154,6 +158,11 @@ class AstDataset(BaseDataset[AstExample]):
 
     def is_item_processed(self, idx: int) -> bool:
         return (self._processed_dir / str(idx)).exists()
+
+    def item_size(self, idx: int) -> int:
+        if not self.is_item_processed(idx):
+            return 0
+        return (self._processed_dir / str(idx)).stat().st_size
 
     async def _introspect(self):
         async for graph_meta in self._parse_root():
@@ -263,7 +272,7 @@ class AstDataset(BaseDataset[AstExample]):
 
     def _print_summary(self, out: Optional[typing.TextIO] = None):
         assert self.index is not None, "Run .introspect() first"
-        print(f"Dataset summary for {self.__class__.__name__}:\n", file=out)
+        print(f"Summary for {self.__class__.__name__}:\n", file=out)
         print(f"- Number of graphs: {len(self.index):,}", file=out)
         print(f"- Avg. number of nodes: {self.index['nodes'].mean():.0f}", file=out)
         print(f"- Avg. number of edges: {self.index['edges'].mean():.0f}", file=out)
@@ -274,3 +283,8 @@ class AstDataset(BaseDataset[AstExample]):
         print(
             f"- Number of processed graphs: {self.index['processed'].sum():,}", file=out
         )
+        print(f"- Dataset size: {humanize.naturalsize(self.index['size'].sum())}", file=out)
+        print("\nSplits:", file=out)
+        for split, loader in self.loaders.items():
+            print(f"- {split}: {len(loader):,} graphs", file=out)
+

@@ -207,13 +207,19 @@ def test_preprocess():
         filter_index=filter_is_processed,
     )
     assert dataset.index.shape[0] == len(dataset)
-    summary = """Dataset summary for AstDataset:
+    summary = """Summary for AstDataset:
 
 - Number of graphs: 12
 - Avg. number of nodes: 22
 - Avg. number of edges: 26
 - Number of documented graphs: 8
 - Number of processed graphs: 12
+- Dataset size: 19.5 kB
+
+Splits:
+- train: 8 graphs
+- val: 2 graphs
+- test: 2 graphs
 """
     io = StringIO()
     dataset._print_summary(io)
