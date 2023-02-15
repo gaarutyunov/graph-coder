@@ -15,6 +15,7 @@
 import abc
 import os
 import pickle
+import re
 import typing
 from pathlib import Path
 
@@ -72,8 +73,13 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
     def is_processed(self) -> bool:
         if self._is_processed is None:
             try:
-                _ = next(iter(Path(self.processed_dir).iterdir()))
-                self._is_processed = self._last_processed_idx == len(self) - 1
+                i = 0
+                reg = re.compile(r"\d+")
+                for d in Path(self.processed_dir).iterdir():
+                    if not reg.match(d.stem):
+                        continue
+                    i += 1
+                self._is_processed = i == len(self)
             except:
                 self._is_processed = False
 

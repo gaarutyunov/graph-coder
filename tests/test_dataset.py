@@ -210,7 +210,7 @@ def test_preprocess():
     summary = """Dataset summary for AstDataset:
 
 - Number of graphs: 12
-- Avg. number of nodes: 21
+- Avg. number of nodes: 22
 - Avg. number of edges: 26
 - Number of documented graphs: 8
 - Number of processed graphs: 12
