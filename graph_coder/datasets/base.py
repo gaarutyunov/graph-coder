@@ -79,7 +79,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
                     if not reg.match(d.stem):
                         continue
                     i += 1
-                self._is_processed = i == len(self)
+                self._is_processed = i >= len(self)  # filtered may be less than processed
             except:
                 self._is_processed = False
 
