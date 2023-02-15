@@ -156,14 +156,6 @@ class AstDataset(BaseDataset[AstExample]):
                 for fn in self.filter_index:
                     self.index = fn(self.index)
 
-    def is_item_processed(self, idx: int) -> bool:
-        return (self._processed_dir / str(idx)).exists()
-
-    def item_size(self, idx: int) -> int:
-        if not self.is_item_processed(idx):
-            return 0
-        return (self._processed_dir / str(idx)).stat().st_size
-
     async def _introspect(self):
         async for graph_meta in self._parse_root():
             await self._write_index(**graph_meta)

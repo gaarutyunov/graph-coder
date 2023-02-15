@@ -261,3 +261,23 @@ def test_in_memory():
     with patch.object(dataset, "_get_from_cache", wraps=dataset._get_from_cache) as mock:
         _ = dataset[0]
         mock.assert_called_with(0)
+
+    dataset = AstDataset(
+        root=Path(__file__).parent / "./data",
+        in_memory=True,
+        collate_fn=partial(collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")),
+        batch_size=2,
+    )
+
+    assert dataset.is_processed
+    assert dataset.is_loaded
+
+    for loader in dataset.loaders.values():
+        for batch in loader:
+            batch = GraphCoderBatch.from_dict(batch)
+            assert batch.node_data.dtype == torch.long
+            assert batch.edge_data.dtype == torch.long
+            assert batch.docstring.dtype == torch.long
+            assert batch.source.dtype == torch.long
+            assert batch.lap_eigval.dtype == torch.float
+            assert batch.lap_eigvec.dtype == torch.float

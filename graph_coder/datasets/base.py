@@ -124,11 +124,6 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
             )
         )
 
-    def _get_data_loader(self, subset: Subset) -> DataLoader:
-        return DataLoader(
-            subset, collate_fn=self.collate_fn, batch_size=self.batch_size
-        )
-
     def process(self):
         """Preprocesses the dataset by getting each item and saving it into `processed_dir`"""
         if not self.is_processed:
@@ -143,11 +138,26 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
         if not self.is_loaded:
             run_async(self._load())
 
+    def is_item_processed(self, idx: int) -> bool:
+        return (Path(self.processed_dir) / str(idx)).exists()
+
+    def is_item_loaded(self, idx: int) -> bool:
+        return idx in self._cache
+
+    def item_size(self, idx: int) -> int:
+        if not self.is_item_processed(idx):
+            return 0
+        return (Path(self.processed_dir) / str(idx)).stat().st_size
+
+    def _get_data_loader(self, subset: Subset) -> DataLoader:
+        return DataLoader(
+            subset, collate_fn=self.collate_fn, batch_size=self.batch_size
+        )
+
     def _get_item(self, index: int) -> typing.Optional[T]:
-        if self.in_memory and self.is_processed:
-            assert self.is_loaded, "Dataset is not loaded yet, call .load() first or set `in_memory=False`"
+        if self.in_memory and self.is_item_loaded(index):
             return self._get_from_cache(index)
-        if self.is_processed:
+        if self.is_item_processed(index):
             return self._get_processed(index)
         return None
 
