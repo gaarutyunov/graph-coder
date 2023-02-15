@@ -155,13 +155,19 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
     def _get_from_cache(self, idx: int) -> T:
         return self._cache[idx]
 
-    async def _get_processed_async(self, idx: int) -> T:
-        async with aiofiles.open(Path(self.processed_dir) / str(idx), "rb") as f:
+    async def _get_processed_async(self, idx: int) -> typing.Optional[T]:
+        path = Path(self.processed_dir) / str(idx)
+        if not path.exists():
+            return None
+        async with aiofiles.open(path, "rb") as f:
             return pickle.loads(await f.read())
 
     async def _load(self):
         for i in trange(len(self), desc="Loading dataset", unit="files"):
-            self._cache[i] = await self._get_processed_async(i)
+            item = await self._get_processed_async(i)
+            if item is None:
+                continue
+            self._cache[i] = item
 
     async def _process(self):
         try:
