@@ -6,6 +6,7 @@ dataset:
   collate_fn:
     _var_: collator
   random_seed: 42
+  in_memory: true
   filter_index:
     - _target_: graph_coder.config.F.filter_is_processed
     - _target_: graph_coder.utils.partial

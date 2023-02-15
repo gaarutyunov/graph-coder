@@ -13,7 +13,6 @@
 #  limitations under the License.
 
 import abc
-import functools
 import os
 import pickle
 import typing
@@ -24,7 +23,7 @@ import torch
 from torch.utils.data import DataLoader, random_split, Dataset
 from typing import Dict
 
-from tqdm.auto import tqdm
+from tqdm.auto import tqdm, trange
 
 from graph_coder.logger import ILogger
 from graph_coder.utils import run_async
@@ -41,6 +40,8 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
         test_size: float = 0.2,
         val_size: float = 0.2,
         batch_size: int = 1,
+        in_memory: bool = False,
+        preprocess: bool = True,
     ):
         self._logger = logger
         self._loaders: Dict[str, DataLoader] = {}
@@ -49,6 +50,9 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
         self.random_seed = random_seed
         self.val_size = val_size
         self.test_size = test_size
+        self.in_memory = in_memory
+        self.preprocess = preprocess
+        self._cache: Dict[int, T] = {}
         self._is_processed: typing.Optional[bool] = None
 
     @abc.abstractmethod
@@ -56,7 +60,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
         pass
 
     @abc.abstractmethod
-    def __getitem__(self, item: int) -> T:
+    def __getitem__(self, index: int) -> T:
         pass
 
     @property
@@ -76,6 +80,10 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
         return self._is_processed
 
     @property
+    def is_loaded(self) -> bool:
+        return len(self._cache) == len(self)
+
+    @property
     def loaders(self) -> Dict[str, DataLoader]:
         return self._loaders
 
@@ -84,6 +92,10 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
         return int(
             max(Path(self.processed_dir).iterdir(), key=lambda x: int(x.stem)).stem
         )
+
+    @property
+    def _last_loaded_idx(self) -> int:
+        return len(self._cache) - 1
 
     def split(self):
         """Splits the dataset into train, test and validation sets using `random_seed`"""
@@ -114,10 +126,36 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
             run_async(self._process())
             self._is_processed = True
 
-    @functools.lru_cache(maxsize=16)
+    def load(self):
+        """Loads the dataset into memory"""
+        assert (
+            self.is_processed
+        ), "Dataset is not processed. Please run `process` first."
+        if not self.is_loaded:
+            run_async(self._load())
+
+    def _get_item(self, index: int) -> typing.Optional[T]:
+        if self.in_memory:
+            assert self.is_loaded, "Dataset is not loaded yet, call .load() first"
+            return self._get_from_cache(index)
+        if self.is_processed:
+            return self._get_processed(index)
+        return None
+
     def _get_processed(self, idx: int) -> T:
         with open(Path(self.processed_dir) / str(idx), "rb") as f:
             return pickle.load(f)
+
+    def _get_from_cache(self, idx: int) -> T:
+        return self._cache[idx]
+
+    async def _get_processed_async(self, idx: int) -> T:
+        async with aiofiles.open(Path(self.processed_dir) / str(idx), "rb") as f:
+            return pickle.loads(await f.read())
+
+    async def _load(self):
+        for i in trange(len(self), desc="Loading dataset", unit="files"):
+            self._cache[i] = await self._get_processed_async(i)
 
     async def _process(self):
         try:

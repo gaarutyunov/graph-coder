@@ -239,3 +239,19 @@ def test_dtype():
         assert batch.source.dtype == torch.long
         assert batch.lap_eigval.dtype == torch.half
         assert batch.lap_eigvec.dtype == torch.half
+
+
+def test_in_memory():
+    dataset = AstDataset(
+        root=Path(__file__).parent / "./data",
+        introspect=True,
+        preprocess=True,
+        in_memory=True,
+    )
+
+    assert dataset.is_processed
+    assert dataset.is_loaded
+
+    with patch.object(dataset, "_get_from_cache", wraps=dataset._get_from_cache) as mock:
+        _ = dataset[0]
+        mock.assert_called_with(0)

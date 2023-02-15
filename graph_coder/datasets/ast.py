@@ -53,6 +53,8 @@ class AstDataset(BaseDataset[AstExample]):
         batch_size: int = 1,
         log_file: str = "log.txt",
         introspect: bool = False,
+        preprocess: bool = False,
+        in_memory: bool = False,
         filter_index: Optional[Union[typing.Iterable[FilterFn], FilterFn]] = None,
         processed_dir: Optional[typing.Union[os.PathLike, str]] = None,
     ) -> None:
@@ -65,6 +67,8 @@ class AstDataset(BaseDataset[AstExample]):
             test_size,
             val_size,
             batch_size,
+            in_memory,
+            preprocess
         )
         if processed_dir is not None:
             self._processed_dir = Path(processed_dir).expanduser()
@@ -86,6 +90,10 @@ class AstDataset(BaseDataset[AstExample]):
         self.filter_index = filter_index
         self.introspect()
         self.split()
+        if self.preprocess:
+            self.process()
+        if self.in_memory:
+            self.load()
 
     @property
     def processed_dir(self) -> typing.Union[os.PathLike, str]:
@@ -95,8 +103,9 @@ class AstDataset(BaseDataset[AstExample]):
         return len(self.index)
 
     def __getitem__(self, index: int) -> AstExample:
-        if self.is_processed:
-            return self._get_processed(index)
+        item = self._get_item(index)
+        if item is not None:
+            return item
         assert (
             self.index is not None
         ), "Dataset is not introspected yet, call .introspect()"
