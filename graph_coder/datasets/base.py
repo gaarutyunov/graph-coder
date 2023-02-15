@@ -142,7 +142,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
 
     def _get_item(self, index: int) -> typing.Optional[T]:
         if self.in_memory:
-            assert self.is_loaded, "Dataset is not loaded yet, call .load() first"
+            assert self.is_loaded, "Dataset is not loaded yet, call .load() first or set `in_memory=False`"
             return self._get_from_cache(index)
         if self.is_processed:
             return self._get_processed(index)
