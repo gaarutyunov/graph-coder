@@ -8,6 +8,6 @@ graph_encoder:
   encoder_embed_dim: 64
   encoder_ffn_embed_dim: 128
   encoder_layers: 4
-  encoder_attention_heads: 8
+  encoder_attention_heads: 4
   attention_dropout: 0.1
   apply_graphormer_init: true
