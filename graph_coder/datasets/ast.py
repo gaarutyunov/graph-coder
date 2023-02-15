@@ -91,9 +91,9 @@ class AstDataset(BaseDataset[AstExample]):
         self.index: Optional[pandas.DataFrame] = None
         self.filter_index = filter_index
         self.introspect()
-        self.split()
         if self.preprocess:
             self.process()
+        self.split()
         if print_summary:
             self._print_summary()
         if self.in_memory:

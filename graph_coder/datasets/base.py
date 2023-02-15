@@ -21,7 +21,7 @@ from pathlib import Path
 
 import aiofiles
 import torch
-from torch.utils.data import DataLoader, random_split, Dataset
+from torch.utils.data import DataLoader, random_split, Dataset, Subset
 from typing import Dict
 
 from tqdm.auto import tqdm, trange
@@ -118,12 +118,15 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
             zip(
                 ["train", "val", "test"],
                 [
-                    DataLoader(
-                        dataset, collate_fn=self.collate_fn, batch_size=self.batch_size
-                    )
+                    self._get_data_loader(dataset)
                     for dataset in datasets
                 ],
             )
+        )
+
+    def _get_data_loader(self, subset: Subset) -> DataLoader:
+        return DataLoader(
+            subset, collate_fn=self.collate_fn, batch_size=self.batch_size
         )
 
     def process(self):
@@ -141,7 +144,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
             run_async(self._load())
 
     def _get_item(self, index: int) -> typing.Optional[T]:
-        if self.in_memory:
+        if self.in_memory and self.is_processed:
             assert self.is_loaded, "Dataset is not loaded yet, call .load() first or set `in_memory=False`"
             return self._get_from_cache(index)
         if self.is_processed:

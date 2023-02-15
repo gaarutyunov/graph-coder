@@ -193,8 +193,8 @@ def test_preprocess():
     dataset = AstDataset(
         root=Path(__file__).parent / "./data",
         introspect=True,
+        preprocess=True,
     )
-    dataset.process()
     assert dataset.is_processed
     with patch.object(dataset, "_get_processed", wraps=dataset._get_processed) as mock:
         _ = dataset[0]
@@ -210,7 +210,7 @@ def test_preprocess():
     summary = """Summary for AstDataset:
 
 - Number of graphs: 12
-- Avg. number of nodes: 22
+- Avg. number of nodes: 21
 - Avg. number of edges: 26
 - Number of documented graphs: 8
 - Number of processed graphs: 12
