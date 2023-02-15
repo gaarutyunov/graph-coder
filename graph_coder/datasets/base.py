@@ -87,7 +87,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
 
     @property
     def is_loaded(self) -> bool:
-        return len(self._cache) == len(self)
+        return len(self._cache) >= len(self)  # dataset is smaller after split
 
     @property
     def loaders(self) -> Dict[str, DataLoader]:
