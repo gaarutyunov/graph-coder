@@ -69,13 +69,13 @@ class ConfigBuilder:
             self._add(self.root)
             return self
         for i, d in enumerate(self.dirs):
-            if i == 0:
+            if i == 0 and len(self.dirs) < 4:
                 common_dir = d / self.common_dir
             else:
                 common_dir = d.parent / self.common_dir
             if common_dir.exists():
                 for cfg in sorted(common_dir.iterdir()):
-                    self._add(cfg)
+                    self._add(cfg, from_common=True)
             for cfg in sorted(d.iterdir()):
                 self._add(cfg)
 
@@ -129,14 +129,19 @@ class ConfigBuilder:
         if self.root.is_file():
             configs = [str(self.root)]
         else:
-            configs = [str(self.root / path) for path in self.configs.values()]
+            configs = [str(self.root / cfg["path"]) for cfg in self.configs.values()]
 
         return process_configs(configs, ordered=ordered, load_ordered=load_ordered)
 
-    def _add(self, config: Path):
+    def _add(self, config: Path, from_common: bool = False):
         if not config.is_file() and not config.suffix == ".yaml":
             return
-        elif config.stem in self.configs:
+        elif config.stem in self.configs \
+                and (not self.configs[config.stem]["from_common"]
+                     or from_common and self.configs[config.stem]["from_common"]):
             return
 
-        self.configs[config.stem] = str(config.relative_to(self.root))
+        self.configs[config.stem] = {
+            "path": str(config.relative_to(self.root)),
+            "from_common": from_common,
+        }
