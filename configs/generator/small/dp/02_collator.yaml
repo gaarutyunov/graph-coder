@@ -1,0 +1,20 @@
+collator:
+  _target_: graph_coder.utils.partial
+  _var_: collator
+  func:
+    _target_: graph_coder.data.collate_ast
+  max_length: 16
+  max_seq_length: 2048
+  tokenizer:
+    _var_: tokenizer
+  dtype:
+    _target_: graph_coder.config.F.get_dtype
+    _var_: dtype
+    name: half
+    _mode_: call
+  graph_dtype:
+    _target_: graph_coder.config.F.get_dtype
+    _var_: graph_dtype
+    name: long
+    _mode_: call
+  _mode_: call

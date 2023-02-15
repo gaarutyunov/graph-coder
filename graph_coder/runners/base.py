@@ -13,7 +13,7 @@
 #  limitations under the License.
 import abc
 from collections import defaultdict
-from typing import Dict
+from typing import Dict, Optional
 
 import torch
 from catalyst import dl
@@ -31,14 +31,16 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
     def __init__(
         self,
         model: nn.Module,
-        device: torch.device = get_device(),
+        device: Optional[torch.device] = None,
         print_summary: bool = True,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
-        self.model = model.to(device)
-        self.device = device
+        if device is not None:
+            self.model = model.to(device)
+        else:
+            self.model = model
         self.print_summary = print_summary
 
     def on_experiment_start(self, runner: "IRunner"):
@@ -61,7 +63,6 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
         if self.print_summary:
             sample_batch = next(iter(self.get_loaders()["train"]))
             summary(self.model, input_data=sample_batch)
-        print(f"Device: {self.device}")
 
     @abc.abstractmethod
     def _calc_loss(self, **kwargs: torch.Tensor) -> torch.Tensor:

@@ -21,7 +21,8 @@
 #SBATCH --output="logs/slurm/train/"%j.out
 #SBATCH --error="logs/slurm/train/"%j.err
 #SBATCH --constraint="type_a|type_b|type_c"
-#SBATCH --gpus=1
+#SBATCH --gpus-per-node=2
+#SBATCH --nodes=1
 #SBATCH --cpus-per-gpu=1
 #SBATCH --time=7-0:0
 
