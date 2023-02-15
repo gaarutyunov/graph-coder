@@ -50,7 +50,7 @@ class ConfigBuilder:
 
         if size is not None:
             path = self.root / str(name) / str(size)
-            assert (path).exists(), f"Model {name} does not have size {size}"
+            assert path.exists(), f"Model {name} does not have size {size}"
             self.dirs.append(path)
 
         if arch is not None:
@@ -68,9 +68,13 @@ class ConfigBuilder:
         if self.root.is_file():
             self._add(self.root)
             return self
-        for d in self.dirs:
-            if (d.parent / self.common_dir).exists():
-                for cfg in sorted((d.parent / self.common_dir).iterdir()):
+        for i, d in enumerate(self.dirs):
+            if i == 0:
+                common_dir = d / self.common_dir
+            else:
+                common_dir = d.parent / self.common_dir
+            if common_dir.exists():
+                for cfg in sorted(common_dir.iterdir()):
                     self._add(cfg)
             for cfg in sorted(d.iterdir()):
                 self._add(cfg)
