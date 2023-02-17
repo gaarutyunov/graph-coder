@@ -5,4 +5,4 @@ encoder:
   depth: 4
   heads: 4
   causal: true
-  max_seq_len: 1028
+  max_seq_len: 2048
