@@ -79,7 +79,9 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
                     if not reg.match(d.stem):
                         continue
                     i += 1
-                self._is_processed = i >= len(self)  # filtered may be less than processed
+                self._is_processed = i >= len(
+                    self
+                )  # filtered may be less than processed
             except:
                 self._is_processed = False
 
@@ -117,10 +119,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
         self._loaders = dict(
             zip(
                 ["train", "val", "test"],
-                [
-                    self._get_data_loader(dataset)
-                    for dataset in datasets
-                ],
+                [self._get_data_loader(dataset) for dataset in datasets],
             )
         )
 

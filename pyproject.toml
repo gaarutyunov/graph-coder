@@ -9,7 +9,7 @@ packages = [{include = "graph_coder"}]
 [tool.poetry.dependencies]
 python = "3.9"
 catalyst = "^22.4"
-astmonkey = {git = "https://github.com/jepler/astmonkey.git", tag = "ast-fixes"}
+astmonkey = {git = "https://github.com/jepler/astmonkey.git", branch = "ast-fixes"}
 networkx = "^2.8.8"
 aiofiles = "^22.1.0"
 pandas = "^1.5.2"

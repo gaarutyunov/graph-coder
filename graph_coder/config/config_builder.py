@@ -112,9 +112,7 @@ class ConfigBuilder:
         with open(path, "a") as f:
             f.truncate()
             for key, config in configs.items():
-                yaml.dump({
-                    key: config
-                }, f)
+                yaml.dump({key: config}, f)
 
     def build(self):
         config = self._process_configs()
@@ -136,9 +134,11 @@ class ConfigBuilder:
     def _add(self, config: Path, from_common: bool = False):
         if not config.is_file() and not config.suffix == ".yaml":
             return
-        elif config.stem in self.configs \
-                and (not self.configs[config.stem]["from_common"]
-                     or from_common and self.configs[config.stem]["from_common"]):
+        elif config.stem in self.configs and (
+            not self.configs[config.stem]["from_common"]
+            or from_common
+            and self.configs[config.stem]["from_common"]
+        ):
             return
 
         self.configs[config.stem] = {

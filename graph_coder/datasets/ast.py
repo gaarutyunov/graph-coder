@@ -70,7 +70,7 @@ class AstDataset(BaseDataset[AstExample]):
             val_size,
             batch_size,
             in_memory,
-            preprocess
+            preprocess,
         )
         if processed_dir is not None:
             self._processed_dir = Path(processed_dir).expanduser()
@@ -275,8 +275,10 @@ class AstDataset(BaseDataset[AstExample]):
         print(
             f"- Number of processed graphs: {self.index['processed'].sum():,}", file=out
         )
-        print(f"- Dataset size: {humanize.naturalsize(self.index['size'].sum())}", file=out)
+        print(
+            f"- Dataset size: {humanize.naturalsize(self.index['size'].sum())}",
+            file=out,
+        )
         print("\nSplits:", file=out)
         for split, loader in self.loaders.items():
             print(f"- {split}: {len(loader):,} graphs", file=out)
-

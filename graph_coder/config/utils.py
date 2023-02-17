@@ -18,7 +18,9 @@ from typing import Iterable, Dict, Any
 from catalyst import utils
 
 
-def process_configs(configs: Iterable[str], ordered: bool = False, load_ordered: bool = False) -> Dict[str, Any]:
+def process_configs(
+    configs: Iterable[str], ordered: bool = False, load_ordered: bool = False
+) -> Dict[str, Any]:
     """Merges YAML configs and prepares env."""
     config: Dict[str, Any] = OrderedDict() if ordered else {}  # type: ignore[assignment]
 

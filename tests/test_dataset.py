@@ -258,14 +258,18 @@ def test_in_memory():
     assert dataset.is_processed
     assert dataset.is_loaded
 
-    with patch.object(dataset, "_get_from_cache", wraps=dataset._get_from_cache) as mock:
+    with patch.object(
+        dataset, "_get_from_cache", wraps=dataset._get_from_cache
+    ) as mock:
         _ = dataset[0]
         mock.assert_called_with(0)
 
     dataset = AstDataset(
         root=Path(__file__).parent / "./data",
         in_memory=True,
-        collate_fn=partial(collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")),
+        collate_fn=partial(
+            collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
+        ),
         batch_size=2,
     )
 
