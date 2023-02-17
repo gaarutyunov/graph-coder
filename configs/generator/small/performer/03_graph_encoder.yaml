@@ -5,11 +5,11 @@ graph_encoder:
     _var_: token_embedding
   lap_node_id: true
   type_id: true
-  encoder_embed_dim: 32
+  encoder_embed_dim: 64
   encoder_ffn_embed_dim: 128
   causal: true
-  encoder_layers: 4
-  encoder_attention_heads: 8
+  encoder_layers: 8
+  encoder_attention_heads: 16
   performer: true
   attention_dropout: 0 # mandatory for performer
   apply_graphormer_init: true
