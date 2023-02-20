@@ -5,9 +5,9 @@ graph_encoder:
     _var_: token_embedding
   lap_node_id: true
   type_id: true
-  encoder_embed_dim: 32
-  encoder_ffn_embed_dim: 128
-  encoder_layers: 4
-  encoder_attention_heads: 4
+  encoder_embed_dim: 16
+  encoder_ffn_embed_dim: 64
+  encoder_layers: 2
+  encoder_attention_heads: 2
   attention_dropout: 0.1
   apply_graphormer_init: true

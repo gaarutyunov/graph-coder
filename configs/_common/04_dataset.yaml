@@ -13,12 +13,12 @@ dataset:
     - _target_: graph_coder.utils.partial
       func:
         _target_: graph_coder.config.F.filter_max_tokens
-        max_tokens: 256
+        max_tokens: 128
       _mode_: call
     - _target_: graph_coder.utils.partial
       func:
         _target_: graph_coder.config.F.filter_max_lines
-        max_lines: 128
+        max_lines: 64
       _mode_: call
     - _target_: graph_coder.utils.partial
       func:
