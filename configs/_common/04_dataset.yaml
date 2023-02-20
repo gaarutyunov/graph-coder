@@ -23,5 +23,5 @@ dataset:
     - _target_: graph_coder.utils.partial
       func:
         _target_: graph_coder.config.F.filter_max_size
-        max_size: 12288
+        max_size: 8192
       _mode_: call
