@@ -281,4 +281,4 @@ class AstDataset(BaseDataset[AstExample]):
         )
         print("\nSplits:", file=out)
         for split, loader in self.loaders.items():
-            print(f"- {split}: {len(loader):,} graphs", file=out)
+            print(f"- {split}: {len(loader):,} batches", file=out)

@@ -12,6 +12,6 @@ dataset:
     - _target_: graph_coder.config.F.filter_is_processed
     - _target_: graph_coder.utils.partial
       func:
-        _target_: graph_coder.config.F.filter_max_nodes
-        max_nodes: 1000
+        _target_: graph_coder.config.F.filter_max_tokens
+        max_nodes: 500
       _mode_: call

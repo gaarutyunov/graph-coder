@@ -53,6 +53,11 @@ def filter_max_nodes(index: pd.DataFrame, max_nodes: int = 1000) -> pd.DataFrame
     return index[index.nodes <= max_nodes].dropna(axis=0)
 
 
+def filter_max_tokens(index: pd.DataFrame, max_tokens: int = 1000) -> pd.DataFrame:
+    """Filters out rows that have more than `max_tokens` nodes+edges"""
+    return index[(index.nodes + index.edges) <= max_tokens].dropna(axis=0)
+
+
 def get_device(name: str) -> torch.device:
     """Get device by name"""
     return torch.device(name)

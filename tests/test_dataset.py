@@ -217,9 +217,9 @@ def test_preprocess():
 - Dataset size: 19.5 kB
 
 Splits:
-- train: 8 graphs
-- val: 2 graphs
-- test: 2 graphs
+- train: 8 batches
+- val: 2 batches
+- test: 2 batches
 """
     io = StringIO()
     dataset._print_summary(io)
