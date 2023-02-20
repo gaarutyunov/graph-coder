@@ -27,7 +27,8 @@ from graph_coder.config.functional import (
     filter_has_docstring,
     filter_is_processed,
     get_dtype,
-    filter_max_nodes, filter_max_size,
+    filter_max_nodes,
+    filter_max_size,
 )
 
 
