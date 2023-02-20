@@ -4,7 +4,7 @@ collator:
   func:
     _target_: graph_coder.data.collate_ast
   max_length: 16
-  max_seq_length: 512
+  max_seq_length: 256
   tokenizer:
     _var_: tokenizer
   device:

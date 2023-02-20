@@ -1,7 +1,7 @@
 run:
   - _call_: train
     logdir: logs
-    num_epochs: 100
+    num_epochs: 10
     valid_loader: valid
     valid_metric: loss
     minimize_valid_metric: true
