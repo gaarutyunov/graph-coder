@@ -58,6 +58,16 @@ def filter_max_tokens(index: pd.DataFrame, max_tokens: int = 1000) -> pd.DataFra
     return index[(index.nodes + index.edges) <= max_tokens].dropna(axis=0)
 
 
+def filter_max_size(index: pd.DataFrame, max_size: int = 1000) -> pd.DataFrame:
+    """Filters out rows that have more than `max_size` size"""
+    return index[index.size <= max_size].dropna(axis=0)
+
+
+def filter_max_lines(index: pd.DataFrame, max_lines: int = 1000) -> pd.DataFrame:
+    """Filters out rows that have more than `max_lines` lines (end_lineno-lineno)"""
+    return index[(index.end_lineno - index.lineno) <= max_lines].dropna(axis=0)
+
+
 def get_device(name: str) -> torch.device:
     """Get device by name"""
     return torch.device(name)
