@@ -13,5 +13,5 @@ dataset:
     - _target_: graph_coder.utils.partial
       func:
         _target_: graph_coder.config.F.filter_max_tokens
-        max_tokens: 512
+        max_tokens: 448
       _mode_: call
