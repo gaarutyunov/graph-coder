@@ -60,7 +60,7 @@ def filter_max_tokens(index: pd.DataFrame, max_tokens: int = 1000) -> pd.DataFra
 
 def filter_max_size(index: pd.DataFrame, max_size: int = 1000) -> pd.DataFrame:
     """Filters out rows that have more than `max_size` size"""
-    return index[index.size <= max_size].dropna(axis=0)
+    return index[index["size"] <= max_size].dropna(axis=0)
 
 
 def filter_max_lines(index: pd.DataFrame, max_lines: int = 1000) -> pd.DataFrame:

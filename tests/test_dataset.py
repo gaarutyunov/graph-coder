@@ -27,7 +27,7 @@ from graph_coder.config.functional import (
     filter_has_docstring,
     filter_is_processed,
     get_dtype,
-    filter_max_nodes,
+    filter_max_nodes, filter_max_size,
 )
 
 
@@ -285,3 +285,16 @@ def test_in_memory():
             assert batch.source.dtype == torch.long
             assert batch.lap_eigval.dtype == torch.float
             assert batch.lap_eigvec.dtype == torch.float
+
+
+def test_filters_size():
+    dataset = AstDataset(
+        Path(__file__).parent / "./data",
+        collate_fn=partial(
+            collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
+        ),
+        batch_size=2,
+        filter_index=[partial(filter_max_size, max_size=1000)],
+    )
+
+    assert len(dataset.index) == 2
