@@ -18,10 +18,10 @@ dataset:
     - _target_: graph_coder.utils.partial
       func:
         _target_: graph_coder.config.F.filter_max_lines
-        max_tokens: 256
+        max_lines: 256
       _mode_: call
     - _target_: graph_coder.utils.partial
       func:
         _target_: graph_coder.config.F.filter_max_size
-        max_tokens: 16384
+        max_size: 16384
       _mode_: call
