@@ -189,7 +189,6 @@ class AstDataset(BaseDataset[AstExample]):
 
             yield {
                 **res,
-                "hash": hash_,
                 "encoding": encoding,
             }
 

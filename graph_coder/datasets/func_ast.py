@@ -28,6 +28,9 @@ class FuncAstDataset(AstDataset):
     ) -> AsyncGenerator[Dict[str, Union[nx.Graph, Optional[int]]], None]:
         source, encoding, mod = await self._parse_ast(file)
 
+        if mod is None:
+            return
+
         for node in mod.body:
             if isinstance(node, ast.ClassDef):
                 for res in self._iter_node(node):
