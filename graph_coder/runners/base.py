@@ -50,7 +50,7 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
 
     def on_loader_start(self, runner: "IRunner"):
         super().on_loader_start(runner)
-        self.loss_metric = metrics.AdditiveMetric(compute_on_call=False, mode="torch")
+        self.loss_metric = metrics.AdditiveMetric(compute_on_call=False)
 
     def handle_batch(self, batch: Dict[str, torch.Tensor]) -> None:
         loss = self._calc_loss(**batch)
