@@ -36,7 +36,9 @@ from graph_coder.datasets import get
     help="Process dataset after introspection",
 )
 def main(name: str, root: str, index: str, out: str, introspect: bool, process: bool):
-    dataset = get(name)(root=root, index_file=index, introspect=introspect, processed_dir=out)
+    dataset = get(name)(
+        root=root, index_file=index, introspect=introspect, processed_dir=out
+    )
     if process:
         dataset.process()
     dataset.summary()
