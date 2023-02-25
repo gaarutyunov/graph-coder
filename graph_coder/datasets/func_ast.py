@@ -46,6 +46,8 @@ class FuncAstDataset(AstDataset):
                 continue
 
             res = self._parse_ast_node(node)
+            if res is None:
+                continue
 
             yield {
                 **res,
