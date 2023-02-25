@@ -2,7 +2,7 @@ dataset:
   _target_: graph_coder.datasets.FuncAstDataset
   _var_: dataset
   root: ~/git-py/raw/python
-  processed: ~/git-py/func/python
+  processed_dir: ~/git-py/func/python
   index_file: func_index.jsonl
   batch_size: 4
   collate_fn:
