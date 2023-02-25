@@ -12,6 +12,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 """Functional utilities to use in config files"""
+from typing import Any, Dict, List
+
 import pandas as pd
 import torch
 from torch._C._profiler import ProfilerActivity
@@ -86,3 +88,8 @@ def get_dtype(name: str) -> torch.dtype:
 def get_activity(idx: int) -> ProfilerActivity:
     """Get profiler activity by index"""
     return ProfilerActivity(idx)
+
+
+def get_keys(obj: Dict[str, Any], keys: List[str]) -> Dict[str, Any]:
+    """Get only specified keys from object"""
+    return {k: v for k, v in obj.items() if k in keys}

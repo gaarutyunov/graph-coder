@@ -15,7 +15,12 @@ run:
       _var_: engine
 
     loaders:
-      _var_: dataset.loaders
+      _target_: graph_coder.config.F.get_keys
+      obj:
+        _var_: dataset.loaders
+      keys:
+        - train
+        - valid
 
     loggers:
       _var_: loggers

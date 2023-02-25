@@ -118,7 +118,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
 
         self._loaders = dict(
             zip(
-                ["train", "val", "test"],
+                ["train", "valid", "infer"],
                 [self._get_data_loader(dataset) for dataset in datasets],
             )
         )
