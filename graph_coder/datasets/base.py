@@ -29,10 +29,10 @@ from tqdm.auto import tqdm, trange
 from graph_coder.logger import ILogger
 from graph_coder.utils import run_async
 
-T = typing.TypeVar("T")
+TEx = typing.TypeVar("TEx")
 
 
-class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
+class BaseDataset(Dataset, abc.ABC, typing.Generic[TEx]):
     def __init__(
         self,
         logger: ILogger,
@@ -53,7 +53,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
         self.test_size = test_size
         self.in_memory = in_memory
         self.preprocess = preprocess
-        self._cache: Dict[int, T] = {}
+        self._cache: Dict[int, TEx] = {}
         self._is_processed: typing.Optional[bool] = None
 
     @abc.abstractmethod
@@ -61,7 +61,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
         pass
 
     @abc.abstractmethod
-    def __getitem__(self, index: int) -> T:
+    def __getitem__(self, index: int) -> TEx:
         pass
 
     @property
@@ -153,21 +153,21 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[T]):
             subset, collate_fn=self.collate_fn, batch_size=self.batch_size
         )
 
-    def _get_item(self, index: int) -> typing.Optional[T]:
+    def _get_item(self, index: int) -> typing.Optional[TEx]:
         if self.in_memory and self.is_item_loaded(index):
             return self._get_from_cache(index)
         if self.is_item_processed(index):
             return self._get_processed(index)
         return None
 
-    def _get_processed(self, idx: int) -> T:
+    def _get_processed(self, idx: int) -> TEx:
         with open(Path(self.processed_dir) / str(idx), "rb") as f:
             return pickle.load(f)
 
-    def _get_from_cache(self, idx: int) -> T:
+    def _get_from_cache(self, idx: int) -> TEx:
         return self._cache[idx]
 
-    async def _get_processed_async(self, idx: int) -> typing.Optional[T]:
+    async def _get_processed_async(self, idx: int) -> typing.Optional[TEx]:
         path = Path(self.processed_dir) / str(idx)
         if not path.exists():
             return None

@@ -194,7 +194,7 @@ class AstDataset(BaseDataset[AstExample]):
 
     async def _parse_ast(
         self, file: Path
-    ) -> Tuple[Optional[str], Optional[str], Optional[Union[ast.Module, ast.AST]],]:
+    ) -> Tuple[Optional[str], Optional[str], Optional[ast.Module]]:
         source, encoding = await self._try_open(file)
 
         if source is None:

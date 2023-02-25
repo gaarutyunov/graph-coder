@@ -16,7 +16,7 @@ from collections import defaultdict
 from typing import Dict, Optional
 
 import torch
-from catalyst import dl
+from catalyst import dl, metrics
 from catalyst.core import IRunner
 from catalyst.utils import get_device
 from torch import nn
@@ -42,21 +42,31 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
         else:
             self.model = model
         self.print_summary = print_summary
+        self.loss_metric: Optional[metrics.IMetric] = None
 
     def on_experiment_start(self, runner: "IRunner"):
         super().on_experiment_start(runner)
         self._print_summary()
 
+    def on_loader_start(self, runner: "IRunner"):
+        super().on_loader_start(runner)
+        self.loss_metric = metrics.AdditiveMetric(compute_on_call=False, mode="torch")
+
     def handle_batch(self, batch: Dict[str, torch.Tensor]) -> None:
         loss = self._calc_loss(**batch)
 
         self.batch_metrics["loss"] = loss.item()
+        self.loss_metric.update(loss.item(), self.batch_size)
 
         if self.is_train_loader:
             self.engine.backward(loss)
             if self.optimizer is not None:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
+
+    def on_loader_end(self, runner: "IRunner"):
+        self.loader_metrics["loss"], _ = self.loss_metric.compute()
+        super().on_loader_end(runner)
 
     def _print_summary(self):
         """Prints summary about the model"""

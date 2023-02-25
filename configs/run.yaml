@@ -1,9 +1,9 @@
 run:
   - _call_: train
-    logdir: logs
+    logdir: &logdir logs
     num_epochs: 10
-    valid_loader: valid
-    valid_metric: loss
+    valid_loader: &loader_key valid
+    valid_metric: &metric_key loss
     minimize_valid_metric: true
     verbose: true
     timeit: true
@@ -29,9 +29,9 @@ run:
     callbacks:
       - _target_: catalyst.callbacks.checkpoint.CheckpointCallback
         topk: 2
-        logdir: logs
-        loader_key: &loader_key valid
-        metric_key: &metric_key loss
+        logdir: *logdir
+        loader_key: *loader_key
+        metric_key: *metric_key
         minimize: &minimize true
       - _target_: catalyst.callbacks.misc.EarlyStoppingCallback
         patience: 20

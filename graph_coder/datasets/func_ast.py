@@ -54,7 +54,7 @@ class FuncAstDataset(AstDataset):
                 "encoding": encoding,
             }
 
-    def _iter_node(self, node: ast.AST):
+    def _iter_node(self, node: ast.ClassDef):
         for subnode in node.body:
             if not isinstance(subnode, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue

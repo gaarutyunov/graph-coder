@@ -77,7 +77,7 @@ directory = "coverage"
 [tool.mypy]
 files = "graph_coder"
 python_version = "3.9"
-exclude = "tests/data"
+exclude = "tests/*data"
 ignore_missing_imports = true
 
 [build-system]
