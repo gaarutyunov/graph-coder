@@ -42,7 +42,7 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
         else:
             self.model = model
         self.print_summary = print_summary
-        self.loss_metric: Optional[metrics.IMetric] = None
+        self.loss_metric = metrics.AdditiveMetric(compute_on_call=False)
 
     def on_experiment_start(self, runner: "IRunner"):
         super().on_experiment_start(runner)
@@ -50,7 +50,7 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
 
     def on_loader_start(self, runner: "IRunner"):
         super().on_loader_start(runner)
-        self.loss_metric = metrics.AdditiveMetric(compute_on_call=False)
+        self.loss_metric.reset()
 
     def handle_batch(self, batch: Dict[str, torch.Tensor]) -> None:
         loss = self._calc_loss(**batch)
