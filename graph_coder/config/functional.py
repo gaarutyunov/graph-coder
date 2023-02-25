@@ -68,6 +68,11 @@ def filter_max_lines(index: pd.DataFrame, max_lines: int = 1000) -> pd.DataFrame
     return index[(index.end_lineno - index.lineno) <= max_lines].dropna(axis=0)
 
 
+def filter_unique_by_column(index: pd.DataFrame, column: str) -> pd.DataFrame:
+    """Filters out rows that have the same value in `column`"""
+    return index.drop_duplicates(subset=[column]).dropna(axis=0)
+
+
 def get_device(name: str) -> torch.device:
     """Get device by name"""
     return torch.device(name)

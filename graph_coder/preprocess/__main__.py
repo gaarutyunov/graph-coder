@@ -13,11 +13,16 @@
 #  limitations under the License.
 import click
 
-from graph_coder.datasets import AstDataset
+from graph_coder.datasets import get
 
 
 @click.command()
+@click.option("--name", default="ast", help="Dataset name")
 @click.option("--root", default="~/git-py/raw/python", help="Root data directory")
+@click.option(
+    "--out", default="~/git-py/processed/python", help="Processed data directory"
+)
+@click.option("--index", default="index.jsonl", help="Index file name")
 @click.option(
     "--introspect",
     default=False,
@@ -30,8 +35,8 @@ from graph_coder.datasets import AstDataset
     is_flag=True,
     help="Process dataset after introspection",
 )
-def main(root: str, introspect: bool, process: bool):
-    dataset = AstDataset(root=root, introspect=introspect)
+def main(name: str, root: str, index: str, out: str, introspect: bool, process: bool):
+    dataset = get(name)(root=root, index_file=index, introspect=introspect, processed_dir=out)
     if process:
         dataset.process()
     dataset.summary()

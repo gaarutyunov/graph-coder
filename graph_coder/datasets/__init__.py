@@ -14,5 +14,7 @@
 
 from .ast import *
 from .base import *
+from .func_ast import *
+from .registry import *
 
-__all__ = ("AstDataset",)
+__all__ = ("AstDataset", "FuncAstDataset", "register", "get")

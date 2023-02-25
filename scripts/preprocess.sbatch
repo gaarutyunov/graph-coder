@@ -28,4 +28,9 @@ chmod +x ./scripts/prepare.sh
 source ./scripts/prepare.sh
 
 # Preprocess the data
-python -m graph_coder.preprocess --root "$1"
+python -m graph_coder.preprocess --name "$1" \
+                                 --root "$2" \
+                                 --index "$3" \
+                                 --out "$4" \
+                                 --introspect "${5:-false}" \
+                                 --process "${6:-true}"

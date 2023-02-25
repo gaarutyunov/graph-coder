@@ -21,7 +21,7 @@ import numpy as np
 import torch
 
 from graph_coder.data import collate_ast, pad, GraphCoderBatch
-from graph_coder.datasets import AstDataset
+from graph_coder.datasets import AstDataset, get
 from graph_coder.config.functional import (
     get_pretrained_tokenizer,
     filter_has_docstring,
@@ -299,3 +299,8 @@ def test_filters_size():
     )
 
     assert len(dataset.index) == 2
+
+
+def test_register():
+    dataset = get("ast")
+    assert dataset.__name__ == AstDataset.__name__

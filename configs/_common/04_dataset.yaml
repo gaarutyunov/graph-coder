@@ -1,8 +1,10 @@
 dataset:
-  _target_: graph_coder.datasets.AstDataset
+  _target_: graph_coder.datasets.FuncAstDataset
   _var_: dataset
   root: ~/git-py/raw/python
-  batch_size: 1
+  processed: ~/git-py/func/python
+  index_file: func_index.jsonl
+  batch_size: 4
   collate_fn:
     _var_: collator
   random_seed: 42
@@ -10,18 +12,5 @@ dataset:
   print_summary: true
   filter_index:
     - _target_: graph_coder.config.F.filter_is_processed
-    - _target_: graph_coder.utils.partial
-      func:
-        _target_: graph_coder.config.F.filter_max_tokens
-        max_tokens: 128
-      _mode_: call
-    - _target_: graph_coder.utils.partial
-      func:
-        _target_: graph_coder.config.F.filter_max_lines
-        max_lines: 64
-      _mode_: call
-    - _target_: graph_coder.utils.partial
-      func:
-        _target_: graph_coder.config.F.filter_max_size
-        max_size: 8192
-      _mode_: call
+    - _target_: graph_coder.config.F.filter_unique_by_column
+      column: hash

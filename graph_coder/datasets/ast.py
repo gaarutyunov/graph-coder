@@ -17,6 +17,8 @@ import inspect
 import json
 import os
 import typing
+from hashlib import md5
+
 import aiofiles
 import chardet
 import humanize
@@ -32,15 +34,17 @@ from tqdm.auto import tqdm
 from lib2to3.refactor import MultiprocessRefactoringTool, get_fixers_from_package
 
 from graph_coder.data import AstExample
-from graph_coder.datasets.base import BaseDataset
+from .registry import register
+from .base import BaseDataset
 from graph_coder.logger import AsyncLogger
 from graph_coder.utils import run_async
 from graph_coder.ast import F
-
+from black import format_str, Mode
 
 FilterFn = typing.Callable[[pd.DataFrame], pd.DataFrame]
 
 
+@register("ast")
 class AstDataset(BaseDataset[AstExample]):
     def __init__(
         self,
@@ -88,7 +92,6 @@ class AstDataset(BaseDataset[AstExample]):
             get_fixers_from_package("lib2to3.fixes")
         )
         self.encodings = ["big5", "latin-1"]
-        self.index: Optional[pandas.DataFrame] = None
         self.filter_index = filter_index
         self.introspect()
         if self.preprocess:
@@ -119,6 +122,7 @@ class AstDataset(BaseDataset[AstExample]):
 
         code = self._get_source(path, encoding)
         graph_source = "\n".join(code[lineno - 1 : end_lineno])
+        graph_source = format_str(graph_source, mode=Mode())
         node, graph = F.parse_graph(graph_source, path)
 
         return AstExample(
@@ -176,10 +180,30 @@ class AstDataset(BaseDataset[AstExample]):
     async def _parse_source(
         self, file: Path
     ) -> AsyncGenerator[Dict[str, Union[nx.Graph, Optional[int]]], None]:
+        source, encoding, mod = await self._parse_ast(file)
+        if mod is None:
+            return
+
+        for node in mod.body:
+            res = self._parse_ast_node(node)
+
+            yield {
+                **res,
+                "hash": hash_,
+                "encoding": encoding,
+            }
+
+    async def _parse_ast(
+        self, file: Path
+    ) -> Tuple[
+        Optional[str],
+        Optional[str],
+        Optional[Union[ast.Module, ast.AST]],
+    ]:
         source, encoding = await self._try_open(file)
 
         if source is None:
-            return
+            return None, None, None
 
         try:
             source = self._refactor(source, file.relative_to(self.root))
@@ -190,23 +214,30 @@ class AstDataset(BaseDataset[AstExample]):
             mod = ast.parse(source, filename=str(file))
         except Exception as e:
             await self._logger.error(f"Parsing {file.relative_to(self.root)}: {e}")
-            return
+            return None, None, None
 
-        for node in mod.body:
-            _, graph = F.node_to_graph(node)
-            nodes = graph.number_of_nodes()
+        return source, encoding, mod
 
-            if self.min_nodes > nodes:
-                continue
+    def _hash(self, source: str, encoding: str) -> str:
+        return md5(bytes(source, encoding=encoding)).hexdigest()
 
-            yield {
-                "lineno": node.lineno,
-                "end_lineno": node.end_lineno,
-                "nodes": nodes,
-                "edges": graph.number_of_edges(),
-                "has_docstring": F.get_docstring(node) != "",
-                "encoding": encoding,
-            }
+    def _parse_ast_node(self, node: ast.AST) -> Optional[Dict[str, typing.Any]]:
+        _, graph = F.node_to_graph(node)
+        nodes = graph.number_of_nodes()
+
+        if self.min_nodes > nodes:
+            return None
+
+        hash_ = self._hash(ast.unparse(node), "utf-8")
+
+        return {
+            "lineno": node.lineno,
+            "end_lineno": node.end_lineno,
+            "nodes": nodes,
+            "edges": graph.number_of_edges(),
+            "has_docstring": F.get_docstring(node) != "",
+            "hash": hash_,
+        }
 
     def _refactor(self, source: str, name: Union[str, os.PathLike]) -> str:
         if not source.endswith("\n"):
