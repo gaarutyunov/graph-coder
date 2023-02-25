@@ -143,8 +143,8 @@ def test_loaders():
     )
 
     train = dataset.loaders["train"]
-    val = dataset.loaders["val"]
-    test = dataset.loaders["test"]
+    val = dataset.loaders["valid"]
+    test = dataset.loaders["infer"]
 
     assert len(train) == math.ceil(len(dataset.index) * 0.6)
     assert len(val) == math.floor(len(dataset.index) * 0.2)

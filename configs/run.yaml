@@ -21,6 +21,7 @@ run:
       keys:
         - train
         - valid
+      _mode_: call
 
     loggers:
       _var_: loggers
