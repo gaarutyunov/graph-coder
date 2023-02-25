@@ -32,5 +32,5 @@ python -m graph_coder.preprocess --name "$1" \
                                  --root "$2" \
                                  --index "$3" \
                                  --out "$4" \
-                                 --introspect "${5:-true}" \
-                                 --process "${6:-true}"
+                                 --introspect \
+                                 --process
