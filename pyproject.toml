@@ -16,7 +16,6 @@ pandas = "^1.5.2"
 tokenizers = "^0.13.2"
 torch = "1.13.1"
 fairseq = "^0.12.2"
-performer-pytorch = "^1.1.4"
 einops = "^0.6.0"
 timm = "^0.6.12"
 tensorboard = "^2.11.2"
@@ -30,6 +29,7 @@ deepspeed = "^0.8.0"
 humanize = "^4.6.0"
 nest-asyncio = "^1.5.6"
 black = {version = "^23.1.0", extras = ["d", "jupyter"]}
+performer-pytorch = {git = "https://github.com/gaarutyunov/performer-pytorch.git", tag = "main"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
