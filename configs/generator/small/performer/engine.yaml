@@ -16,11 +16,11 @@ engine:
             device: cpu
           contiguous_gradients: true
           overlap_comm: true
-          allgather_bucket_size: 5e8 # TODO: try to use smaller values for these
-          reduce_bucket_size: 5e8
-          stage3_max_reuse_distance: 1e9
-          stage3_prefetch_bucket_size: 5e8
-          stage3_param_persistence_threshold: 1e6
+          allgather_bucket_size: 1000 # TODO: try to use smaller values for these
+          reduce_bucket_size: 1000
+          stage3_max_reuse_distance: 1000
+          stage3_prefetch_bucket_size: 1000
+          stage3_param_persistence_threshold: 1000
         fp16:
           enabled: false
         activation_checkpointing:
