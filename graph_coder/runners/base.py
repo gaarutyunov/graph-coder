@@ -33,6 +33,7 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
         model: nn.Module,
         device: Optional[torch.device] = None,
         print_summary: bool = True,
+        detect_anomaly: bool = True,
         *args,
         **kwargs,
     ):
@@ -42,11 +43,13 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
         else:
             self.model = model
         self.print_summary = print_summary
+        self.detect_anomaly = detect_anomaly
         self.loss_metric = metrics.AdditiveMetric(compute_on_call=False)
 
     def on_experiment_start(self, runner: "IRunner"):
         super().on_experiment_start(runner)
         self._print_summary()
+        torch.autograd.set_detect_anomaly(self.detect_anomaly)
 
     def on_loader_start(self, runner: "IRunner"):
         super().on_loader_start(runner)
