@@ -6,7 +6,7 @@ engine:
     hf_ds_config:
       _target_: accelerate.utils.deepspeed.HfDeepSpeedConfig
       config_file_or_dict:
-        train_micro_batch_size_per_gpu: 8
+        train_micro_batch_size_per_gpu: 4
         gradient_accumulation_steps: 1
         zero_optimization:
           stage: 3
@@ -16,11 +16,13 @@ engine:
             device: cpu
           contiguous_gradients: true
           overlap_comm: true
-          reduce_bucket_size: 1024
-          stage3_prefetch_bucket_size: 921.6
-          stage3_param_persistence_threshold: 320
+          allgather_bucket_size: 5e8 # TODO: try to use smaller values for these
+          reduce_bucket_size: 5e8
+          stage3_max_reuse_distance: 1e9
+          stage3_prefetch_bucket_size: 5e8
+          stage3_param_persistence_threshold: 1e6
         fp16:
-          enabled: false # fast-transformers do not support fp16
+          enabled: false
         activation_checkpointing:
           partition_activations: true
           contiguous_memory_optimization: true
@@ -39,4 +41,4 @@ engine:
           params:
             warmup_min_lr: 0
             warmup_max_lr: 0.02
-            warmup_num_steps: 10000
+            warmup_num_steps: 10000§
