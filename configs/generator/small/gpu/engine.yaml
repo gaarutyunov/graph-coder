@@ -6,7 +6,7 @@ engine:
     hf_ds_config:
       _target_: accelerate.utils.deepspeed.HfDeepSpeedConfig
       config_file_or_dict:
-        train_micro_batch_size_per_gpu: 2
+        train_micro_batch_size_per_gpu: 8
         gradient_accumulation_steps: 1
         zero_optimization:
           stage: 3
@@ -25,7 +25,7 @@ engine:
           enabled: true
           auto_cast: true
           loss_scale: 0
-          initial_scale_power: 16
+          initial_scale_power: 32
           loss_scale_window: 1000
           hysteresis: 2
           min_loss_scale: 1
