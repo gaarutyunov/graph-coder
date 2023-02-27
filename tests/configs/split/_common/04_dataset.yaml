@@ -1,5 +1,5 @@
 dataset:
-  _target_: graph_coder.datasets.AstDataset
+  _target_: graph_coder.datasets.FuncAstDataset
   _var_: dataset
   root: ./tests/data
   batch_size: 4

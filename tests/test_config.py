@@ -43,20 +43,21 @@ def test_config():
     )
 
     for batch in params["dataset"].loaders["train"]:
-        res = params["model"](batch)
+        res = params["model"](**batch)
         assert isinstance(res, dict)
 
 
 def test_parse_config():
     root = Path(__file__).parent / "./configs/split"
-    config = ConfigBuilder(root, "generator", "small", "performer").load()
+    config = ConfigBuilder(root, "generator", "tiny", "performer").load()
     params = config.build()
 
     assert params["runner"] is not None
     assert params["run"] is not None
     assert isinstance(params["runner"], GraphCoderGeneratorRunner)
     assert isinstance(params["runner"].model, GraphCoderGenerator)
-    assert isinstance(params["runner"].model.encoder, PerformerEncoder)
+    assert isinstance(params["runner"].model.text_encoder, PerformerEncoder)
+    assert isinstance(params["runner"].model.code_encoder, PerformerEncoder)
     assert isinstance(params["runner"].model.decoder, TransformerDecoder)
     assert isinstance(params["runner"].model.embedding, torch.nn.Embedding)
     assert isinstance(params["runner"].model.graph_encoder, TokenGTEncoder)

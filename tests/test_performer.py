@@ -66,13 +66,21 @@ def test_performer():
         max_seq_len=8192,
         causal=True,
     )
+    code_encoder = PerformerEncoder(
+        dim=128,
+        depth=6,
+        heads=8,
+        max_seq_len=8192,
+        causal=True,
+    )
     decoder = nn.TransformerDecoder(
         decoder_layer=nn.TransformerDecoderLayer(d_model=128, nhead=8), num_layers=6
     )
 
     generator = GraphCoderGenerator(
         embedding=embedding,
-        encoder=text_encoder,
+        text_encoder=text_encoder,
+        code_encoder=code_encoder,
         graph_encoder=encoder,
         decoder=decoder,
         hidden_size=128,
@@ -107,7 +115,7 @@ def test_config_performer():
     assert params["run"][0]["optimizer"].param_groups[0]["params"] == list(
         params["runner"].model.parameters()
     )
-    assert isinstance(params["model"].encoder, PerformerEncoder)
+    assert isinstance(params["model"].text_encoder, PerformerEncoder)
 
     for batch in params["dataset"].loaders["train"]:
         res = params["model"](**batch)

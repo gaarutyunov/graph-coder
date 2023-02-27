@@ -186,6 +186,8 @@ class AstDataset(BaseDataset[AstExample]):
 
         for node in mod.body:
             res = self._parse_ast_node(node)
+            if res is None:
+                continue
 
             yield {
                 **res,

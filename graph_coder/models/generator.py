@@ -25,7 +25,8 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
     def __init__(
         self,
         embedding: nn.Module,
-        encoder: nn.Module,
+        text_encoder: nn.Module,
+        code_encoder: nn.Module,
         graph_encoder: nn.Module,
         decoder: nn.Module,
         hidden_size: int,
@@ -33,7 +34,7 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
         eos_token_id: int = 0,
         max_length: int = 64,
     ) -> None:
-        super().__init__(embedding, encoder, graph_encoder, decoder)
+        super().__init__(embedding, text_encoder, code_encoder, graph_encoder, decoder)
         self.hidden_size = hidden_size
         self.eos_token_id = eos_token_id
         self.vocab_size = vocab_size
@@ -51,7 +52,7 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
 
         if batch.has_docstring:
             emb = self.embedding(batch.docstring)
-            docstring_encoded = self.encoder(emb)
+            docstring_encoded = self.text_encoder(emb)
             x.append(docstring_encoded)
             tgt.append(emb)
             # add eos token
@@ -87,7 +88,7 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
 
         if batch.has_source:
             emb = self.embedding(batch.source)
-            source_code_encoded = self.encoder(emb)
+            source_code_encoded = self.code_encoder(emb)
             device = source_code_encoded.device
             x.append(source_code_encoded)
             tgt.append(emb)

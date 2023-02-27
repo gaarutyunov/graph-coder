@@ -7,8 +7,10 @@ model:
   max_length: 8
   embedding:
     _var_: embedding
-  encoder:
-    _var_: encoder
+  text_encoder:
+    _var_: text_encoder
+  code_encoder:
+    _var_: code_encoder
   graph_encoder:
     _var_: graph_encoder
   decoder:

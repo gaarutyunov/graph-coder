@@ -26,13 +26,15 @@ class GraphCoderBase(nn.Module, Generic[T], abc.ABC):
     def __init__(
         self,
         embedding: nn.Module,
-        encoder: nn.Module,
+        text_encoder: nn.Module,
+        code_encoder: nn.Module,
         graph_encoder: nn.Module,
         decoder: nn.Module,
     ) -> None:
         super().__init__()
         self.embedding = embedding
-        self.encoder = encoder
+        self.text_encoder = text_encoder
+        self.code_encoder = code_encoder
         self.graph_encoder = graph_encoder
         self.decoder = decoder
 

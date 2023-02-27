@@ -1,0 +1,8 @@
+loggers:
+  _var_: loggers
+  console:
+    _target_: catalyst.dl.ConsoleLogger
+  tensorboard:
+    _target_: catalyst.dl.TensorboardLogger
+    logdir: logs
+    log_batch_metrics: true

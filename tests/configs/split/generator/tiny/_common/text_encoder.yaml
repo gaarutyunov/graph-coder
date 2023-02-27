@@ -1,6 +1,6 @@
-encoder:
+text_encoder:
   _target_: torch.nn.TransformerEncoder
-  _var_: encoder
+  _var_: text_encoder
   encoder_layer:
     _target_: torch.nn.TransformerEncoderLayer
     d_model: 16

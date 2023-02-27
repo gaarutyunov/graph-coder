@@ -1,15 +1,18 @@
 run:
   - _call_: train
-    logdir: logs
-    num_epochs: 100
-    valid_loader: valid
-    valid_metric: loss
+    logdir: &logdir logs
+    num_epochs: 8
+    valid_loader: &loader_key valid
+    valid_metric: &metric_key loss
     minimize_valid_metric: true
     verbose: true
     timeit: true
 
     criterion:
       _var_: criterion
+
+    engine:
+      _var_: engine
 
     optimizer:
       _var_: optimizer
@@ -18,14 +21,23 @@ run:
       _var_: scheduler
 
     loaders:
-      _var_: dataset.loaders
+      _target_: graph_coder.config.F.get_keys
+      obj:
+        _var_: dataset.loaders
+      keys:
+        - train
+        - valid
+      _mode_: call
+
+    loggers:
+      _var_: loggers
 
     callbacks:
       - _target_: catalyst.callbacks.checkpoint.CheckpointCallback
         topk: 2
-        logdir: logs
-        loader_key: &loader_key valid
-        metric_key: &metric_key loss
+        logdir: *logdir
+        loader_key: *loader_key
+        metric_key: *metric_key
         minimize: &minimize true
       - _target_: catalyst.callbacks.misc.EarlyStoppingCallback
         patience: 20

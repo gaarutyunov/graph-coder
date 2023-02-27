@@ -71,8 +71,8 @@ Summary for FuncAstDataset:
 
 Splits:
 - train: 6 batches
-- val: 2 batches
-- test: 1 batches
+- valid: 2 batches
+- infer: 1 batches
 """
     io = StringIO()
     dataset._print_summary(io)

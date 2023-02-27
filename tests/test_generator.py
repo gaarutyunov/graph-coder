@@ -59,13 +59,17 @@ def test_generator():
     text_encoder = nn.TransformerEncoder(
         encoder_layer=nn.TransformerEncoderLayer(d_model=128, nhead=8), num_layers=6
     )
+    code_encoder = nn.TransformerEncoder(
+        encoder_layer=nn.TransformerEncoderLayer(d_model=128, nhead=8), num_layers=6
+    )
     decoder = nn.TransformerDecoder(
         decoder_layer=nn.TransformerDecoderLayer(d_model=128, nhead=8), num_layers=6
     )
 
     generator = GraphCoderGenerator(
         embedding=embedding,
-        encoder=text_encoder,
+        text_encoder=text_encoder,
+        code_encoder=code_encoder,
         graph_encoder=encoder,
         decoder=decoder,
         hidden_size=128,
@@ -111,13 +115,17 @@ def test_generator_runner():
     text_encoder = nn.TransformerEncoder(
         encoder_layer=nn.TransformerEncoderLayer(d_model=128, nhead=8), num_layers=6
     )
+    code_encoder = nn.TransformerEncoder(
+        encoder_layer=nn.TransformerEncoderLayer(d_model=128, nhead=8), num_layers=6
+    )
     decoder = nn.TransformerDecoder(
         decoder_layer=nn.TransformerDecoderLayer(d_model=128, nhead=8), num_layers=6
     )
 
     generator = GraphCoderGenerator(
         embedding=embedding,
-        encoder=text_encoder,
+        text_encoder=text_encoder,
+        code_encoder=code_encoder,
         graph_encoder=encoder,
         decoder=decoder,
         hidden_size=128,

@@ -219,8 +219,8 @@ def test_preprocess():
 
 Splits:
 - train: 8 batches
-- val: 2 batches
-- test: 2 batches
+- valid: 2 batches
+- infer: 2 batches
 """
     io = StringIO()
     dataset._print_summary(io)
