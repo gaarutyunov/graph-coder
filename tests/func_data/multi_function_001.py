@@ -1,7 +1,7 @@
 import torch
 
 
-def simple_train_torch(model: torch.nn, data: torch.Tensor, labels: torch.Tensor):
+def simple_train_torch(model: torch.nn.Module, data: torch.Tensor, labels: torch.Tensor):
     """Simple training function for torch"""
     model.train()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -17,7 +17,7 @@ def simple_train_torch(model: torch.nn, data: torch.Tensor, labels: torch.Tensor
     return model
 
 
-def simple_evaluate_torch(model: torch.nn, data: torch.Tensor, labels: torch.Tensor):
+def simple_evaluate_torch(model: torch.nn.Module, data: torch.Tensor, labels: torch.Tensor):
     """Simple evaluation function for torch"""
     model.eval()
     output = model(data)
