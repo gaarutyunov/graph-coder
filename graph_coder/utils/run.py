@@ -19,15 +19,10 @@ from catalyst.contrib.scripts.run import run_from_params
 from graph_coder.config import ConfigBuilder
 
 
-def run_model(
-    root: str,
-    name: Optional[str] = None,
-    size: Optional[str] = None,
-    arch: Optional[str] = None,
-):
-    """Run a model from a config directory with the specified name, size and arch.
+def run_model(root: str, *args: str):
+    """Run a model from a config `root` directory with and path parts specified by `args`.
 
-    If root is a path to a file, it will be used as the config file."""
-    experiment_params = ConfigBuilder(root, name, size, arch).load().build()
+    If `root` is a path to a file, it will be used as the config file."""
+    experiment_params = ConfigBuilder(root, *args).load().build()
 
     run_from_params(experiment_params)

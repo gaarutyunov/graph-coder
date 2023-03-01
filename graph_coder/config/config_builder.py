@@ -11,13 +11,15 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import pathlib
 from collections import OrderedDict
 from os import PathLike
 from pathlib import Path
-from typing import Union, Optional, Dict, Any
+from typing import Union, Optional, Dict, Any, List, Tuple
 
 import yaml
 from catalyst.registry import REGISTRY
+from torchgen.utils import OrderedSet
 
 from .utils import process_configs
 
@@ -26,40 +28,23 @@ class ConfigBuilder:
     def __init__(
         self,
         root: Union[str, PathLike],
-        name: Optional[str] = None,
-        size: Optional[str] = None,
-        arch: Optional[str] = None,
+        *args: str,
         common_dir: str = "_common",
+        order_file: str = "_order",
     ):
         self.root = Path(root).expanduser()
+        self.order_file = order_file
         self.configs: Dict[str, Any] = OrderedDict()
 
         if self.root.is_file():
             return
-        self.name = name
-        self.size = size
-        self.arch = arch
         self.common_dir = common_dir
 
         self.dirs = [self.root]
 
-        if name is not None:
-            path = self.root / str(name)
-            assert path.exists(), f"Model {name} does not exist"
-            self.dirs.append(path)
-
-        if size is not None:
-            path = self.root / str(name) / str(size)
-            assert path.exists(), f"Model {name} does not have size {size}"
-            self.dirs.append(path)
-
-        if arch is not None:
-            path = self.root / str(name) / str(size) / str(arch)
-            assert (
-                path
-            ).exists(), (
-                f"Model {name} does not have size {size} and architecture {arch}"
-            )
+        for arg in args:
+            path = self.dirs[-1] / arg
+            assert path.exists(), f"Model in {path} does not exist"
             self.dirs.append(path)
 
         self.dirs.reverse()
@@ -68,16 +53,46 @@ class ConfigBuilder:
         if self.root.is_file():
             self._add(self.root)
             return self
+        processed_dirs = []
+        order = OrderedSet()
+        order_from_common = False
+
+        def read_order(dr: pathlib.Path, from_common: bool):
+            nonlocal order, order_from_common
+            order_file = dr / self.order_file
+            if (
+                not order_file.exists()
+                or len(order.storage) != 0
+                and (not order_from_common or from_common and order_from_common)
+            ):
+                return
+            with open(order_file, mode="r") as f:
+                order_from_common = from_common
+                order.update(OrderedSet(f.read().splitlines(False)))
+
         for i, d in enumerate(self.dirs):
-            if i == 0 and len(self.dirs) < 4:
-                common_dir = d / self.common_dir
-            else:
-                common_dir = d.parent / self.common_dir
-            if common_dir.exists():
-                for cfg in sorted(common_dir.iterdir()):
-                    self._add(cfg, from_common=True)
+            read_order(d, False)
             for cfg in sorted(d.iterdir()):
                 self._add(cfg)
+            common_dir = d / self.common_dir
+            if not common_dir.exists():
+                common_dir = d.parent / self.common_dir
+            if common_dir.exists() and str(common_dir) not in processed_dirs:
+                read_order(common_dir, True)
+                for cfg in sorted(common_dir.iterdir()):
+                    self._add(cfg, from_common=True)
+                processed_dirs.append(str(common_dir))
+
+        new_configs = OrderedDict()
+
+        order.update(OrderedSet(self.configs.keys()))
+
+        for key in order:
+            if key not in self.configs:
+                continue
+            new_configs[key] = self.configs[key]
+
+        self.configs = new_configs
 
         return self
 
@@ -96,12 +111,7 @@ class ConfigBuilder:
 
         if path is None or path.is_dir():
             parts = []
-            if self.name is not None:
-                parts.append(self.name)
-            if self.size is not None:
-                parts.append(self.size)
-            if self.arch is not None:
-                parts.append(self.arch)
+            parts.extend(reversed(self.dirs[:-1]))  # remove root and reverse back
             if len(parts) == 0:
                 parts.append("config")
 
@@ -132,7 +142,7 @@ class ConfigBuilder:
         return process_configs(configs, ordered=ordered, load_ordered=load_ordered)
 
     def _add(self, config: Path, from_common: bool = False):
-        if not config.is_file() and not config.suffix == ".yaml":
+        if not config.is_file() or not config.suffix == ".yaml":
             return
         elif config.stem in self.configs and (
             not self.configs[config.stem]["from_common"]

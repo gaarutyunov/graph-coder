@@ -15,23 +15,27 @@ import warnings
 
 import click
 
-from typing import Optional
+from typing import List
 
 from graph_coder.utils import run_model
 
 
 @click.command()
-@click.option("--root", default="configs", help="Config directory")
-@click.option("--name", default="generator", help="Model name")
-@click.option("--size", default="small", help="Model size")
-@click.option("--arch", default=None, help="Model architecture")
+@click.option(
+    "--root",
+    default="configs",
+    help="Config directory",
+)
+@click.argument(
+    "path", nargs=-1
+)
 def main(
     root: str,
-    name: Optional[str] = None,
-    size: Optional[str] = None,
-    arch: Optional[str] = None,
+    path: List[str],
 ):
-    run_model(root, name, size, arch)
+    """Run a model from a config `root` directory with and path parts specified by `PATH`.
+    If `root` is a path to a file, it will be used as the config file."""
+    run_model(root, *path)
 
 
 if __name__ == "__main__":
