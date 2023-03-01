@@ -5,4 +5,4 @@ text_encoder:
   depth: 2
   heads: 2
   causal: true
-  max_seq_len: 256
+  max_seq_len: 257
