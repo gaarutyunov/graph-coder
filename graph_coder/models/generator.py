@@ -33,7 +33,7 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
         vocab_size: int,
         eos_token_id: int = 0,
         max_length: int = 64,
-        max_seq_length: int = 512,
+        max_seq_length: int = 512
     ) -> None:
         super().__init__(embedding, text_encoder, code_encoder, graph_encoder, decoder)
         self.hidden_size = hidden_size
@@ -56,12 +56,7 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
         if batch.has_docstring:
             # add eos token
             if batch.docstring.size(-1) == self.max_seq_length:
-                text = torch.index_fill(
-                    batch.docstring,
-                    1,
-                    torch.tensor(-1, device=batch.docstring.device),
-                    self.eos_token_id,
-                )
+                text = torch.index_fill(batch.docstring, 1, torch.Tensor(-1), self.eos_token_id)
             else:
                 eos = torch.empty(
                     (batch.batch_size, 1),
@@ -96,12 +91,9 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
             # add eos token
             if batch.source.size(-1) > self.max_seq_length - 2:
                 if batch.source.size(-1) == self.max_seq_length:
-                    index = torch.tensor(
-                        [0, -1],
-                        device=batch.docstring.device,
-                    )
+                    index = torch.tensor([0, -1])
                 else:
-                    index = torch.tensor(-1, device=batch.docstring.device)
+                    index = torch.tensor([-1])
                 text = torch.index_fill(batch.source, 1, index, self.eos_token_id)
                 if batch.source.size(-1) == self.max_seq_length - 1:
                     eos = torch.empty(
