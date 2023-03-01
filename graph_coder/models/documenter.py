@@ -45,7 +45,7 @@ class GraphCoderDocumenter(GraphCoderBase):
             hidden_size, hidden_size * max_length, bias=False
         )
 
-    def forward(self, **kwargs: torch.Tensor) -> Dict[str, torch.Tensor]:  # TODO: fix eos like generator
+    def forward(self, **kwargs: torch.Tensor) -> Dict[str, torch.Tensor]:
         batch = GraphCoderBatch.from_dict(kwargs)
 
         x = []

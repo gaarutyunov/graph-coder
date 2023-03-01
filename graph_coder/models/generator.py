@@ -33,14 +33,11 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
         vocab_size: int,
         eos_token_id: int = 0,
         max_length: int = 64,
-        max_seq_length: int = 512
     ) -> None:
         super().__init__(embedding, text_encoder, code_encoder, graph_encoder, decoder)
         self.hidden_size = hidden_size
         self.eos_token_id = eos_token_id
         self.vocab_size = vocab_size
-        self.max_length = max_length
-        self.max_seq_length = max_seq_length
         self.dense = nn.Linear(hidden_size, hidden_size)
         self.lm_head = nn.Linear(hidden_size, vocab_size, bias=False)
         self.lm_graph_head = nn.Linear(
@@ -55,15 +52,12 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
 
         if batch.has_docstring:
             # add eos token
-            if batch.docstring.size(-1) == self.max_seq_length:
-                text = torch.index_fill(batch.docstring, 1, torch.Tensor(-1), self.eos_token_id)
-            else:
-                eos = torch.empty(
-                    (batch.batch_size, 1),
-                    device=batch.docstring.device,
-                    dtype=batch.docstring.dtype,
-                ).fill_(self.eos_token_id)
-                text = torch.cat([batch.docstring, eos], dim=1)
+            eos = torch.empty(
+                (batch.batch_size, 1),
+                device=batch.docstring.device,
+                dtype=batch.docstring.dtype,
+            ).fill_(self.eos_token_id)
+            text = torch.cat([batch.docstring, eos], dim=1)
 
             emb = self.embedding(text)
             docstring_encoded = self.text_encoder(emb)
@@ -89,26 +83,12 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
 
         if batch.has_source:
             # add eos token
-            if batch.source.size(-1) > self.max_seq_length - 2:
-                if batch.source.size(-1) == self.max_seq_length:
-                    index = torch.tensor([0, -1])
-                else:
-                    index = torch.tensor([-1])
-                text = torch.index_fill(batch.source, 1, index, self.eos_token_id)
-                if batch.source.size(-1) == self.max_seq_length - 1:
-                    eos = torch.empty(
-                        (batch.batch_size, 1),
-                        device=batch.source.device,
-                        dtype=batch.source.dtype,
-                    ).fill_(self.eos_token_id)
-                    text = torch.cat([eos, text], dim=1)
-            else:
-                eos = torch.empty(
-                    (batch.batch_size, 1),
-                    device=batch.source.device,
-                    dtype=batch.source.dtype,
-                ).fill_(self.eos_token_id)
-                text = torch.cat([eos, batch.source, torch.clone(eos)], dim=1)
+            eos = torch.empty(
+                (batch.batch_size, 1),
+                device=batch.source.device,
+                dtype=batch.source.dtype,
+            ).fill_(self.eos_token_id)
+            text = torch.cat([eos, batch.source, torch.clone(eos)], dim=1)
 
             emb = self.embedding(text)
             source_code_encoded = self.code_encoder(emb)
