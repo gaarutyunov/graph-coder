@@ -51,20 +51,21 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
         result = {}
 
         if batch.has_docstring:
-            emb = self.embedding(batch.docstring)
+            # add eos token
+            eos = torch.empty(
+                (batch.batch_size, 1),
+                device=batch.docstring.device,
+                dtype=batch.docstring.dtype,
+            ).fill_(self.eos_token_id)
+            text = torch.cat([batch.docstring, eos], dim=1)
+
+            emb = self.embedding(text)
             docstring_encoded = self.text_encoder(emb)
             x.append(docstring_encoded)
             tgt.append(emb)
-            # add eos token
-            eos = torch.tensor(
-                [self.eos_token_id], device=docstring_encoded.device
-            ).repeat(docstring_encoded.size(0), 1, docstring_encoded.size(-1))
-            x.append(eos)
-            tgt.append(eos)
 
         if batch.has_graph:
             graph_encoded = self.graph_encoder(**kwargs)
-            device = graph_encoded.device
             x.append(graph_encoded)
             (
                 _,
@@ -79,25 +80,20 @@ class GraphCoderGenerator(GraphCoderBase[Dict[str, torch.Tensor]]):
                 padding_mask[..., None], float("0")
             )
             tgt.append(padded_feature)
-            # add eos token
-            eos = torch.tensor([self.eos_token_id], device=device).repeat(
-                graph_encoded.size(0), 1, graph_encoded.size(-1)
-            )
-            x.append(eos)
-            tgt.append(eos)
 
         if batch.has_source:
-            emb = self.embedding(batch.source)
+            # add eos token
+            eos = torch.empty(
+                (batch.batch_size, 1),
+                device=batch.source.device,
+                dtype=batch.source.dtype,
+            ).fill_(self.eos_token_id)
+            text = torch.cat([eos, batch.source, torch.clone(eos)], dim=1)
+
+            emb = self.embedding(text)
             source_code_encoded = self.code_encoder(emb)
-            device = source_code_encoded.device
             x.append(source_code_encoded)
             tgt.append(emb)
-            # add eos token
-            eos = torch.tensor([self.eos_token_id], device=device).repeat(
-                source_code_encoded.size(0), 1, source_code_encoded.size(-1)
-            )
-            x.append(eos)
-            tgt.append(eos)
 
         x_, tgt_ = torch.cat(x, dim=1), torch.cat(tgt, dim=1)
 

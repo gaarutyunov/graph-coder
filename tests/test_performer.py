@@ -15,6 +15,7 @@
 from functools import partial
 from pathlib import Path
 
+import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
@@ -120,3 +121,78 @@ def test_config_performer():
     for batch in params["dataset"].loaders["train"]:
         res = params["model"](**batch)
         assert isinstance(res, dict)
+
+
+def test_performer_runner():
+    tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
+    dataset = AstDataset(
+        collate_fn=partial(
+            collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
+        ),
+        root=Path(__file__).parent / "./data",
+    )
+    embedding = nn.Embedding(
+        len(tokenizer.vocab), 128, padding_idx=tokenizer.pad_token_id
+    )
+
+    graph_embedding = TokenEmbedding(
+        embedding=embedding,
+        ff=nn.Linear(64, 1, bias=False),
+    )
+
+    encoder = TokenGTEncoder(
+        embedding=graph_embedding,
+        encoder_embed_dim=128,
+        encoder_ffn_embed_dim=128,
+        lap_node_id=True,
+        type_id=True,
+        performer=True,
+        causal=True,
+        attention_dropout=0.0,
+    )
+    text_encoder = PerformerEncoder(
+        dim=128,
+        depth=6,
+        heads=8,
+        max_seq_len=8192,
+        causal=True,
+    )
+    code_encoder = PerformerEncoder(
+        dim=128,
+        depth=6,
+        heads=8,
+        max_seq_len=8192,
+        causal=True,
+    )
+    decoder = nn.TransformerDecoder(
+        decoder_layer=nn.TransformerDecoderLayer(d_model=128, nhead=8), num_layers=6
+    )
+
+    generator = GraphCoderGenerator(
+        embedding=embedding,
+        text_encoder=text_encoder,
+        code_encoder=code_encoder,
+        graph_encoder=encoder,
+        decoder=decoder,
+        hidden_size=128,
+        vocab_size=len(tokenizer.vocab),
+        eos_token_id=tokenizer.eos_token_id,
+    )
+
+    runner = GraphCoderGeneratorRunner(
+        generator,
+        vocab_size=len(tokenizer.vocab),
+        eos_token_id=tokenizer.eos_token_id,
+    )
+    runner._loaders = dataset.loaders
+    runner.criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
+
+    runner._print_summary()
+
+    loader = DataLoader(
+        dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer), batch_size=2
+    )
+
+    for batch in loader:
+        loss = runner._calc_loss(**batch)
+        assert torch.is_floating_point(loss)

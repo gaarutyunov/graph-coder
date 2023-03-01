@@ -17,8 +17,9 @@ engine:
           contiguous_gradients: true
           overlap_comm: true
           reduce_scatter: true
-          allgather_bucket_size: 1000 # TODO: try to use smaller values for these
-          reduce_bucket_size: 1000
+          round_robin_gradients: true
+          allgather_bucket_size: 256 # TODO: try to use smaller values for these
+          reduce_bucket_size: 256
         fp16:
           enabled: false # fast-transformers do not support fp16
         activation_checkpointing:

@@ -7,7 +7,7 @@ graph_encoder:
   lap_node_id_sign_flip: true
   type_id: true
   encoder_embed_dim: 16
-  encoder_ffn_embed_dim: 64
+  encoder_ffn_embed_dim: 32
   causal: true
   encoder_layers: 2
   encoder_attention_heads: 2

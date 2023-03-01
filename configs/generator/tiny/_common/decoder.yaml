@@ -5,7 +5,7 @@ decoder:
     _target_: torch.nn.TransformerDecoderLayer
     d_model: 16
     nhead: 2
-    dim_feedforward: 64
+    dim_feedforward: 32
     dropout: 0.1
     activation: relu
   num_layers: 2
