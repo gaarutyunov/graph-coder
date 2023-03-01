@@ -26,9 +26,7 @@ from graph_coder.utils import run_model
     default="configs",
     help="Config directory",
 )
-@click.argument(
-    "path", nargs=-1
-)
+@click.argument("path", nargs=-1)
 def main(
     root: str,
     path: List[str],
