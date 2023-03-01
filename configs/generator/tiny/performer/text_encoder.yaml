@@ -6,4 +6,3 @@ text_encoder:
   heads: 2
   causal: true
   max_seq_len: 256
-  cross_attend: true
