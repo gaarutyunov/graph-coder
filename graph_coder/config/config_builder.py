@@ -40,7 +40,7 @@ class ConfigBuilder:
             return
         self.common_dir = common_dir
 
-        self.dirs = [self.root]
+        self.dirs: List[Path] = [self.root]
 
         for arg in args:
             path = self.dirs[-1] / arg
@@ -110,8 +110,8 @@ class ConfigBuilder:
             root = self.root
 
         if path is None or path.is_dir():
-            parts = []
-            parts.extend(reversed(self.dirs[:-1]))  # remove root and reverse back
+            parts: List[str] = []
+            parts.extend([dr.stem for dr in reversed(self.dirs[:-1])])
             if len(parts) == 0:
                 parts.append("config")
 

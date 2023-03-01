@@ -11,7 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from typing import Optional
+from typing import List
 
 import click
 
@@ -21,17 +21,13 @@ from graph_coder.config import ConfigBuilder
 @click.command()
 @click.option("--root", default="configs", help="Config directory")
 @click.option("--out", default="configs", help="Output directory")
-@click.option("--name", default="generator", help="Model name")
-@click.option("--size", default="small", help="Model size")
-@click.option("--arch", default=None, help="Model architecture")
+@click.argument("path", nargs=-1)
 def main(
     root: str,
     out: str,
-    name: Optional[str] = None,
-    size: Optional[str] = None,
-    arch: Optional[str] = None,
+    path: List[str]
 ):
-    ConfigBuilder(root, name, size, arch).load().save(out)
+    ConfigBuilder(root, *path).load().save(out)
 
 
 if __name__ == "__main__":
