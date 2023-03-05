@@ -21,8 +21,14 @@ from torch.utils.data import DataLoader
 
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
-from graph_coder.models import GraphCoderGenerator
-from graph_coder.modules import TokenGTEncoder, TokenEmbedding
+from graph_coder.models import GraphCoderGenerator, GraphCoderGeneratorPipe
+from graph_coder.modules import (
+    TransformerDecoderPipe,
+    TransformerEncoderPipe,
+    TokenGTEncoder,
+    TokenEmbedding,
+    TokenGTEncoderPipe,
+)
 from graph_coder.runners import GraphCoderGeneratorRunner
 from graph_coder.config.functional import get_pretrained_tokenizer
 
@@ -150,3 +156,74 @@ def test_generator_runner():
     for batch in loader:
         loss = runner._calc_loss(**batch)
         assert torch.is_floating_point(loss)
+
+
+def test_generator_pipe():
+    tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
+    collator = partial(
+        collate_ast,
+        tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"),
+        max_length=4,
+    )
+    dataset = AstDataset(
+        collate_fn=collator,
+        root=Path(__file__).parent / "./data",
+    )
+    loader = DataLoader(
+        dataset,
+        batch_size=2,
+        collate_fn=collator,
+    )
+    embedding = nn.Embedding(
+        len(tokenizer.vocab), 16, padding_idx=tokenizer.pad_token_id
+    )
+
+    graph_embedding = TokenEmbedding(
+        embedding=embedding,
+        ff=nn.Linear(4, 1, bias=False),
+    )
+
+    encoder = TokenGTEncoderPipe(
+        embedding=graph_embedding,
+        encoder_embed_dim=16,
+        encoder_ffn_embed_dim=16,
+        lap_node_id=True,
+        type_id=True,
+    )
+    text_encoder = TransformerEncoderPipe(
+        encoder_layer=nn.TransformerEncoderLayer(d_model=16, nhead=2), num_layers=2
+    )
+    code_encoder = TransformerEncoderPipe(
+        encoder_layer=nn.TransformerEncoderLayer(d_model=16, nhead=2), num_layers=2
+    )
+    decoder = TransformerDecoderPipe(
+        decoder_layer=nn.TransformerDecoderLayer(d_model=16, nhead=2), num_layers=2
+    )
+
+    generator = GraphCoderGeneratorPipe(
+        embedding=embedding,
+        text_encoder=text_encoder,
+        code_encoder=code_encoder,
+        graph_encoder=encoder,
+        decoder=decoder,
+        hidden_size=16,
+        vocab_size=len(tokenizer.vocab),
+        eos_token_id=tokenizer.eos_token_id,
+        max_length=4,
+    )
+
+    layers = generator.to_layers()
+
+    for batch in loader:
+        decoded = generator(**batch)
+
+        kwargs = batch
+        for layer in layers:
+            kwargs = layer(**kwargs)
+
+        if "docstring" in kwargs:
+            assert kwargs["docstring"].shape == decoded["docstring"].shape
+        if "graph" in kwargs:
+            assert kwargs["graph"].shape == decoded["graph"].shape
+        if "source" in kwargs:
+            assert kwargs["source"].shape == decoded["source"].shape

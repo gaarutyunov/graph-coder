@@ -14,12 +14,10 @@
 
 from .env import *
 from .summary import *
-from .functools import *
 from .run import *
 
 __all__ = (
     "run_async",
     "summary",
-    "partial",
     "run_model",
 )

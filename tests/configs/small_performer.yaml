@@ -4,9 +4,7 @@ dataset:
   root: ./tests/data
   batch_size: &batch_size 4
   collate_fn:
-    _target_: graph_coder.utils.partial
-    func:
-      _target_: graph_coder.data.collate_ast
+    _target_: graph_coder.data.collate_ast
     max_length: &max_length 32
     max_seq_length: &max_seq_length 4096
     tokenizer:
@@ -16,7 +14,6 @@ dataset:
       pad_token_id: &pad_token_id 1
       eos_token_id: &eos_token_id 0
       _mode_: call
-    _mode_: call
   random_seed: 42
 
 model:

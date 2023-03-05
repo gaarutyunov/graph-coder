@@ -1,3 +1,17 @@
+#  Copyright 2023 German Arutyunov
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
 #  Copyright (c) Microsoft Corporation.
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,9 +45,11 @@ import torch.nn as nn
 from fairseq.modules import LayerNorm
 from fairseq.modules.fairseq_dropout import FairseqDropout
 
-from .multihead_attention import MultiheadAttention
-from .multihead_performer_attention import MultiheadPerformerAttention
-from .feedforward import FeedForward
+from graph_coder.modules.multihead_attention import MultiheadAttention
+from graph_coder.modules.multihead_performer_attention import (
+    MultiheadPerformerAttention,
+)
+from graph_coder.modules.feedforward import FeedForward
 from timm.models.layers.drop import DropPath
 
 
@@ -188,9 +204,7 @@ class TokenGTGraphEncoderLayer(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        self_attn_bias: Optional[torch.Tensor] = None,
-        self_attn_mask: Optional[torch.Tensor] = None,
-        self_attn_padding_mask: Optional[torch.Tensor] = None,
+        padding_mask: Optional[torch.Tensor] = None,
     ):
         """
         LayerNorm is applied either before or after the self-attention/ffn
@@ -200,15 +214,13 @@ class TokenGTGraphEncoderLayer(nn.Module):
         if self.layernorm_style == "prenorm":
             residual = x
             x = self.self_attn_layer_norm(x)
-            x, attn = self.self_attn(
+            x = self.self_attn(
                 query=x,
                 key=x,
                 value=x,
-                attn_bias=self_attn_bias,
-                key_padding_mask=self_attn_padding_mask,
+                key_padding_mask=padding_mask,
                 need_weights=self.return_attention,
                 need_head_weights=self.return_attention,
-                attn_mask=self_attn_mask,
             )
             x = self.dropout_module(x)
             x = self.drop_path1(x)
@@ -222,15 +234,13 @@ class TokenGTGraphEncoderLayer(nn.Module):
 
         elif self.layernorm_style == "postnorm":
             residual = x
-            x, attn = self.self_attn(
+            x = self.self_attn(
                 query=x,
                 key=x,
                 value=x,
-                attn_bias=self_attn_bias,
-                key_padding_mask=self_attn_padding_mask,
+                key_padding_mask=padding_mask,
                 need_weights=self.return_attention,
                 need_head_weights=self.return_attention,
-                attn_mask=self_attn_mask,
             )
             x = self.dropout_module(x)
             x = residual + x
@@ -243,4 +253,4 @@ class TokenGTGraphEncoderLayer(nn.Module):
 
         else:
             raise NotImplementedError
-        return x, attn
+        return x

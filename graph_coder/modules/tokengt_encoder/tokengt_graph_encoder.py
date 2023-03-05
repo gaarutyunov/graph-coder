@@ -1,3 +1,17 @@
+#  Copyright 2023 German Arutyunov
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
 #  Copyright (c) Microsoft Corporation.
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,8 +46,8 @@ from fairseq.modules import FairseqDropout, LayerDropModuleList, LayerNorm
 from fairseq.modules.quant_noise import quant_noise as apply_quant_noise_
 
 from performer_pytorch import ProjectionUpdater
-from .multihead_attention import MultiheadAttention
-from .tokenizer import GraphFeatureTokenizer
+from graph_coder.modules.multihead_attention import MultiheadAttention
+from graph_coder.modules.tokenizer import GraphFeatureTokenizer
 from .tokengt_graph_encoder_layer import TokenGTGraphEncoderLayer
 
 
@@ -288,7 +302,9 @@ class TokenGTGraphEncoder(nn.Module):
         if self.performer and self.performer_auto_check_redraw:
             self.performer_proj_updater.redraw_projections()
 
-        x, padding_mask, padded_index = self.graph_feature(**kwargs)
+        res = self.graph_feature(**kwargs)
+        x = res["x"]
+        padding_mask = res["padding_mask"]
 
         # x: B x T x C
 
@@ -308,27 +324,11 @@ class TokenGTGraphEncoder(nn.Module):
         # B x T x C -> T x B x C
         x = x.transpose(0, 1)
 
-        inner_states = []
-        if not self.last_state_only:
-            inner_states.append(x)
-
-        attn_dict = {"maps": {}, "padded_index": padded_index}
         for i in range(len(self.layers)):
             layer = self.layers[i]
-            x, attn = layer(
+            x = layer(
                 x,
-                self_attn_padding_mask=padding_mask,
+                padding_mask=padding_mask,
             )
-            if not self.last_state_only:
-                inner_states.append(x)
-            attn_dict["maps"][i] = attn
 
-        graph_rep = x[0, :, :]
-
-        if self.last_state_only:
-            inner_states = [x]
-
-        if self.traceable:
-            return torch.stack(inner_states), graph_rep, attn_dict
-        else:
-            return inner_states, graph_rep, attn_dict
+        return x.transpose(0, 1)

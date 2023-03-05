@@ -82,9 +82,9 @@ class MultiheadPerformerAttention(MultiheadAttention):
     def forward(
         self,
         query,
-        key: Optional[Tensor],
-        value: Optional[Tensor],
-        attn_bias: Optional[Tensor],
+        key: Optional[Tensor] = None,
+        value: Optional[Tensor] = None,
+        attn_bias: Optional[Tensor] = None,
         key_padding_mask: Optional[Tensor] = None,
         need_weights: bool = True,
         attn_mask: Optional[Tensor] = None,

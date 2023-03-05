@@ -11,20 +11,8 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from typing import List
-
-import click
-
-from graph_coder.config import ConfigBuilder
-
-
-@click.command()
-@click.option("--root", default="configs", help="Config directory")
-@click.option("--out", default="configs", help="Output directory")
-@click.argument("path", nargs=-1)
-def main(root: str, out: str, path: List[str]):
-    ConfigBuilder(root, *path).load().save(out)
-
-
-if __name__ == "__main__":
-    main()
+from .tokengt_encoder_base import *
+from .tokengt_encoder import *
+from .tokengt_encoder_pipe import *
+from .tokengt_graph_encoder_pipe import *
+from .tokengt_graph_encoder_layer import *

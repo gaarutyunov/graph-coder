@@ -132,9 +132,9 @@ class MultiheadAttention(nn.Module):
     def forward(
         self,
         query,
-        key: Optional[Tensor],
-        value: Optional[Tensor],
-        attn_bias: Optional[Tensor],
+        key: Optional[Tensor] = None,
+        value: Optional[Tensor] = None,
+        attn_bias: Optional[Tensor] = None,
         key_padding_mask: Optional[Tensor] = None,
         need_weights: bool = True,
         attn_mask: Optional[Tensor] = None,
@@ -247,7 +247,7 @@ class MultiheadAttention(nn.Module):
         else:
             attn_weights = None
 
-        return attn, attn_weights
+        return attn
 
     def apply_sparse_mask(self, attn_weights, tgt_len: int, src_len: int, bsz: int):
         return attn_weights
@@ -355,8 +355,4 @@ class MultiheadAttention(nn.Module):
         attn = self.out_proj(attn)
         attn = self.dropout_module(attn)
 
-        attn_weights: Optional[Tensor] = None
-        if need_weights:
-            raise NotImplementedError
-
-        return attn, attn_weights
+        return attn

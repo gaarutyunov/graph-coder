@@ -11,18 +11,14 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-import abc
-from typing import TypeVar, Generic
-
-import torch
 from torch import nn
 
-T = TypeVar("T")
+from .generator_base import GraphCoderGeneratorBase
+from .layers import TextLayer, GraphLayer, CodeLayer
 
 
-class GraphCoderBase(nn.Module, Generic[T], abc.ABC):
-    """Base class for graph-coder models"""
-
+class GraphCoderGenerator(GraphCoderGeneratorBase[nn.Module]):
+    """Graph-coder model for code generation"""
     def __init__(
         self,
         embedding: nn.Module,
@@ -30,14 +26,24 @@ class GraphCoderBase(nn.Module, Generic[T], abc.ABC):
         code_encoder: nn.Module,
         graph_encoder: nn.Module,
         decoder: nn.Module,
+        hidden_size: int,
+        vocab_size: int,
+        eos_token_id: int = 0,
+        max_length: int = 64,
     ) -> None:
-        super().__init__()
+        super().__init__(
+            layers=[
+                TextLayer(embedding, text_encoder, eos_token_id),
+                GraphLayer(graph_encoder),
+                CodeLayer(embedding, code_encoder, eos_token_id),
+            ],
+            decoder=decoder,
+            hidden_size=hidden_size,
+            vocab_size=vocab_size,
+            eos_token_id=eos_token_id,
+            max_length=max_length,
+        )
         self.embedding = embedding
         self.text_encoder = text_encoder
         self.code_encoder = code_encoder
         self.graph_encoder = graph_encoder
-        self.decoder = decoder
-
-    @abc.abstractmethod
-    def forward(self, **kwargs: torch.Tensor) -> T:
-        pass

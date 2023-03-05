@@ -15,14 +15,13 @@
 from functools import partial
 from pathlib import Path
 
-import torch
 from torch import nn as nn
 from torch.utils.data import DataLoader
 
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
-from graph_coder.modules import TokenGTEncoder, TokenEmbedding
 from graph_coder.config.functional import get_pretrained_tokenizer
+from graph_coder.modules import TokenGTEncoderPipe, TokenGTEncoder, TokenEmbedding
 
 
 def test_tokengt_encoder():
@@ -136,3 +135,36 @@ def test_graphormer_init():
     for batch in loader:
         encoded = encoder(**batch)
         assert encoded.size(-1) == 128
+
+
+def test_pipe():
+    tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
+    dataset = AstDataset(
+        root=Path(__file__).parent / "./data",
+    )
+    loader = DataLoader(
+        dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer), batch_size=2
+    )
+    embedding = TokenEmbedding(
+        embedding=nn.Embedding(len(tokenizer.vocab), 128, padding_idx=1),
+        ff=nn.Linear(64, 1, bias=False),
+    )
+
+    encoder = TokenGTEncoderPipe(
+        embedding=embedding,
+        encoder_embed_dim=128,
+        encoder_ffn_embed_dim=128,
+        lap_node_id=True,
+        type_id=True,
+        performer=True,
+        attention_dropout=0.0,  # necessary for performer
+        causal=True,
+        apply_graphormer_init=True,
+    )
+
+    for batch in loader:
+        kwargs = batch
+        encoded = encoder(**kwargs)
+        for layer in encoder.to_layers():
+            kwargs = layer(**kwargs)
+        assert kwargs["x"].shape == encoded.shape

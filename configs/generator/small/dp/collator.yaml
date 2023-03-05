@@ -1,8 +1,7 @@
 collator:
-  _target_: graph_coder.utils.partial
+  _target_: graph_coder.data.collate_ast
   _var_: collator
   func:
-    _target_: graph_coder.data.collate_ast
   max_length: 16
   max_seq_length: 2048
   tokenizer:
@@ -17,4 +16,3 @@ collator:
     _var_: graph_dtype
     name: long
     _mode_: call
-  _mode_: call

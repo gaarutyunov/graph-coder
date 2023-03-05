@@ -11,9 +11,15 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-import functools
+
+import abc
+
+from torch import nn
+
+from .types import Layers
 
 
-def partial(func, *args, **keywords):
-    """Built in object partial has no signature. It is a workaround."""
-    return functools.partial(func, *args, **keywords)
+class PipeModule(nn.Module, abc.ABC):
+    @abc.abstractmethod
+    def to_layers(self) -> Layers:
+        pass

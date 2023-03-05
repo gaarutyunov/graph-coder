@@ -11,20 +11,11 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from typing import List
-
-import click
-
-from graph_coder.config import ConfigBuilder
+from performer_pytorch import Performer
 
 
-@click.command()
-@click.option("--root", default="configs", help="Config directory")
-@click.option("--out", default="configs", help="Output directory")
-@click.argument("path", nargs=-1)
-def main(root: str, out: str, path: List[str]):
-    ConfigBuilder(root, *path).load().save(out)
+class PerformerPipe(Performer):
+    def to_layers(self):
+        layers = []
 
-
-if __name__ == "__main__":
-    main()
+        return layers

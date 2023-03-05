@@ -271,8 +271,7 @@ class GraphFeatureTokenizer(nn.Module):
 
         padded_feature = padded_feature.masked_fill(padding_mask[..., None], float("0"))
 
-        return (
-            padded_feature,
-            padding_mask,
-            padded_index,
-        )  # [B, T, D], [B, T], [B, T, 2]
+        kwargs["x"] = padded_feature  # [B, T, D]
+        kwargs["padding_mask"] = padding_mask  # [B, T]
+
+        return kwargs

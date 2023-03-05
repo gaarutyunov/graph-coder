@@ -11,20 +11,19 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from typing import List
+from typing import Callable, Union
 
-import click
-
-from graph_coder.config import ConfigBuilder
+from torch import nn
 
 
-@click.command()
-@click.option("--root", default="configs", help="Config directory")
-@click.option("--out", default="configs", help="Output directory")
-@click.argument("path", nargs=-1)
-def main(root: str, out: str, path: List[str]):
-    ConfigBuilder(root, *path).load().save(out)
+class ConditionalLayer(nn.Module):
+    def __init__(self, inner: Union[nn.Module, Callable], condition: Callable) -> None:
+        super().__init__()
+        self.inner = inner
+        self.condition = condition
 
+    def forward(self, *args, **kwargs):
+        if not self.condition(*args, **kwargs):
+            return kwargs
 
-if __name__ == "__main__":
-    main()
+        return self.inner(*args, **kwargs)

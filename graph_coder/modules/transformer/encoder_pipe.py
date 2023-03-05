@@ -11,20 +11,12 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from typing import List
+from torch import nn
 
-import click
-
-from graph_coder.config import ConfigBuilder
-
-
-@click.command()
-@click.option("--root", default="configs", help="Config directory")
-@click.option("--out", default="configs", help="Output directory")
-@click.argument("path", nargs=-1)
-def main(root: str, out: str, path: List[str]):
-    ConfigBuilder(root, *path).load().save(out)
+from graph_coder.modules import PassThroughLayer
+from graph_coder.pipe import PipeModule, Layers
 
 
-if __name__ == "__main__":
-    main()
+class TransformerEncoderPipe(nn.TransformerEncoder, PipeModule):
+    def to_layers(self) -> Layers:
+        return [PassThroughLayer(layer, "x", ["x"]) for layer in self.layers]
