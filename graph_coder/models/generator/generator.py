@@ -19,6 +19,7 @@ from .layers import TextLayer, GraphLayer, CodeLayer
 
 class GraphCoderGenerator(GraphCoderGeneratorBase[nn.Module]):
     """Graph-coder model for code generation"""
+
     def __init__(
         self,
         embedding: nn.Module,

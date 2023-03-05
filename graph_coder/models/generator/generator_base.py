@@ -46,7 +46,9 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
         )
 
     def forward(self, **kwargs: torch.Tensor) -> Dict[str, torch.Tensor]:
-        new_kwargs: Dict[str, Union[List[torch.Tensor], torch.Tensor, Dict[str, torch.Tensor]]] = {
+        new_kwargs: Dict[
+            str, Union[List[torch.Tensor], torch.Tensor, Dict[str, torch.Tensor]]
+        ] = {
             **kwargs,
             "x_": [],
             "tgt_": [],
