@@ -15,7 +15,7 @@
 import dataclasses
 
 import torch
-from typing import Dict
+from typing import Dict, Any
 
 
 @dataclasses.dataclass
@@ -118,7 +118,7 @@ class GraphCoderBatch:
         }
 
     @staticmethod
-    def from_dict(obj: Dict[str, torch.Tensor]) -> "GraphCoderBatch":
+    def from_dict(obj: Dict[str, Any]) -> "GraphCoderBatch":
         return GraphCoderBatch(
             idx=obj["idx"],
             source_={

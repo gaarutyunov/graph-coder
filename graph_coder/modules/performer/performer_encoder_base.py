@@ -13,6 +13,7 @@
 #  limitations under the License.
 
 import math
+from typing import TypeVar, Generic
 
 import torch
 from axial_positional_embedding import AxialPositionalEmbedding
@@ -25,7 +26,10 @@ from performer_pytorch.performer_pytorch import (
 from torch import nn
 
 
-class PerformerEncoderBase(nn.Module):
+TE = TypeVar("TE", bound=nn.Module)
+
+
+class PerformerEncoderBase(nn.Module, Generic[TE]):
     """Encoder layer using Performer attention.
 
     This module is a modified :class:`performer_pytorch.performer_pytorch.PerformerLM`
@@ -34,7 +38,7 @@ class PerformerEncoderBase(nn.Module):
     def __init__(
         self,
         *,
-        performer: nn.Module,
+        performer: TE,
         max_seq_len,
         dim,
         dim_head=64,

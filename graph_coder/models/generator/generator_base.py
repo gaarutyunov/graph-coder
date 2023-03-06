@@ -11,7 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from typing import Dict, Generic, List, TypeVar, Union
+from typing import Dict, Generic, List, TypeVar, Any
 
 import torch
 from torch import nn
@@ -46,9 +46,7 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
         )
 
     def forward(self, **kwargs: torch.Tensor) -> Dict[str, torch.Tensor]:
-        new_kwargs: Dict[
-            str, Union[List[torch.Tensor], torch.Tensor, Dict[str, torch.Tensor]]
-        ] = {
+        new_kwargs: Dict[str, Any] = {
             **kwargs,
             "x_": [],
             "tgt_": [],
@@ -58,11 +56,9 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
         for layer in self.layers:
             new_kwargs = layer(**new_kwargs)
 
-        x, tgt, result = (
-            torch.cat(new_kwargs["x_"], dim=1),
-            torch.cat(new_kwargs["tgt_"], dim=1),
-            new_kwargs["result_"],
-        )
+        x = torch.cat(new_kwargs["x_"], dim=1)
+        tgt = torch.cat(new_kwargs["tgt_"], dim=1)
+        result: Dict[str, Any] = new_kwargs["result_"]
 
         out = self.decoder(tgt, x)
         hidden_states = torch.tanh(self.dense(out)).contiguous()

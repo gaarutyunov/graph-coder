@@ -85,8 +85,10 @@ ignore_missing_imports = true
 [tool.autoflake]
 files = "graph_coder"
 exclude = "tests/.*data"
+quiet = true
 in-place = true
 recursive = true
+imports = ["einops", "performer_pytorch", "torch", "deepspeed"]
 
 [build-system]
 requires = ["poetry-core"]

@@ -18,13 +18,9 @@ import torch
 from torch import nn
 
 from graph_coder.data import GraphCoderBatch
+from graph_coder.modules import Kwargs
 
 TE = typing.TypeVar("TE", bound=nn.Module)
-
-
-Kwargs = typing.Union[
-    torch.Tensor, typing.List[torch.Tensor], typing.Dict[str, torch.Tensor]
-]
 
 
 class TextLayer(nn.Module, typing.Generic[TE]):
@@ -37,13 +33,14 @@ class TextLayer(nn.Module, typing.Generic[TE]):
     def forward(
         self,
         **kwargs: Kwargs,
-    ) -> typing.Dict[str, torch.Tensor]:
+    ) -> typing.Dict[str, Kwargs]:
         batch = GraphCoderBatch.from_dict(kwargs)
 
         if not batch.has_docstring:
             return kwargs
 
-        x, tgt = kwargs["x_"], kwargs["tgt_"]
+        x: typing.List[torch.Tensor] = kwargs["x_"]  # type: ignore[assignment]
+        tgt: typing.List[torch.Tensor] = kwargs["tgt_"]  # type: ignore[assignment]
 
         eos = torch.empty(
             (batch.batch_size, 1),
@@ -71,13 +68,14 @@ class CodeLayer(nn.Module, typing.Generic[TE]):
     def forward(
         self,
         **kwargs: Kwargs,
-    ) -> typing.Dict[str, torch.Tensor]:
+    ) -> typing.Dict[str, Kwargs]:
         batch = GraphCoderBatch.from_dict(kwargs)
 
         if not batch.has_source:
             return kwargs
 
-        x, tgt = kwargs["x_"], kwargs["tgt_"]
+        x: typing.List[torch.Tensor] = kwargs["x_"]  # type: ignore[assignment]
+        tgt: typing.List[torch.Tensor] = kwargs["tgt_"]  # type: ignore[assignment]
 
         eos = torch.empty(
             (batch.batch_size, 1),
@@ -103,13 +101,15 @@ class GraphLayer(nn.Module, typing.Generic[TE]):
     def forward(
         self,
         **kwargs: Kwargs,
-    ) -> typing.Dict[str, torch.Tensor]:
+    ) -> typing.Dict[str, Kwargs]:
         batch = GraphCoderBatch.from_dict(kwargs)
 
         if not batch.has_graph:
             return kwargs
 
-        x, tgt, result = kwargs["x_"], kwargs["tgt_"], kwargs["result_"]
+        x: typing.List[torch.Tensor] = kwargs["x_"]  # type: ignore[assignment]
+        tgt: typing.List[torch.Tensor] = kwargs["tgt_"]  # type: ignore[assignment]
+        result: typing.Dict[str, torch.Tensor] = kwargs["result_"]  # type: ignore[assignment]
 
         x_ = self.graph_encoder(**kwargs)
 

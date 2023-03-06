@@ -14,9 +14,10 @@
 
 import typing
 
-import torch
 from deepspeed.runtime.pipe import LayerSpec
 from torch import nn
+
+from .types import Kwargs
 
 
 class PassThroughLayer(nn.Module):
@@ -41,10 +42,8 @@ class PassThroughLayer(nn.Module):
 
     def forward(
         self,
-        **kwargs: typing.Union[
-            torch.Tensor, typing.List[torch.Tensor], typing.Dict[str, torch.Tensor]
-        ],
-    ) -> typing.Dict[str, torch.Tensor]:
+        **kwargs: Kwargs,
+    ) -> typing.Dict[str, Kwargs]:
         args = self.args_getter(**kwargs)
 
         if isinstance(args, (list, tuple)):

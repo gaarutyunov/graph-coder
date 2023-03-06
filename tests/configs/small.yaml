@@ -5,7 +5,7 @@ dataset:
   batch_size: &batch_size 4
   collate_fn:
     _target_: graph_coder.data.collate_ast
-    max_length: &max_length 32
+    max_length: &max_length 8
     tokenizer:
       _target_: graph_coder.config.F.get_pretrained_tokenizer
       _var_: tokenizer
@@ -24,7 +24,7 @@ model:
       _var_: tokenizer
     _mode_: call
   eos_token_id: *eos_token_id
-  hidden_size: &hidden_size 128
+  hidden_size: &hidden_size 16
   embedding:
     _target_: torch.nn.Embedding
     _var_: embedding
@@ -37,21 +37,21 @@ model:
     encoder_layer:
       _target_: torch.nn.TransformerEncoderLayer
       d_model: *hidden_size
-      nhead: 4
-      dim_feedforward: 512
+      nhead: 2
+      dim_feedforward: 32
       dropout: 0.1
       activation: relu
-    num_layers: 6
+    num_layers: 2
   code_encoder:
     _target_: torch.nn.TransformerEncoder
     encoder_layer:
       _target_: torch.nn.TransformerEncoderLayer
       d_model: *hidden_size
-      nhead: 4
-      dim_feedforward: 512
+      nhead: 2
+      dim_feedforward: 32
       dropout: 0.1
       activation: relu
-    num_layers: 6
+    num_layers: 2
   graph_encoder:
     _target_: graph_coder.modules.TokenGTEncoder
     embedding:
@@ -66,10 +66,10 @@ model:
     lap_node_id: true
     type_id: true
     encoder_embed_dim: *hidden_size
-    encoder_ffn_embed_dim: 512
+    encoder_ffn_embed_dim: 32
     causal: true
-    encoder_layers: 6
-    encoder_attention_heads: 4
+    encoder_layers: 2
+    encoder_attention_heads: 2
     performer: true
     attention_dropout: 0
     apply_graphormer_init: true
@@ -78,11 +78,11 @@ model:
     decoder_layer:
       _target_: torch.nn.TransformerDecoderLayer
       d_model: *hidden_size
-      nhead: 4
-      dim_feedforward: 512
+      nhead: 2
+      dim_feedforward: 32
       dropout: 0.1
       activation: relu
-    num_layers: 6
+    num_layers: 2
 
 runner:
   _target_: graph_coder.runners.GraphCoderGeneratorRunner

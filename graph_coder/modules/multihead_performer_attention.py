@@ -24,12 +24,14 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from typing import Optional, Tuple
+from typing import Optional
 
+import torch
+from einops import rearrange
 from torch import Tensor, nn
 
 from .multihead_attention import MultiheadAttention
-from performer_pytorch import FastAttention
+from .performer.fast_attention import FastAttention
 
 
 class MultiheadPerformerAttention(MultiheadAttention):
@@ -90,7 +92,7 @@ class MultiheadPerformerAttention(MultiheadAttention):
         attn_mask: Optional[Tensor] = None,
         before_softmax: bool = False,
         need_head_weights: bool = False,
-    ) -> Tuple[Tensor, Optional[Tensor]]:
+    ) -> Tensor:
         """Input shape: Time x Batch x Channel
 
         Args:
@@ -108,14 +110,46 @@ class MultiheadPerformerAttention(MultiheadAttention):
                 weights for each head. Implies *need_weights*. Default:
                 return the average attention weights over all heads.
         """
-        return self.forward_performer(
-            query,
-            key,
-            value,
-            attn_bias,
-            key_padding_mask,
-            need_weights,
-            attn_mask,
-            before_softmax,
-            need_head_weights,
+        assert attn_bias is None
+
+        if need_head_weights:
+            need_weights = True
+
+        tgt_len, bsz, embed_dim = query.size()
+        src_len = tgt_len
+        assert embed_dim == self.embed_dim, f"query dim {embed_dim} != {self.embed_dim}"
+        assert list(query.size()) == [tgt_len, bsz, embed_dim]
+        if key is not None:
+            src_len, key_bsz, _ = key.size()
+            if not torch.jit.is_scripting():
+                assert key_bsz == bsz
+                assert value is not None
+                assert src_len, bsz == value.shape[:2]
+
+        q = self.q_proj(query)
+        k = self.k_proj(query)
+        v = self.v_proj(query)
+
+        assert k is not None
+        assert k.size(0) == src_len
+
+        # This is part of a workaround to get around fork/join parallelism
+        # not supporting Optional types.
+        if key_padding_mask is not None and key_padding_mask.dim() == 0:
+            key_padding_mask = None
+
+        if key_padding_mask is not None:
+            assert key_padding_mask.size(0) == bsz
+            assert key_padding_mask.size(1) == src_len
+            key_padding_mask = key_padding_mask.to(torch.bool)[:, None, :, None]
+
+        q, k, v = map(
+            lambda t: rearrange(t, "n b (h d) -> b h n d", h=self.num_heads), (q, k, v)
         )
+        attn = self.fast_attention(q, k, v, key_padding_mask)
+        attn = rearrange(attn, "b h n d -> n b (h d)")
+
+        attn = self.out_proj(attn)
+        attn = self.dropout_module(attn)
+
+        return attn

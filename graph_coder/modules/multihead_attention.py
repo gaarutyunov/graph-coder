@@ -25,7 +25,7 @@
 #  limitations under the License.
 
 import math
-from typing import Optional, Tuple
+from typing import Optional
 
 import torch
 from fairseq import utils
@@ -33,7 +33,6 @@ from fairseq.modules.fairseq_dropout import FairseqDropout
 from fairseq.modules.quant_noise import quant_noise
 from torch import Tensor, nn
 
-from einops import rearrange
 
 from performer_pytorch import FastAttention
 
@@ -140,7 +139,7 @@ class MultiheadAttention(nn.Module):
         attn_mask: Optional[Tensor] = None,
         before_softmax: bool = False,
         need_head_weights: bool = False,
-    ) -> Tuple[Optional[Tensor], Optional[Tensor]]:
+    ) -> Tensor:
         """Input shape: Time x Batch x Channel
 
         Args:
@@ -220,7 +219,7 @@ class MultiheadAttention(nn.Module):
             attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
 
         if before_softmax:
-            return attn_weights, v
+            return v
 
         attn_weights_float = utils.softmax(
             attn_weights, dim=-1, onnx_trace=self.onnx_trace
@@ -282,77 +281,3 @@ class MultiheadAttention(nn.Module):
 
         for key, value in items_to_add.items():
             state_dict[key] = value
-
-    def forward_performer(
-        self,
-        query,
-        key: Optional[Tensor],
-        value: Optional[Tensor],
-        attn_bias: Optional[Tensor],
-        key_padding_mask: Optional[Tensor] = None,
-        need_weights: bool = True,
-        attn_mask: Optional[Tensor] = None,
-        before_softmax: bool = False,
-        need_head_weights: bool = False,
-    ) -> Tuple[Tensor, Optional[Tensor]]:
-        """Input shape: Time x Batch x Channel
-
-        Args:
-            key_padding_mask (ByteTensor, optional): mask to exclude
-                keys that are pads, of shape `(batch, src_len)`, where
-                padding elements are indicated by 1s.
-            need_weights (bool, optional): return the attention weights,
-                averaged over heads (default: False).
-            attn_mask (ByteTensor, optional): typically used to
-                implement causal attention, where the mask prevents the
-                attention from looking forward in time (default: None).
-            before_softmax (bool, optional): return the raw attention
-                weights and values before the attention softmax.
-            need_head_weights (bool, optional): return the attention
-                weights for each head. Implies *need_weights*. Default:
-                return the average attention weights over all heads.
-        """
-        assert attn_bias is None
-
-        if need_head_weights:
-            need_weights = True
-
-        tgt_len, bsz, embed_dim = query.size()
-        src_len = tgt_len
-        assert embed_dim == self.embed_dim, f"query dim {embed_dim} != {self.embed_dim}"
-        assert list(query.size()) == [tgt_len, bsz, embed_dim]
-        if key is not None:
-            src_len, key_bsz, _ = key.size()
-            if not torch.jit.is_scripting():
-                assert key_bsz == bsz
-                assert value is not None
-                assert src_len, bsz == value.shape[:2]
-
-        q = self.q_proj(query)
-        k = self.k_proj(query)
-        v = self.v_proj(query)
-
-        assert k is not None
-        assert k.size(0) == src_len
-
-        # This is part of a workaround to get around fork/join parallelism
-        # not supporting Optional types.
-        if key_padding_mask is not None and key_padding_mask.dim() == 0:
-            key_padding_mask = None
-
-        if key_padding_mask is not None:
-            assert key_padding_mask.size(0) == bsz
-            assert key_padding_mask.size(1) == src_len
-            key_padding_mask = key_padding_mask.to(torch.bool)[:, None, :, None]
-
-        q, k, v = map(
-            lambda t: rearrange(t, "n b (h d) -> b h n d", h=self.num_heads), (q, k, v)
-        )
-        # attn = self.fast_attention(q, k, v, key_padding_mask) TODO: check if this implementation is needed https://github.com/jw9730/tokengt/blob/main/large-scale-regression/tokengt/modules/performer_pytorch.py#L183
-        attn = self.fast_attention(q, k, v)
-        attn = rearrange(attn, "b h n d -> n b (h d)")
-
-        attn = self.out_proj(attn)
-        attn = self.dropout_module(attn)
-
-        return attn

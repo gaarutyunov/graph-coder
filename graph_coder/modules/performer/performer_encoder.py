@@ -19,7 +19,7 @@ from torch import nn
 from .performer_encoder_base import PerformerEncoderBase
 
 
-class PerformerEncoder(PerformerEncoderBase):
+class PerformerEncoder(PerformerEncoderBase[Performer]):
     def __init__(
         self,
         *,

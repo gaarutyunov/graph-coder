@@ -30,7 +30,7 @@ class PositionalEmbeddingLayer(nn.Module):
         return x, self.inner(x)
 
 
-class PerformerEncoderPipe(PerformerEncoderBase):
+class PerformerEncoderPipe(PerformerEncoderBase[PerformerPipe]):
     def __init__(
         self,
         *,
