@@ -43,6 +43,7 @@ pandas-stubs = "^1.5.2.230105"
 poetry2conda = "^0.3.0"
 types-pyyaml = "^6.0.12.3"
 torch-tb-profiler = "^0.4.1"
+autoflake = "^2.0.1"
 
 [tool.poetry2conda]
 name = "graph-coder"
@@ -81,6 +82,12 @@ python_version = "3.9"
 exclude = "tests/.*data"
 ignore_missing_imports = true
 
+[tool.autoflake]
+files = "graph_coder"
+exclude = "tests/.*data"
+in-place = true
+recursive = true
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
@@ -90,22 +97,23 @@ _test = "coverage run -m pytest"
 _report = "coverage report"
 _html = "coverage html"
 _lcov = "coverage lcov"
+_black = "black ."
+_optional = "no_implicit_optional graph_coder"
+_autoflake = "autoflake ."
+_check_autoflake = "autoflake . --check"
+_mypy = "mypy ."
 
 [tool.poe.tasks.test]
 help = "Run tests and report coverage (html and lcov)"
 sequence = ["_test", "_report", "_html", "_lcov"]
 
 [tool.poe.tasks.lint]
-help = "Lint typings with mypy"
-cmd = "mypy ."
+help = "Lint code"
+sequence = ["_check_autoflake", "_mypy"]
 
 [tool.poe.tasks.fmt]
-help = "Format code with black"
-cmd = "black ."
-
-[tool.poe.tasks.fix_optional]
-help = "Fix optional types with no_implicit_optional"
-cmd = "no_implicit_optional ."
+help = "Format code"
+sequence = ["_black", "_optional", "_autoflake"]
 
 [tool.poe.tasks.conda_deps]
 help = "Generate conda dependencies"

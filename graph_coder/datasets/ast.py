@@ -254,7 +254,6 @@ class AstDataset(BaseDataset[AstExample]):
             await self._logger.warn(
                 f"Opening {file.relative_to(self.root)} as utf-8: {e}",
             )
-            pass
 
         async with aiofiles.open(file, "rb") as f:
             encoding = None

@@ -31,4 +31,3 @@ class AstData:
 class AstExample(BaseExample[AstData]):
     """Example for AST dataset."""
 
-    pass

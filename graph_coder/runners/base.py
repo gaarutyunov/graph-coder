@@ -12,7 +12,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import abc
-from collections import defaultdict
 from typing import Dict, Optional
 
 import torch
@@ -80,4 +79,3 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
     @abc.abstractmethod
     def _calc_loss(self, **kwargs: torch.Tensor) -> torch.Tensor:
         """Method that calculates loss for a batch."""
-        pass

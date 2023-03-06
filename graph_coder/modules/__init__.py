@@ -24,7 +24,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from .tokengt_encoder import *
+from .tokengt import *
 from .performer import *
 from .token_embedding import *
 from .pass_through import *

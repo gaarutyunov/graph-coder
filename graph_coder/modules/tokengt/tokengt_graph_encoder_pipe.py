@@ -11,16 +11,12 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-import typing
-from typing import List, Union, Callable, Optional
+from typing import List
 
-from deepspeed import PipelineModule
-from deepspeed.runtime.pipe import LayerSpec
-from torch import nn
 from torch.nn import Identity
 
 from .tokengt_graph_encoder import TokenGTGraphEncoder
-from graph_coder.modules.pass_through import PassThroughLayer, PassThroughLayerSpec
+from graph_coder.modules.pass_through import PassThroughLayer
 from .tokengt_graph_encoder_layer_pipe import TokenGTGraphEncoderLayerPipe
 from graph_coder.pipe import Layers, PipeModule
 
