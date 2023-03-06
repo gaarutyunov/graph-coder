@@ -11,12 +11,18 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+from typing import Dict, List, Tuple
 
 from performer_pytorch import Performer
+from performer_pytorch.reversible import SequentialSequence
 from torch import nn
 
+from graph_coder.pipe import Layers, PassThroughLayer, PipeModule
 
-class PerformerPipe(Performer):
+
+class PerformerPipe(PipeModule, Performer):
+    net: SequentialSequence
+
     def __init__(
         self,
         dim,
@@ -72,10 +78,40 @@ class PerformerPipe(Performer):
             attn_out_bias,
             shift_tokens,
         )
-        self.net.layers
-        self.net.args_route
 
-    def to_layers(self):
-        layers = []
+    def performer_redraw(self, **kwargs):
+        if self.auto_check_redraw:
+            self.proj_updater.redraw_projections()
+
+        return kwargs
+
+    def to_layers(self) -> Layers:
+        layers = [self.performer_redraw]
+
+        args_route: List[Dict[str, Tuple[bool, ...]]] = [{}] * len(self.net.layers)
+
+        for arg_name, arg_layers in self.net.args_route.items():
+            for i, r in enumerate(arg_layers):
+                args_route[i][arg_name] = r
+
+        for (f, g), args_map in zip(self.net.layers, args_route):
+            layers.extend(
+                [
+                    PassThroughLayer(
+                        f,
+                        "x",
+                        ["x"] + [k for k, v in args_map.items() if v[0]],
+                        callback=lambda res, **kwargs: kwargs["x"] + res,
+                        args_mode="kwargs",
+                    ),
+                    PassThroughLayer(
+                        g,
+                        "x",
+                        ["x"] + [k for k, v in args_map.items() if v[1]],
+                        callback=lambda res, **kwargs: kwargs["x"] + res,
+                        args_mode="kwargs",
+                    ),
+                ]
+            )
 
         return layers

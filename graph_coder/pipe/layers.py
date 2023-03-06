@@ -28,17 +28,26 @@ class PassThroughLayer(nn.Module):
         inp: typing.Optional[typing.List[str]] = None,
         callback: typing.Optional[typing.Callable] = None,
         args_getter: typing.Optional[typing.Callable] = None,
+        args_mode: str = "args",
     ):
         super().__init__()
         self.inner = inner
         self.inp = inp
         self.out = out
-        self.args_getter = args_getter or self._default_args_getter
+        self.args_getter: Callable = (
+            args_getter or self._default_args_getter  # type: ignore[assignment]
+            if args_mode == "args"
+            else self._default_kwargs_getter
+        )
         self.callback = callback
 
     def _default_args_getter(self, **kwargs):
         assert self.inp is not None, "input keys are not specified"
-        return [kwargs[k] for k in self.inp]
+        return [kwargs[k] for k in self.inp if k in kwargs]
+
+    def _default_kwargs_getter(self, **kwargs):
+        assert self.inp is not None, "input keys are not specified"
+        return {k: kwargs[k] for k in self.inp if k in kwargs}
 
     def forward(
         self,

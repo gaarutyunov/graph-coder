@@ -79,20 +79,6 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
     def has_graph(self, **kwargs):
         return GraphCoderBatch.from_dict(kwargs).has_graph
 
-    def pass_result(self, **kwargs):
-        result = kwargs["result_"]
-
-        if self.has_docstring(**kwargs):
-            result["docstring"] = kwargs["docstring_logits"]
-
-        if self.has_source(**kwargs):
-            result["source"] = kwargs["source_logits"]
-
-        if self.has_graph(**kwargs):
-            result["graph"] = kwargs["graph_logits"]
-
-        return result
-
     def tgt_and_memory(self, **kwargs):
         kwargs["tgt"] = torch.cat(kwargs["tgt_"], dim=1)
         kwargs["memory"] = torch.cat(kwargs["x_"], dim=1)
@@ -126,17 +112,13 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
                 ),
                 self.get_states,
                 ConditionalLayer(
-                    PassThroughLayer(self.lm_head, "docstring_logits", ["text_states"]),
+                    PassThroughLayer(self.lm_head, "docstring", ["text_states"]),
                     self.has_docstring,
-                ),
-                ConditionalLayer(
-                    PassThroughLayer(self.lm_head, "source_logits", ["code_states"]),
-                    self.has_source,
                 ),
                 ConditionalLayer(
                     PassThroughLayer(
                         self.lm_graph_head,
-                        "graph_logits",
+                        "graph",
                         ["graph_states"],
                         callback=lambda res, **kwargs: res.view(
                             res.size(0), -1, self.hidden_size
@@ -145,10 +127,14 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
                     self.has_graph,
                 ),
                 ConditionalLayer(
+                    PassThroughLayer(self.lm_head, "source", ["code_states"]),
+                    self.has_source,
+                ),
+                ConditionalLayer(
                     PassThroughLayer(
                         self.lm_head,
-                        "graph_logits",
-                        ["graph_logits"],
+                        "graph",
+                        ["graph"],
                         callback=lambda res, **kwargs: res.view(
                             res.size(0),
                             kwargs["graph_states"].size(1),
@@ -158,7 +144,6 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
                     ),
                     self.has_graph,
                 ),
-                self.pass_result,
             ]
         )
 

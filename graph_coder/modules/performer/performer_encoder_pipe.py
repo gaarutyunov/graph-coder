@@ -11,18 +11,17 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-import typing
 
 from performer_pytorch.performer_pytorch import cast_tuple
 from torch import nn
 
-from graph_coder.pipe import PassThroughLayer
+from graph_coder.pipe import Layers, PassThroughLayer, PipeModule
 
 from .performer_encoder_base import PerformerEncoderBase
 from .performer_pipe import PerformerPipe
 
 
-class PerformerEncoderPipe(PerformerEncoderBase[PerformerPipe]):
+class PerformerEncoderPipe(PipeModule, PerformerEncoderBase[PerformerPipe]):
     def __init__(
         self,
         *,
@@ -94,18 +93,13 @@ class PerformerEncoderPipe(PerformerEncoderBase[PerformerPipe]):
             axial_position_shape=axial_position_shape,
         )
 
-    def performer_redraw(self, **kwargs):
-        if self.auto_check_redraw:
-            self.proj_updater.redraw_projections()
-
-        return kwargs
-
-    def to_layers(self) -> typing.List[typing.Union[nn.Module, typing.Callable]]:
+    def to_layers(self) -> Layers:
         layers = [
-            PassThroughLayer(self.pos_emb, "x", ["x"]),
+            PassThroughLayer(
+                self.pos_emb, "x", ["x"], lambda res, **kwargs: kwargs["x"] + res
+            ),
             PassThroughLayer(self.dropout, "x", ["x"]),
-            PassThroughLayer(self.layer_pos_emb, "layer_pos_emb", ["x"]),
-            self.performer_redraw,
+            PassThroughLayer(self.layer_pos_emb, "pos_emb", ["x"]),
             *self.performer.to_layers(),
         ]
 

@@ -21,8 +21,15 @@ from graph_coder.config import ConfigBuilder
 from graph_coder.config.functional import get_pretrained_tokenizer
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
-from graph_coder.models import GraphCoderGenerator
-from graph_coder.modules import PerformerEncoder, TokenEmbedding, TokenGTEncoder
+from graph_coder.models import GraphCoderGenerator, GraphCoderGeneratorPipe
+from graph_coder.modules import (
+    PerformerEncoder,
+    TokenEmbedding,
+    TokenGTEncoder,
+    TokenGTEncoderPipe,
+    TransformerDecoderPipe,
+)
+from graph_coder.modules.performer.performer_encoder_pipe import PerformerEncoderPipe
 from graph_coder.runners import GraphCoderGeneratorRunner
 from torch import nn
 from torch.utils.data import DataLoader
@@ -204,3 +211,86 @@ def test_performer_runner():
     for batch in loader:
         loss = runner._calc_loss(**batch)
         assert torch.is_floating_point(loss)
+
+
+def test_performer_pipe():
+    tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
+    dataset = AstDataset(
+        collate_fn=partial(collate_ast, tokenizer=tokenizer),
+        root=Path(__file__).parent / "./data",
+    )
+    loader = DataLoader(
+        dataset,
+        batch_size=2,
+        collate_fn=partial(collate_ast, tokenizer=tokenizer, max_length=8),
+    )
+    embedding = nn.Embedding(
+        len(tokenizer.vocab), 16, padding_idx=tokenizer.pad_token_id
+    )
+
+    graph_embedding = TokenEmbedding(
+        embedding=embedding,
+        ff=nn.Linear(8, 1, bias=False),
+    )
+
+    encoder = TokenGTEncoderPipe(
+        embedding=graph_embedding,
+        encoder_embed_dim=16,
+        encoder_ffn_embed_dim=32,
+        lap_node_id=True,
+        type_id=True,
+        performer=True,
+        causal=True,
+        attention_dropout=0.0,
+        encoder_layers=2,
+        encoder_attention_heads=2,
+    )
+    text_encoder = PerformerEncoderPipe(
+        dim=16,
+        depth=2,
+        heads=2,
+        max_seq_len=1024,
+        causal=True,
+    )
+    code_encoder = PerformerEncoderPipe(
+        dim=16,
+        depth=2,
+        heads=2,
+        max_seq_len=1024,
+        causal=True,
+    )
+    decoder = TransformerDecoderPipe(
+        decoder_layer=nn.TransformerDecoderLayer(d_model=16, nhead=2), num_layers=2
+    )
+
+    generator = GraphCoderGeneratorPipe(
+        embedding=embedding,
+        text_encoder=text_encoder,
+        code_encoder=code_encoder,
+        graph_encoder=encoder,
+        decoder=decoder,
+        hidden_size=16,
+        vocab_size=len(tokenizer.vocab),
+        eos_token_id=tokenizer.eos_token_id,
+        max_length=8,
+    )
+
+    layers = generator.to_layers()
+
+    for batch in loader:
+        decoded = generator(**batch)
+
+        kwargs = batch
+
+        for layer in layers:
+            kwargs = layer(**kwargs)
+
+        if "docstring" in decoded:
+            assert decoded["docstring"].size(-1) == len(tokenizer.vocab)
+            assert decoded["docstring"].shape == kwargs["docstring"].shape
+        if "graph" in decoded:
+            assert decoded["graph"].size(-1) == len(tokenizer.vocab)
+            assert decoded["graph"].shape == kwargs["graph"].shape
+        if "source" in decoded:
+            assert decoded["source"].size(-1) == len(tokenizer.vocab)
+            assert decoded["source"].shape == kwargs["source"].shape
