@@ -28,7 +28,7 @@ from typing import Optional
 
 import torch
 from einops import rearrange
-from torch import Tensor, nn
+from torch import nn, Tensor
 
 from .multihead_attention import MultiheadAttention
 from .performer.fast_attention import FastAttention

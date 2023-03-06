@@ -15,7 +15,7 @@ import pathlib
 from collections import OrderedDict
 from os import PathLike
 from pathlib import Path
-from typing import Union, Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional, Union
 
 import yaml
 from catalyst.registry import REGISTRY

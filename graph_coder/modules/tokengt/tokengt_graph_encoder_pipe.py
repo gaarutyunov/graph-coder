@@ -15,10 +15,10 @@ from typing import List
 
 from torch.nn import Identity
 
+from graph_coder.pipe import Layers, PassThroughLayer, PipeModule
+
 from .tokengt_graph_encoder import TokenGTGraphEncoder
-from graph_coder.modules.pass_through import PassThroughLayer
 from .tokengt_graph_encoder_layer_pipe import TokenGTGraphEncoderLayerPipe
-from graph_coder.pipe import Layers, PipeModule
 
 
 class TokenGTGraphEncoderPipe(TokenGTGraphEncoder, PipeModule):

@@ -44,13 +44,14 @@ import torch
 import torch.nn as nn
 from fairseq.modules import LayerNorm
 from fairseq.modules.fairseq_dropout import FairseqDropout
+from timm.models.layers.drop import DropPath
+
+from graph_coder.modules.feedforward import FeedForward
 
 from graph_coder.modules.multihead_attention import MultiheadAttention
 from graph_coder.modules.multihead_performer_attention import (
     MultiheadPerformerAttention,
 )
-from graph_coder.modules.feedforward import FeedForward
-from timm.models.layers.drop import DropPath
 
 
 class TokenGTGraphEncoderLayer(nn.Module):

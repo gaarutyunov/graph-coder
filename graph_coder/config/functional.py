@@ -17,7 +17,7 @@ from typing import Any, Dict, List
 import pandas as pd
 import torch
 from torch._C._profiler import ProfilerActivity
-from transformers import PreTrainedTokenizerFast, AutoTokenizer
+from transformers import AutoTokenizer, PreTrainedTokenizerFast
 
 
 def get_pretrained_tokenizer(

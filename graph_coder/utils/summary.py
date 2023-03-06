@@ -26,24 +26,24 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import sys
-from typing import Union, Any, Iterable, Mapping, Optional
+from typing import Any, Iterable, Mapping, Optional, Union
 
 import torch
 from catalyst.utils import get_device
 from torch import nn
-from torchinfo import ModelStatistics, summary as info_summary, Mode, Verbosity
+from torchinfo import Mode, ModelStatistics, summary as info_summary, Verbosity
 from torchinfo.formatting import FormattingOptions
 from torchinfo.layer_info import LayerInfo
 from torchinfo.torchinfo import (
-    INPUT_DATA_TYPE,
+    add_missing_container_layers,
+    apply_hooks,
+    CORRECTED_INPUT_DATA_TYPE,
     DEFAULT_COLUMN_NAMES,
     DEFAULT_ROW_SETTINGS,
-    process_input as info_process_input,
-    CORRECTED_INPUT_DATA_TYPE,
     forward_pass as info_forward_pass,
-    apply_hooks,
+    INPUT_DATA_TYPE,
+    process_input as info_process_input,
     set_children_layers,
-    add_missing_container_layers,
 )
 
 from graph_coder.data import GraphCoderBatch

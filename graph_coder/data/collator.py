@@ -11,15 +11,17 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+from typing import Dict, List
+
 import torch
+from catalyst.utils import get_device
 from torch.functional import F
 from transformers import PreTrainedTokenizerFast
-from typing import List, Dict
+
+from .algos import lap_eig
+from .ast import AstExample
 
 from .batch import GraphCoderBatch
-from .ast import AstExample
-from .algos import lap_eig
-from catalyst.utils import get_device
 
 
 def pad(

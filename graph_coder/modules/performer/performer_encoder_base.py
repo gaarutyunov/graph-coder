@@ -13,15 +13,15 @@
 #  limitations under the License.
 
 import math
-from typing import TypeVar, Generic
+from typing import Generic, TypeVar
 
 import torch
 from axial_positional_embedding import AxialPositionalEmbedding
 from performer_pytorch.performer_pytorch import (
-    FixedPositionalEmbedding,
-    default,
-    Always,
     AbsolutePositionalEmbedding,
+    Always,
+    default,
+    FixedPositionalEmbedding,
 )
 from torch import nn
 

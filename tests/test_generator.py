@@ -16,21 +16,21 @@ from functools import partial
 from pathlib import Path
 
 import torch
-from torch import nn
-from torch.utils.data import DataLoader
+from graph_coder.config.functional import get_pretrained_tokenizer
 
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
 from graph_coder.models import GraphCoderGenerator, GraphCoderGeneratorPipe
 from graph_coder.modules import (
+    TokenEmbedding,
+    TokenGTEncoder,
+    TokenGTEncoderPipe,
     TransformerDecoderPipe,
     TransformerEncoderPipe,
-    TokenGTEncoder,
-    TokenEmbedding,
-    TokenGTEncoderPipe,
 )
 from graph_coder.runners import GraphCoderGeneratorRunner
-from graph_coder.config.functional import get_pretrained_tokenizer
+from torch import nn
+from torch.utils.data import DataLoader
 
 
 def test_generator():
@@ -62,7 +62,7 @@ def test_generator():
         lap_node_id=True,
         type_id=True,
         encoder_layers=2,
-        encoder_attention_heads=2
+        encoder_attention_heads=2,
     )
     text_encoder = nn.TransformerEncoder(
         encoder_layer=nn.TransformerEncoderLayer(d_model=16, nhead=2), num_layers=2
@@ -83,7 +83,7 @@ def test_generator():
         hidden_size=16,
         vocab_size=len(tokenizer.vocab),
         eos_token_id=tokenizer.eos_token_id,
-        max_length=8
+        max_length=8,
     )
 
     for batch in loader:
@@ -100,7 +100,9 @@ def test_generator_runner():
     tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
     dataset = AstDataset(
         collate_fn=partial(
-            collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"), max_length=8
+            collate_ast,
+            tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"),
+            max_length=8,
         ),
         root=Path(__file__).parent / "./data",
         batch_size=2,
@@ -121,7 +123,7 @@ def test_generator_runner():
         lap_node_id=True,
         type_id=True,
         encoder_layers=2,
-        encoder_attention_heads=2
+        encoder_attention_heads=2,
     )
     text_encoder = nn.TransformerEncoder(
         encoder_layer=nn.TransformerEncoderLayer(d_model=16, nhead=2), num_layers=2
@@ -142,7 +144,7 @@ def test_generator_runner():
         hidden_size=16,
         vocab_size=len(tokenizer.vocab),
         eos_token_id=tokenizer.eos_token_id,
-        max_length=8
+        max_length=8,
     )
 
     runner = GraphCoderGeneratorRunner(
@@ -156,7 +158,9 @@ def test_generator_runner():
     runner._print_summary()
 
     loader = DataLoader(
-        dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer, max_length=8), batch_size=2
+        dataset,
+        collate_fn=partial(collate_ast, tokenizer=tokenizer, max_length=8),
+        batch_size=2,
     )
 
     for batch in loader:

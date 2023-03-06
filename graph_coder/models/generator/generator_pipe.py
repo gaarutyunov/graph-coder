@@ -14,11 +14,11 @@
 import torch
 from torch import nn
 
-from .generator_base import GraphCoderGeneratorBase
-from graph_coder.modules import PassThroughLayer, ConditionalLayer
-from .layers_pipe import CodeLayerPipe, GraphLayerPipe, TextLayerPipe
 from graph_coder.data import GraphCoderBatch
-from graph_coder.pipe import Layers, PipeModule
+from graph_coder.pipe import ConditionalLayer, Layers, PassThroughLayer, PipeModule
+
+from .generator_base import GraphCoderGeneratorBase
+from .layers_pipe import CodeLayerPipe, GraphLayerPipe, TextLayerPipe
 
 
 class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):

@@ -13,9 +13,9 @@
 #  limitations under the License.
 import warnings
 
-import click
-
 from typing import List
+
+import click
 
 from graph_coder.utils import run_model
 

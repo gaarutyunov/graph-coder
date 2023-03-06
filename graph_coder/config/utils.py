@@ -13,7 +13,7 @@
 #  limitations under the License.
 
 from collections import OrderedDict
-from typing import Iterable, Dict, Any
+from typing import Any, Dict, Iterable
 
 from catalyst import utils
 

@@ -46,6 +46,7 @@ from fairseq.modules import FairseqDropout, LayerDropModuleList, LayerNorm
 from fairseq.modules.quant_noise import quant_noise as apply_quant_noise_
 
 from performer_pytorch import ProjectionUpdater
+
 from graph_coder.modules.multihead_attention import MultiheadAttention
 from graph_coder.modules.tokenizer import GraphFeatureTokenizer
 from .tokengt_graph_encoder_layer import TokenGTGraphEncoderLayer

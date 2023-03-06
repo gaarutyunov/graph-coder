@@ -11,8 +11,8 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-
 import typing
+from typing import Callable, Union
 
 from deepspeed.runtime.pipe import LayerSpec
 from torch import nn
@@ -85,3 +85,16 @@ class PassThroughLayerSpec(LayerSpec):
             self.callback,
             self.args_getter,
         )
+
+
+class ConditionalLayer(nn.Module):
+    def __init__(self, inner: Union[nn.Module, Callable], condition: Callable) -> None:
+        super().__init__()
+        self.inner = inner
+        self.condition = condition
+
+    def forward(self, *args, **kwargs):
+        if not self.condition(*args, **kwargs):
+            return kwargs
+
+        return self.inner(*args, **kwargs)

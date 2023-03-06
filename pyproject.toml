@@ -44,6 +44,7 @@ poetry2conda = "^0.3.0"
 types-pyyaml = "^6.0.12.3"
 torch-tb-profiler = "^0.4.1"
 autoflake = "^2.0.1"
+ufmt = "^2.0.1"
 
 [tool.poetry2conda]
 name = "graph-coder"
@@ -69,6 +70,12 @@ line-length = 88
 target-version = ["py39"]
 include = "\\.pyi?$"
 exclude = "tests/.*data"
+
+[tool.usort]
+exclude = "tests/.*data"
+
+[tool.ufmt]
+excludes = ["tests/data", "tests/func_data"]
 
 [tool.coverage.run]
 omit = ["tests/*"]
@@ -99,7 +106,8 @@ _test = "coverage run -m pytest"
 _report = "coverage report"
 _html = "coverage html"
 _lcov = "coverage lcov"
-_black = "black ."
+_ufmt = "ufmt format ."
+_ufmt_check = "ufmt check ."
 _optional = "no_implicit_optional graph_coder"
 _autoflake = "autoflake ."
 _check_autoflake = "autoflake . --check"
@@ -111,11 +119,11 @@ sequence = ["_test", "_report", "_html", "_lcov"]
 
 [tool.poe.tasks.lint]
 help = "Lint code"
-sequence = ["_check_autoflake", "_mypy"]
+sequence = ["_check_autoflake", "_ufmt_check", "_mypy"]
 
 [tool.poe.tasks.fmt]
 help = "Format code"
-sequence = ["_black", "_optional", "_autoflake"]
+sequence = ["_optional", "_autoflake", "_ufmt"]
 
 [tool.poe.tasks.conda_deps]
 help = "Generate conda dependencies"

@@ -16,18 +16,10 @@ import typing
 from performer_pytorch.performer_pytorch import cast_tuple
 from torch import nn
 
+from graph_coder.pipe import PassThroughLayer
+
 from .performer_encoder_base import PerformerEncoderBase
 from .performer_pipe import PerformerPipe
-from graph_coder.modules.pass_through import PassThroughLayer
-
-
-class PositionalEmbeddingLayer(nn.Module):
-    def __init__(self, inner: nn.Module) -> None:
-        super().__init__()
-        self.inner = inner
-
-    def forward(self, x):
-        return x, self.inner(x)
 
 
 class PerformerEncoderPipe(PerformerEncoderBase[PerformerPipe]):
@@ -112,7 +104,7 @@ class PerformerEncoderPipe(PerformerEncoderBase[PerformerPipe]):
         layers = [
             PassThroughLayer(self.pos_emb, "x", ["x"]),
             PassThroughLayer(self.dropout, "x", ["x"]),
-            PassThroughLayer(self.layer_pos_emb, "x", ["x"]),
+            PassThroughLayer(self.layer_pos_emb, "layer_pos_emb", ["x"]),
             self.performer_redraw,
             *self.performer.to_layers(),
         ]

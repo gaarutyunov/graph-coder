@@ -16,24 +16,22 @@ from functools import partial
 from pathlib import Path
 
 import torch
-from torch import nn
-from torch.utils.data import DataLoader
 
 from graph_coder.config import ConfigBuilder
+from graph_coder.config.functional import get_pretrained_tokenizer
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
 from graph_coder.models import GraphCoderGenerator
-from graph_coder.modules import TokenGTEncoder, PerformerEncoder, TokenEmbedding
-from graph_coder.config.functional import get_pretrained_tokenizer
+from graph_coder.modules import PerformerEncoder, TokenEmbedding, TokenGTEncoder
 from graph_coder.runners import GraphCoderGeneratorRunner
+from torch import nn
+from torch.utils.data import DataLoader
 
 
 def test_performer():
     tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
     dataset = AstDataset(
-        collate_fn=partial(
-            collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
-        ),
+        collate_fn=partial(collate_ast, tokenizer=tokenizer),
         root=Path(__file__).parent / "./data",
     )
     loader = DataLoader(
@@ -60,7 +58,7 @@ def test_performer():
         causal=True,
         attention_dropout=0.0,
         encoder_layers=2,
-        encoder_attention_heads=2
+        encoder_attention_heads=2,
     )
     text_encoder = PerformerEncoder(
         dim=16,
@@ -89,7 +87,7 @@ def test_performer():
         hidden_size=16,
         vocab_size=len(tokenizer.vocab),
         eos_token_id=tokenizer.eos_token_id,
-        max_length=8
+        max_length=8,
     )
 
     for batch in loader:
@@ -130,7 +128,9 @@ def test_performer_runner():
     tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
     dataset = AstDataset(
         collate_fn=partial(
-            collate_ast, tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"), max_length=8
+            collate_ast,
+            tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"),
+            max_length=8,
         ),
         root=Path(__file__).parent / "./data",
     )
@@ -153,7 +153,7 @@ def test_performer_runner():
         causal=True,
         attention_dropout=0.0,
         encoder_layers=2,
-        encoder_attention_heads=2
+        encoder_attention_heads=2,
     )
     text_encoder = PerformerEncoder(
         dim=16,
@@ -182,7 +182,7 @@ def test_performer_runner():
         hidden_size=16,
         vocab_size=len(tokenizer.vocab),
         eos_token_id=tokenizer.eos_token_id,
-        max_length=8
+        max_length=8,
     )
 
     runner = GraphCoderGeneratorRunner(
@@ -196,7 +196,9 @@ def test_performer_runner():
     runner._print_summary()
 
     loader = DataLoader(
-        dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer, max_length=8), batch_size=2
+        dataset,
+        collate_fn=partial(collate_ast, tokenizer=tokenizer, max_length=8),
+        batch_size=2,
     )
 
     for batch in loader:

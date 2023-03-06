@@ -13,3 +13,4 @@
 #  limitations under the License.
 from .module import *
 from .types import *
+from .layers import *

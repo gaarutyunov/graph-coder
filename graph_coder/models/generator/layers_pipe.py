@@ -14,10 +14,10 @@
 import torch
 from torch.nn import Identity
 
-from .layers import GraphLayer, TextLayer, CodeLayer
 from graph_coder.data import GraphCoderBatch
-from graph_coder.modules import ConditionalLayer, PassThroughLayer
-from graph_coder.pipe import PipeModule, Layers
+from graph_coder.pipe import ConditionalLayer, Layers, PassThroughLayer, PipeModule
+
+from .layers import CodeLayer, GraphLayer, TextLayer
 
 
 def append_kwarg(key: str, other: str):

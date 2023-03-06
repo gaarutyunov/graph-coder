@@ -13,9 +13,9 @@
 #  limitations under the License.
 
 import dataclasses
+from typing import Any, Dict
 
 import torch
-from typing import Dict, Any
 
 
 @dataclasses.dataclass

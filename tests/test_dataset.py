@@ -19,17 +19,17 @@ from unittest.mock import patch
 
 import numpy as np
 import torch
-
-from graph_coder.data import collate_ast, pad, GraphCoderBatch
-from graph_coder.datasets import AstDataset, get
 from graph_coder.config.functional import (
-    get_pretrained_tokenizer,
     filter_has_docstring,
     filter_is_processed,
-    get_dtype,
     filter_max_nodes,
     filter_max_size,
+    get_dtype,
+    get_pretrained_tokenizer,
 )
+
+from graph_coder.data import collate_ast, GraphCoderBatch, pad
+from graph_coder.datasets import AstDataset, get
 
 
 def test_dataset():

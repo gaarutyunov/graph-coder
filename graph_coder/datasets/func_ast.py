@@ -13,12 +13,13 @@
 #  limitations under the License.
 import ast
 from pathlib import Path
-from typing import AsyncGenerator, Dict, Union, Optional
+from typing import AsyncGenerator, Dict, Optional, Union
 
 import networkx as nx
 
-from .registry import register
 from .ast import AstDataset
+
+from .registry import register
 
 
 @register("func_ast")

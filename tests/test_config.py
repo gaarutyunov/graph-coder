@@ -16,14 +16,14 @@ from pathlib import Path
 
 import torch
 from catalyst.registry import REGISTRY
-from torch._C._profiler import ProfilerActivity
-from torch.nn import TransformerDecoder
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from graph_coder.config import ConfigBuilder
 from graph_coder.models import GraphCoderGenerator
 from graph_coder.modules import PerformerEncoder, TokenGTEncoder
 from graph_coder.runners import GraphCoderGeneratorRunner
+from torch._C._profiler import ProfilerActivity
+from torch.nn import TransformerDecoder
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
 def test_config():

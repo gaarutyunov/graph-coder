@@ -31,10 +31,9 @@ import torch
 from fairseq import utils
 from fairseq.modules.fairseq_dropout import FairseqDropout
 from fairseq.modules.quant_noise import quant_noise
-from torch import Tensor, nn
-
 
 from performer_pytorch import FastAttention
+from torch import nn, Tensor
 
 
 class MultiheadAttention(nn.Module):

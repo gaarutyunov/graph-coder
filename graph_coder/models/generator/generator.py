@@ -14,7 +14,7 @@
 from torch import nn
 
 from .generator_base import GraphCoderGeneratorBase
-from .layers import TextLayer, GraphLayer, CodeLayer
+from .layers import CodeLayer, GraphLayer, TextLayer
 
 
 class GraphCoderGenerator(GraphCoderGeneratorBase[nn.Module]):

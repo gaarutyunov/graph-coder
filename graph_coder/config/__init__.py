@@ -12,8 +12,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from .config_builder import ConfigBuilder
 import graph_coder.config.functional as F  # noqa: N812
+from .config_builder import ConfigBuilder
 from .utils import process_configs
 
 __all__ = ("ConfigBuilder", "F", "process_configs")

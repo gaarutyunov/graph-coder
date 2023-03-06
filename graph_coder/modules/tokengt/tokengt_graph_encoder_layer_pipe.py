@@ -13,9 +13,8 @@
 #  limitations under the License.
 from torch.nn import Identity
 
-from graph_coder.modules.pass_through import PassThroughLayer
+from graph_coder.pipe import Layers, PassThroughLayer, PipeModule
 from .tokengt_graph_encoder_layer import TokenGTGraphEncoderLayer
-from graph_coder.pipe import PipeModule, Layers
 
 
 class TokenGTGraphEncoderLayerPipe(TokenGTGraphEncoderLayer, PipeModule):

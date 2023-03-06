@@ -17,8 +17,9 @@ from typing import Tuple
 import networkx as nx
 from astmonkey import transformers as ast_transformers
 
-from .visitors import GraphNodeVisitor
 from graph_coder.data import AstData
+
+from .visitors import GraphNodeVisitor
 
 
 def graph_to_data(idx: int, graph: nx.Graph) -> AstData:

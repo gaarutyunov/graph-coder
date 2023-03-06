@@ -15,13 +15,14 @@
 from functools import partial
 from pathlib import Path
 
-from torch import nn as nn
-from torch.utils.data import DataLoader
+from graph_coder.config.functional import get_pretrained_tokenizer
 
 from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
-from graph_coder.config.functional import get_pretrained_tokenizer
-from graph_coder.modules import TokenGTEncoderPipe, TokenGTEncoder, TokenEmbedding
+from graph_coder.modules import TokenEmbedding, TokenGTEncoder, TokenGTEncoderPipe
+
+from torch import nn as nn
+from torch.utils.data import DataLoader
 
 
 def test_tokengt_encoder():
@@ -46,7 +47,7 @@ def test_tokengt_encoder():
         lap_node_id=True,
         type_id=True,
         encoder_layers=2,
-        encoder_attention_heads=2
+        encoder_attention_heads=2,
     )
 
     for batch in loader:
@@ -60,7 +61,9 @@ def test_sign_flip():
         root=Path(__file__).parent / "./data",
     )
     loader = DataLoader(
-        dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer, max_length=8), batch_size=2
+        dataset,
+        collate_fn=partial(collate_ast, tokenizer=tokenizer, max_length=8),
+        batch_size=2,
     )
     embedding = TokenEmbedding(
         embedding=nn.Embedding(len(tokenizer.vocab), 16, padding_idx=1),
@@ -76,7 +79,7 @@ def test_sign_flip():
         lap_node_id_sign_flip=True,
         lap_node_id_eig_dropout=0.1,
         encoder_layers=2,
-        encoder_attention_heads=2
+        encoder_attention_heads=2,
     )
 
     for batch in loader:
@@ -90,7 +93,9 @@ def test_performer():
         root=Path(__file__).parent / "./data",
     )
     loader = DataLoader(
-        dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer, max_length=8), batch_size=2
+        dataset,
+        collate_fn=partial(collate_ast, tokenizer=tokenizer, max_length=8),
+        batch_size=2,
     )
     embedding = TokenEmbedding(
         embedding=nn.Embedding(len(tokenizer.vocab), 16, padding_idx=1),
@@ -107,7 +112,7 @@ def test_performer():
         attention_dropout=0.0,  # necessary for performer
         causal=True,
         encoder_layers=2,
-        encoder_attention_heads=2
+        encoder_attention_heads=2,
     )
 
     for batch in loader:
@@ -121,7 +126,9 @@ def test_graphormer_init():
         root=Path(__file__).parent / "./data",
     )
     loader = DataLoader(
-        dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer, max_length=8), batch_size=2
+        dataset,
+        collate_fn=partial(collate_ast, tokenizer=tokenizer, max_length=8),
+        batch_size=2,
     )
     embedding = TokenEmbedding(
         embedding=nn.Embedding(len(tokenizer.vocab), 16, padding_idx=1),
@@ -139,7 +146,7 @@ def test_graphormer_init():
         causal=True,
         apply_graphormer_init=True,
         encoder_layers=2,
-        encoder_attention_heads=2
+        encoder_attention_heads=2,
     )
 
     for batch in loader:
@@ -153,7 +160,9 @@ def test_pipe():
         root=Path(__file__).parent / "./data",
     )
     loader = DataLoader(
-        dataset, collate_fn=partial(collate_ast, tokenizer=tokenizer, max_length=8), batch_size=2
+        dataset,
+        collate_fn=partial(collate_ast, tokenizer=tokenizer, max_length=8),
+        batch_size=2,
     )
     embedding = TokenEmbedding(
         embedding=nn.Embedding(len(tokenizer.vocab), 16, padding_idx=1),
@@ -171,7 +180,7 @@ def test_pipe():
         causal=True,
         apply_graphormer_init=True,
         encoder_layers=2,
-        encoder_attention_heads=2
+        encoder_attention_heads=2,
     )
 
     for batch in loader:

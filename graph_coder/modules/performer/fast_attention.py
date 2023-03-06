@@ -29,10 +29,10 @@ from functools import partial
 
 import torch
 from performer_pytorch.performer_pytorch import (
-    generalized_kernel,
-    softmax_kernel,
-    linear_attention,
     FastAttention as PerformerFastAttention,
+    generalized_kernel,
+    linear_attention,
+    softmax_kernel,
 )
 
 

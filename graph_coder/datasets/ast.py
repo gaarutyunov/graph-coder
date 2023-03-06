@@ -17,7 +17,13 @@ import inspect
 import json
 import os
 import typing
+
+from functools import lru_cache
 from hashlib import md5
+from lib2to3.refactor import get_fixers_from_package, MultiprocessRefactoringTool
+
+from pathlib import Path
+from typing import AsyncGenerator, Dict, List, Optional, Tuple, Union
 
 import aiofiles
 import chardet
@@ -25,21 +31,16 @@ import humanize
 import networkx as nx
 import pandas as pandas
 import pandas as pd
-
-from functools import lru_cache
-from typing import Union, AsyncGenerator, Optional, Tuple, List, Dict
-
-from pathlib import Path
+from black import format_str, Mode
 from tqdm.auto import tqdm
-from lib2to3.refactor import MultiprocessRefactoringTool, get_fixers_from_package
+
+from graph_coder.ast import F
 
 from graph_coder.data import AstExample
-from .registry import register
-from .base import BaseDataset
 from graph_coder.logger import AsyncLogger
 from graph_coder.utils import run_async
-from graph_coder.ast import F
-from black import format_str, Mode
+from .base import BaseDataset
+from .registry import register
 
 FilterFn = typing.Callable[[pd.DataFrame], pd.DataFrame]
 

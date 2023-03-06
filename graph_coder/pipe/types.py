@@ -14,8 +14,12 @@
 
 import typing
 
+import torch
 from deepspeed.runtime.pipe import LayerSpec, TiedLayerSpec
 from torch import nn
 
 Layer = typing.Union[nn.Module, LayerSpec, TiedLayerSpec, typing.Callable]
 Layers = typing.List[Layer]
+Kwargs = typing.Union[
+    torch.Tensor, typing.List[torch.Tensor], typing.Dict[str, torch.Tensor]
+]

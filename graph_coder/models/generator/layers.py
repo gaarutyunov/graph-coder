@@ -18,7 +18,7 @@ import torch
 from torch import nn
 
 from graph_coder.data import GraphCoderBatch
-from graph_coder.modules import Kwargs
+from graph_coder.pipe import Kwargs
 
 TE = typing.TypeVar("TE", bound=nn.Module)
 

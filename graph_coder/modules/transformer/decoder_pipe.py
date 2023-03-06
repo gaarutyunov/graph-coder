@@ -13,8 +13,7 @@
 #  limitations under the License.
 from torch import nn
 
-from graph_coder.modules import PassThroughLayer
-from graph_coder.pipe import PipeModule, Layers
+from graph_coder.pipe import Layers, PassThroughLayer, PipeModule
 
 
 class TransformerDecoderPipe(nn.TransformerDecoder, PipeModule):

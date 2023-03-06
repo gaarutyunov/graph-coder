@@ -18,11 +18,11 @@ import pickle
 import re
 import typing
 from pathlib import Path
+from typing import Dict
 
 import aiofiles
 import torch
-from torch.utils.data import DataLoader, random_split, Dataset, Subset
-from typing import Dict
+from torch.utils.data import DataLoader, Dataset, random_split, Subset
 
 from tqdm.auto import tqdm, trange
 
