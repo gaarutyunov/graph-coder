@@ -1,0 +1,13 @@
+graph_encoder:
+  _target_: graph_coder.modules.TokenGTEncoderPipe
+  _var_: graph_encoder
+  embedding:
+    _var_: token_embedding
+  lap_node_id: true
+  type_id: true
+  encoder_embed_dim: 64
+  encoder_ffn_embed_dim: 512
+  encoder_layers: 8
+  encoder_attention_heads: 16
+  attention_dropout: 0.1
+  apply_graphormer_init: true

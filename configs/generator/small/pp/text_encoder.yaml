@@ -1,0 +1,11 @@
+text_encoder:
+  _target_: graph_coder.modules.TransformerEncoderPipe
+  _var_: text_encoder
+  encoder_layer:
+    _target_: torch.nn.TransformerEncoderLayer
+    d_model: 64
+    nhead: 16
+    dim_feedforward: 512
+    dropout: 0.1
+    activation: relu
+  num_layers: 8
