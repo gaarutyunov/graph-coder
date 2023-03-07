@@ -1,0 +1,14 @@
+graph_encoder:
+  _target_: graph_coder.modules.TokenGTEncoder
+  _var_: graph_encoder
+  embedding:
+    _var_: token_embedding
+  lap_node_id: true
+  lap_node_id_sign_flip: true
+  type_id: true
+  encoder_embed_dim: 8
+  encoder_ffn_embed_dim: 16
+  encoder_layers: 1
+  encoder_attention_heads: 2
+  attention_dropout: 0.1
+  apply_graphormer_init: true
