@@ -17,10 +17,9 @@ from typing import Dict, Optional
 import torch
 from catalyst import dl, metrics
 from catalyst.core import IRunner
-from catalyst.utils import get_device
+from deepspeed import PipelineModule
 from torch import nn
 
-from graph_coder.data import GraphCoderBatch
 from graph_coder.utils import summary
 
 
@@ -65,6 +64,12 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
             if self.optimizer is not None:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
+
+    def forward_model(self, **kwargs: torch.Tensor):
+        if isinstance(self.model, PipelineModule):
+            return self.model.train_batch(**kwargs)
+
+        return self.model(**kwargs)
 
     def on_loader_end(self, runner: "IRunner"):
         self.loader_metrics["loss"], _ = self.loss_metric.compute()
