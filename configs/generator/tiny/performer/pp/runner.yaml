@@ -1,0 +1,11 @@
+runner:
+  _target_: graph_coder.runners.GraphCoderGeneratorRunner
+  model:
+    _var_: model
+  eos_token_id: 0
+  vocab_size: 50277
+  print_summary: false
+  detect_anomaly: false
+  pipeline_parallel: true
+  device:
+    _var_: device
