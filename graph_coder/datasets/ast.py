@@ -38,7 +38,7 @@ from graph_coder.ast import F
 
 from graph_coder.data import AstExample
 from graph_coder.logger import AsyncLogger
-from graph_coder.utils import run_async
+from graph_coder.utils import run_async, print_rank0
 from .base import BaseDataset
 from .registry import register
 
@@ -292,21 +292,21 @@ class AstDataset(BaseDataset[AstExample]):
 
     def _print_summary(self, out: Optional[typing.TextIO] = None):
         assert self.index is not None, "Run .introspect() first"
-        print(f"Summary for {self.__class__.__name__}:\n", file=out)
-        print(f"- Number of graphs: {len(self.index):,}", file=out)
-        print(f"- Avg. number of nodes: {self.index['nodes'].mean():.0f}", file=out)
-        print(f"- Avg. number of edges: {self.index['edges'].mean():.0f}", file=out)
-        print(
+        print_rank0(f"Summary for {self.__class__.__name__}:\n", file=out)
+        print_rank0(f"- Number of graphs: {len(self.index):,}", file=out)
+        print_rank0(f"- Avg. number of nodes: {self.index['nodes'].mean():.0f}", file=out)
+        print_rank0(f"- Avg. number of edges: {self.index['edges'].mean():.0f}", file=out)
+        print_rank0(
             f"- Number of documented graphs: {self.index['has_docstring'].sum():,}",
             file=out,
         )
-        print(
+        print_rank0(
             f"- Number of processed graphs: {self.index['processed'].sum():,}", file=out
         )
-        print(
+        print_rank0(
             f"- Dataset size: {humanize.naturalsize(self.index['size'].sum())}",
             file=out,
         )
-        print("\nSplits:", file=out)
+        print_rank0("\nSplits:", file=out)
         for split, loader in self.loaders.items():
-            print(f"- {split}: {len(loader):,} batches", file=out)
+            print_rank0(f"- {split}: {len(loader):,} batches", file=out)

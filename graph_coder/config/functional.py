@@ -115,6 +115,6 @@ def get_log_path(root: str) -> str:
     versions = sorted(versions)
 
     new_path = path / f"version{versions[-1]+1}"
-    new_path.mkdir(parents=True)
+    new_path.mkdir(exist_ok=True, parents=True)
 
     return str(new_path)
