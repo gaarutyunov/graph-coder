@@ -1,5 +1,5 @@
 runner:
-  _target_: graph_coder.runners.GraphCoderGeneratorRunner
+  _target_: graph_coder.runners.GraphCoderGeneratorRunnerPipe
   model:
     _var_: model
   eos_token_id: 0

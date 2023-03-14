@@ -69,7 +69,7 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
 
     def forward_model(self, **kwargs: torch.Tensor):
         if self.pipeline_parallel:
-            return self.model.train_batch(**kwargs)
+            return self.model.train_batch()
 
         return self.model(**kwargs)
 

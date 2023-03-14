@@ -28,6 +28,7 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
         text_encoder: PipeModule,
         code_encoder: PipeModule,
         graph_encoder: PipeModule,
+        criterion: nn.Module,
         decoder: PipeModule,
         hidden_size: int,
         vocab_size: int,
@@ -46,6 +47,7 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
             eos_token_id=eos_token_id,
             max_length=max_length,
         )
+        self.criterion = criterion
 
     def get_states(self, **kwargs):
         batch = GraphCoderBatch.from_dict(kwargs)
@@ -91,6 +93,69 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
         kwargs["result_"] = {}
 
         return kwargs
+
+    def calc_logits(self, **kwargs):
+        batch = GraphCoderBatch.from_dict(kwargs)
+        result = kwargs["result_"]
+
+        lm_logits = []
+        target_ids = []
+
+        if batch.has_docstring:
+            target_ids.append(batch.docstring[batch.docstring_attn_mask.bool()])
+            lm_logits.append(result["docstring"][batch.docstring_attn_mask.bool()])
+            # add eos token
+            device = batch.docstring.device
+            target_ids.append(torch.tensor([self.eos_token_id], device=device))
+            lm_logits.append(
+                torch.tensor([self.eos_token_id], device=device).repeat(
+                    1, self.vocab_size
+                )
+            )
+        if batch.has_graph:
+            target_ids.extend(
+                [
+                    batch.node_data[batch.node_data_attn_mask.bool()],
+                    batch.edge_data[batch.edge_data_attn_mask.bool()],
+                ]
+            )
+            lm_logits.append(
+                result["graph"][result["padded_node_mask"].bool()][
+                    batch.node_data_attn_mask.bool()
+                ]
+            )
+            lm_logits.append(
+                result["graph"][result["padded_edge_mask"].bool()][
+                    batch.edge_data_attn_mask.bool()
+                ]
+            )
+            # add eos token
+            device = batch.node_data.device
+            target_ids.append(torch.tensor([self.eos_token_id], device=device))
+            lm_logits.append(
+                torch.tensor([self.eos_token_id], device=device).repeat(
+                    1, self.vocab_size
+                )
+            )
+        if batch.has_source:
+            target_ids.append(batch.source[batch.source_attn_mask.bool()])
+            lm_logits.append(result["source"][batch.source_attn_mask.bool()])
+            # add eos token
+            device = batch.source.device
+            target_ids.append(torch.tensor([self.eos_token_id], device=device))
+            lm_logits.append(
+                torch.tensor([self.eos_token_id], device=device).repeat(
+                    1, self.vocab_size
+                )
+            )
+
+        target_ids_ = torch.cat(target_ids)
+        lm_logits_ = torch.cat(lm_logits, dim=0)
+
+        shift_logits = lm_logits_[:-1, :].contiguous()
+        shift_labels = target_ids_[1:].contiguous().long()
+
+        return self.criterion(shift_logits, shift_labels)
 
     def to_layers(self) -> Layers:
         layers = [
@@ -144,6 +209,7 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
                     ),
                     self.has_graph,
                 ),
+                self.calc_logits
             ]
         )
 
