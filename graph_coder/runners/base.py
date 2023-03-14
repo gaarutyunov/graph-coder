@@ -30,7 +30,6 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
         self,
         model: nn.Module,
         device: Optional[torch.device] = None,
-        pipeline_parallel: bool = False,
         print_summary: bool = True,
         detect_anomaly: bool = True,
         *args,
@@ -43,7 +42,6 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
             self.model = model
         self.print_summary = print_summary
         self.detect_anomaly = detect_anomaly
-        self.pipeline_parallel = pipeline_parallel
         self.loss_metric = metrics.AdditiveMetric(compute_on_call=False)
 
     def on_experiment_start(self, runner: "IRunner"):
@@ -66,12 +64,6 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC):
             if self.optimizer is not None:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
-
-    def forward_model(self, **kwargs: torch.Tensor):
-        if self.pipeline_parallel:
-            return self.model.train_batch()
-
-        return self.model(**kwargs)
 
     def on_loader_end(self, runner: "IRunner"):
         self.loader_metrics["loss"], _ = self.loss_metric.compute()

@@ -19,6 +19,9 @@ from graph_coder.runners.generator import GraphCoderGeneratorRunner
 
 class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner):
     """Runner for graph-coder generator model"""
-    def _calc_loss(self, **kwargs: torch.Tensor) -> torch.Tensor:
-        """Calculate loss for the given batch"""
-        return self.forward_model(**kwargs)
+    def _run_loader(self) -> None:
+        if self.is_train_loader:
+            with torch.set_grad_enabled(self.is_train_loader):
+                self.model.train_batch(data_iter=self.loader)
+        else:
+            raise NotImplementedError("only training is implemented for pipeline parallel model")

@@ -96,14 +96,13 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
 
     def calc_logits(self, **kwargs):
         batch = GraphCoderBatch.from_dict(kwargs)
-        result = kwargs["result_"]
 
         lm_logits = []
         target_ids = []
 
         if batch.has_docstring:
             target_ids.append(batch.docstring[batch.docstring_attn_mask.bool()])
-            lm_logits.append(result["docstring"][batch.docstring_attn_mask.bool()])
+            lm_logits.append(kwargs["docstring_result"][batch.docstring_attn_mask.bool()])
             # add eos token
             device = batch.docstring.device
             target_ids.append(torch.tensor([self.eos_token_id], device=device))
@@ -120,12 +119,12 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
                 ]
             )
             lm_logits.append(
-                result["graph"][result["padded_node_mask"].bool()][
+                kwargs["graph_result"][kwargs["result_"]["padded_node_mask"].bool()][
                     batch.node_data_attn_mask.bool()
                 ]
             )
             lm_logits.append(
-                result["graph"][result["padded_edge_mask"].bool()][
+                kwargs["graph_result"][kwargs["result_"]["padded_edge_mask"].bool()][
                     batch.edge_data_attn_mask.bool()
                 ]
             )
@@ -139,7 +138,7 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
             )
         if batch.has_source:
             target_ids.append(batch.source[batch.source_attn_mask.bool()])
-            lm_logits.append(result["source"][batch.source_attn_mask.bool()])
+            lm_logits.append(kwargs["source_result"][batch.source_attn_mask.bool()])
             # add eos token
             device = batch.source.device
             target_ids.append(torch.tensor([self.eos_token_id], device=device))
@@ -177,13 +176,13 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
                 ),
                 self.get_states,
                 ConditionalLayer(
-                    PassThroughLayer(self.lm_head, "docstring", ["text_states"]),
+                    PassThroughLayer(self.lm_head, "docstring_result", ["text_states"]),
                     self.has_docstring,
                 ),
                 ConditionalLayer(
                     PassThroughLayer(
                         self.lm_graph_head,
-                        "graph",
+                        "graph_result",
                         ["graph_states"],
                         callback=lambda res, **kwargs: res.view(
                             res.size(0), -1, self.hidden_size
@@ -192,14 +191,14 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
                     self.has_graph,
                 ),
                 ConditionalLayer(
-                    PassThroughLayer(self.lm_head, "source", ["code_states"]),
+                    PassThroughLayer(self.lm_head, "source_result", ["code_states"]),
                     self.has_source,
                 ),
                 ConditionalLayer(
                     PassThroughLayer(
                         self.lm_head,
-                        "graph",
-                        ["graph"],
+                        "graph_result",
+                        ["graph_result"],
                         callback=lambda res, **kwargs: res.view(
                             res.size(0),
                             kwargs["graph_states"].size(1),

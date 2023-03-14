@@ -6,6 +6,5 @@ runner:
   vocab_size: 50277
   print_summary: false
   detect_anomaly: false
-  pipeline_parallel: true
   device:
     _var_: device

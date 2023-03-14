@@ -262,6 +262,7 @@ def test_performer_pipe():
     decoder = TransformerDecoderPipe(
         decoder_layer=nn.TransformerDecoderLayer(d_model=16, nhead=2), num_layers=2
     )
+    criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
 
     generator = GraphCoderGeneratorPipe(
         embedding=embedding,
@@ -273,24 +274,15 @@ def test_performer_pipe():
         vocab_size=len(tokenizer.vocab),
         eos_token_id=tokenizer.eos_token_id,
         max_length=8,
+        criterion=criterion
     )
 
     layers = generator.to_layers()
 
     for batch in loader:
-        decoded = generator(**batch)
-
         kwargs = batch
 
         for layer in layers:
             kwargs = layer(**kwargs)
 
-        if "docstring" in decoded:
-            assert decoded["docstring"].size(-1) == len(tokenizer.vocab)
-            assert decoded["docstring"].shape == kwargs["docstring"].shape
-        if "graph" in decoded:
-            assert decoded["graph"].size(-1) == len(tokenizer.vocab)
-            assert decoded["graph"].shape == kwargs["graph"].shape
-        if "source" in decoded:
-            assert decoded["source"].size(-1) == len(tokenizer.vocab)
-            assert decoded["source"].shape == kwargs["source"].shape
+        assert torch.is_floating_point(kwargs)

@@ -42,7 +42,7 @@ class GraphCoderGeneratorRunner(GraphCoderRunnerBase):
     def _calc_loss(self, **kwargs: torch.Tensor) -> torch.Tensor:
         """Calculate loss for the given batch"""
         batch = GraphCoderBatch.from_dict(kwargs)
-        result = self.forward_model(**kwargs)
+        result = self.model(**kwargs)
 
         lm_logits = []
         target_ids = []
