@@ -31,4 +31,4 @@ chmod +x ./scripts/prepare.sh
 source ./scripts/prepare.sh
 
 # Train model
-ACCELERATE_LOG_LEVEL=DEBUG python -m graph_coder.train --root "$1" "${@:2}"
+ACCELERATE_LOG_LEVEL=DEBUG mpiexec -n 2 python -m graph_coder.train --root "$1" "${@:2}"
