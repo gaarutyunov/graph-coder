@@ -11,6 +11,8 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import pathlib
+import shutil
 from collections import OrderedDict
 from pathlib import Path
 
@@ -18,6 +20,7 @@ import torch
 from catalyst.registry import REGISTRY
 
 from graph_coder.config import ConfigBuilder
+import graph_coder.config.functional as F
 from graph_coder.models import GraphCoderGenerator
 from graph_coder.modules import PerformerEncoder, TokenGTEncoder
 from graph_coder.runners import GraphCoderGeneratorRunner
@@ -84,3 +87,15 @@ def test_get_activity():
 
     assert activities["activities"][0] == ProfilerActivity.CPU
     assert activities["activities"][1] == ProfilerActivity.CUDA
+
+
+def test_log_path():
+    root = pathlib.Path(__file__).parent / "logs" / "test_logs"
+
+    for i in range(1, 20):
+        _ = F.get_log_path(str(root))
+
+    for i in range(1, 20):
+        assert (root / f"version{i}").exists()
+
+    shutil.rmtree(root)

@@ -12,12 +12,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 """Functional utilities to use in config files"""
+import pathlib
+import re
 from typing import Any, Dict, List
 
 import pandas as pd
 import torch
 from torch._C._profiler import ProfilerActivity
 from transformers import AutoTokenizer, PreTrainedTokenizerFast
+
+
+__num_re__ = re.compile(r"\d+")
 
 
 def get_pretrained_tokenizer(
@@ -93,3 +98,23 @@ def get_activity(idx: int) -> ProfilerActivity:
 def get_keys(obj: Dict[str, Any], keys: List[str]) -> Dict[str, Any]:
     """Get only specified keys from object"""
     return {k: v for k, v in obj.items() if k in keys}
+
+
+def get_log_path(root: str) -> str:
+    """Get log path with model version"""
+    path = pathlib.Path(root)
+    path.mkdir(exist_ok=True, parents=True)
+    versions = [0]
+
+    for version in path.iterdir():
+        m = __num_re__.search(version.stem)
+        if m is None:
+            continue
+        versions.append(int(m[0]))
+
+    versions = sorted(versions)
+
+    new_path = path / f"version{versions[-1]+1}"
+    new_path.mkdir(parents=True)
+
+    return str(new_path)
