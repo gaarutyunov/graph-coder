@@ -13,7 +13,13 @@
 #  limitations under the License.
 from torch.nn import Identity
 
-from graph_coder.pipe import Layers, PassThroughLayer, PipeModule
+from graph_coder.pipe import (
+    CloneLayer,
+    Layers,
+    PassThroughLayer,
+    PipeModule,
+    RemoveArgsLayer,
+)
 from .tokengt_graph_encoder_layer import TokenGTGraphEncoderLayer
 
 
@@ -21,71 +27,80 @@ class TokenGTGraphEncoderLayerPipe(TokenGTGraphEncoderLayer, PipeModule):
     def to_layers(self) -> Layers:
         if self.layernorm_style == "prenorm":
             layers: Layers = [
-                PassThroughLayer(Identity(), "residual", ["x"]),
-                PassThroughLayer(self.self_attn_layer_norm, "x", ["x"]),
+                PassThroughLayer(CloneLayer(), -2),
+                # args: *batch_args, *, x, padding_mask, residual
+                PassThroughLayer(self.self_attn_layer_norm, -3, -3),
                 PassThroughLayer(
                     self.self_attn,
-                    "x",
-                    args_getter=lambda **kwargs: {
-                        "query": kwargs["x"],
-                        "key": kwargs["x"],
-                        "value": kwargs["x"],
-                        "key_padding_mask": kwargs["padding_mask"],
-                        "need_weights": self.return_attention,
-                        "need_head_weights": self.return_attention,
-                    },
+                    out=-3,
+                    args_getter=lambda *args: (
+                        args[-3],
+                        args[-3],
+                        args[-3],
+                        None,
+                        args[-2],
+                        self.return_attention,
+                        None,
+                        False,
+                        self.return_attention,
+                    ),
                 ),
-                PassThroughLayer(self.dropout_module, "x", ["x"]),
-                PassThroughLayer(self.drop_path1, "x", ["x"]),
+                PassThroughLayer(self.dropout_module, -3, -3),
+                PassThroughLayer(self.drop_path1, -3, -3),
                 PassThroughLayer(
                     Identity(),
-                    "x",
-                    ["x"],
-                    callback=lambda res, **kwargs: res + kwargs["residual"],
+                    -3,
+                    -3,
+                    callback=lambda res, *args: res + args[-1],
                 ),
-                PassThroughLayer(Identity(), "residual", ["x"]),
-                PassThroughLayer(self.final_layer_norm, "x", ["x"]),
-                PassThroughLayer(self.feedforward, "x", ["x"]),
-                PassThroughLayer(self.drop_path2, "x", ["x"]),
+                PassThroughLayer(Identity(), -1, -3),
+                PassThroughLayer(self.final_layer_norm, -3, -3),
+                PassThroughLayer(self.feedforward, -3, -3),
+                PassThroughLayer(self.drop_path2, -3, -3),
                 PassThroughLayer(
                     Identity(),
-                    "x",
-                    ["x"],
-                    callback=lambda res, **kwargs: res + kwargs["residual"],
+                    -3,
+                    -3,
+                    callback=lambda res, *args: res + args[-1],
                 ),
+                RemoveArgsLayer(-1),
             ]
         elif self.layernorm_style == "postnorm":
             layers = [
-                PassThroughLayer(Identity(), "residual", ["x"]),
+                PassThroughLayer(CloneLayer(), -2),
+                # args: *batch_args, *, x, padding_mask, residual
                 PassThroughLayer(
                     self.self_attn,
-                    "x",
-                    args_getter=lambda **kwargs: {
-                        "query": kwargs["x"],
-                        "key": kwargs["x"],
-                        "value": kwargs["x"],
-                        "key_padding_mask": kwargs["padding_mask"],
-                        "need_weights": self.return_attention,
-                        "need_head_weights": self.return_attention,
-                    },
+                    out=-3,
+                    args_getter=lambda *args: (
+                        args[-3],
+                        args[-3],
+                        args[-3],
+                        None,
+                        args[-2],
+                        self.return_attention,
+                        None,
+                        False,
+                        self.return_attention,
+                    ),
                 ),
-                PassThroughLayer(self.dropout_module, "x", ["x"]),
+                PassThroughLayer(self.dropout_module, -3, -3),
                 PassThroughLayer(
                     Identity(),
-                    "x",
-                    ["x"],
-                    callback=lambda res, **kwargs: res + kwargs["residual"],
+                    -3,
+                    -3,
+                    callback=lambda res, *args: res + args[-1],
                 ),
-                PassThroughLayer(self.self_attn_layer_norm, "x", ["x"]),
-                PassThroughLayer(Identity(), "residual", ["x"]),
-                PassThroughLayer(self.feedforward, "x", ["x"]),
+                PassThroughLayer(self.self_attn_layer_norm, -3, -3),
+                PassThroughLayer(Identity(), -1, -3),
+                PassThroughLayer(self.feedforward, -3, -3),
                 PassThroughLayer(
                     Identity(),
-                    "x",
-                    ["x"],
-                    callback=lambda res, **kwargs: res + kwargs["residual"],
+                    -3,
+                    -3,
+                    callback=lambda res, *args: res + args[-1],
                 ),
-                PassThroughLayer(self.final_layer_norm, "x", ["x"]),
+                PassThroughLayer(self.final_layer_norm, -3, -3),
             ]
         else:
             raise NotImplementedError

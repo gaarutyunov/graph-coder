@@ -11,27 +11,41 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-import torch
-from torch.nn import Identity
+import typing
 
-from graph_coder.data import GraphCoderBatch
-from graph_coder.pipe import ConditionalLayer, Layers, PassThroughLayer, PipeModule
+import torch
+
+from graph_coder.data import ARGS_SIZE, GraphCoderBatch
+from graph_coder.pipe import (
+    CloneLayer,
+    ConditionalLayer,
+    Layers,
+    PassThroughLayer,
+    PipeModule,
+    RemoveArgsLayer,
+    ReorderLayer,
+)
 
 from .layers import CodeLayer, GraphLayer, TextLayer
 
 
-def append_kwarg(key: str, other: str):
-    def inner(**kwargs):
-        kwargs[key].append(kwargs[other])
+def cat_arg(key: int, other: typing.Union[int, torch.Tensor]):
+    def inner(*args):
+        largs = list(args)
+        obj = other if isinstance(other, torch.Tensor) else largs[other]
+        if len(largs) <= key:
+            largs.append(obj)
+        else:
+            largs[key] = torch.cat([largs[key], obj], dim=1)
 
-        return kwargs
+        return tuple(largs)
 
     return inner
 
 
 class TextLayerPipe(TextLayer[PipeModule], PipeModule):
-    def add_eos(self, **kwargs):
-        batch = GraphCoderBatch.from_dict(kwargs)
+    def add_eos(self, *args):
+        batch = GraphCoderBatch.from_tuple(args)
 
         eos = torch.empty(
             (batch.batch_size, 1),
@@ -39,50 +53,92 @@ class TextLayerPipe(TextLayer[PipeModule], PipeModule):
             dtype=batch.docstring.dtype,
         ).fill_(self.eos_token_id)
 
-        kwargs["text"] = torch.cat([batch.docstring, eos], dim=1)
+        idx = GraphCoderBatch.get_arg_idx("docstring")
+        idx_attn_mask = GraphCoderBatch.get_arg_idx("docstring_attn_mask")
 
-        return kwargs
+        largs = list(args)
 
-    def condition(self, **kwargs):
-        return GraphCoderBatch.from_dict(kwargs).has_docstring
+        largs[idx] = torch.cat([batch.docstring, eos], dim=1)
+        largs[idx_attn_mask] = torch.cat(
+            [batch.docstring_attn_mask, torch.ones_like(eos)], dim=1
+        )
+
+        return tuple(largs)
+
+    def condition(self, *args):
+        return GraphCoderBatch.from_tuple(args).has_docstring
 
     def to_layers(self) -> Layers:
         return [
             ConditionalLayer(self.add_eos, self.condition),
+            ConditionalLayer(PassThroughLayer(self.embedding, 3), self.condition),
+            # args: *batch_args, tgt
             ConditionalLayer(
-                PassThroughLayer(self.embedding, "emb", ["text"]), self.condition
+                PassThroughLayer(CloneLayer(), -1),
+                self.condition,
             ),
-            ConditionalLayer(append_kwarg("tgt_", "emb"), self.condition),
-            ConditionalLayer(
-                PassThroughLayer(Identity(), "x", ["emb"]), self.condition
-            ),
+            # args: *batch_args, tgt, x
             *[
                 ConditionalLayer(layer, self.condition)
                 for layer in self.text_encoder.to_layers()
             ],
-            ConditionalLayer(append_kwarg("x_", "x"), self.condition),
+            # args: *batch_args, tgt, x (memory)
         ]
 
 
 class GraphLayerPipe(GraphLayer[PipeModule], PipeModule):
-    def condition(self, **kwargs):
-        return GraphCoderBatch.from_dict(kwargs).has_graph
+    def condition(self, *args):
+        return GraphCoderBatch.from_tuple(args).has_graph
 
-    def add_target(self, **kwargs):
-        batch = GraphCoderBatch.from_dict(kwargs)
+    def condition_only_graph(self, *args):
+        batch = GraphCoderBatch.from_tuple(args)
+        return batch.has_graph and not batch.has_docstring
+
+    def condition_docstring(self, *args):
+        batch = GraphCoderBatch.from_tuple(args)
+        return batch.has_graph and batch.has_docstring
+
+    def cat_target_and_memory(self, *args):
+        batch = GraphCoderBatch.from_tuple(args)
         (
             _,
             padded_feature,
             padding_mask,
-            kwargs["result_"]["padded_node_mask"],
-            kwargs["result_"]["padded_edge_mask"],
+            padded_node_mask,
+            padded_edge_mask,
         ) = self.graph_encoder.graph_encoder.graph_feature.process_batch(  # type: ignore[union-attr]
-            batch
+            batch.node_data,
+            batch.edge_data,
+            batch.edge_index,
+            batch.node_num,
+            batch.edge_num,
         )  # type: ignore[operator]
         padded_feature = padded_feature.masked_fill(padding_mask[..., None], float("0"))
-        kwargs["tgt_"].append(padded_feature)
 
-        return kwargs
+        return (
+            *cat_arg(-2, -1)(*cat_arg(-3, padded_feature)(*args))[:-1],
+            padded_node_mask,
+            padded_edge_mask,
+        )
+
+    def add_target_and_memory(self, *args):
+        batch = GraphCoderBatch.from_tuple(args)
+        (
+            _,
+            padded_feature,
+            padding_mask,
+            padded_node_mask,
+            padded_edge_mask,
+        ) = self.graph_encoder.graph_encoder.graph_feature.process_batch(  # type: ignore[union-attr]
+            batch.node_data,
+            batch.edge_data,
+            batch.edge_index,
+            batch.node_num,
+            batch.edge_num,
+        )  # type: ignore[operator]
+        padded_feature = padded_feature.masked_fill(padding_mask[..., None], float("0"))
+
+        return *args[:-1], padded_feature, args[-1], padded_node_mask, padded_edge_mask
 
     def to_layers(self) -> Layers:
         return [
@@ -90,14 +146,20 @@ class GraphLayerPipe(GraphLayer[PipeModule], PipeModule):
                 ConditionalLayer(layer, self.condition)
                 for layer in self.graph_encoder.to_layers()
             ],
-            ConditionalLayer(append_kwarg("x_", "x"), self.condition),
-            ConditionalLayer(self.add_target, self.condition),
+            RemoveArgsLayer(-1),
+            # args: *batch_args, tgt?, memory?, x
+            ConditionalLayer(self.add_target_and_memory, self.condition_only_graph),
+            # args: *batch_args, tgt, memory
+            ConditionalLayer(self.cat_target_and_memory, self.condition_docstring),
+            # args: *batch_args, tgt, memory, padded_node_mask, padded_edge_mask
+            ReorderLayer(*range(0, ARGS_SIZE), -2, -1, -4, -3),
+            # args: *batch_args, padded_node_mask, padded_edge_mask, tgt, memory
         ]
 
 
 class CodeLayerPipe(CodeLayer[PipeModule], PipeModule):
-    def add_eos(self, **kwargs):
-        batch = GraphCoderBatch.from_dict(kwargs)
+    def add_eos(self, *args):
+        batch = GraphCoderBatch.from_tuple(args)
 
         eos = torch.empty(
             (batch.batch_size, 1),
@@ -105,26 +167,38 @@ class CodeLayerPipe(CodeLayer[PipeModule], PipeModule):
             dtype=batch.source.dtype,
         ).fill_(self.eos_token_id)
 
-        kwargs["code"] = torch.cat([eos, batch.source, torch.clone(eos)], dim=1)
+        idx = GraphCoderBatch.get_arg_idx("source")
+        idx_attn_mask = GraphCoderBatch.get_arg_idx("source_attn_mask")
 
-        return kwargs
+        largs = list(args)
 
-    def condition(self, **kwargs):
-        return GraphCoderBatch.from_dict(kwargs).has_source
+        largs[idx] = torch.cat([eos, batch.source, torch.clone(eos)], dim=1)
+        largs[idx_attn_mask] = torch.cat(
+            [torch.ones_like(eos), batch.source_attn_mask, torch.ones_like(eos)],
+            dim=1,
+        )
+
+        return tuple(largs)
+
+    def condition(self, *args):
+        return GraphCoderBatch.from_tuple(args).has_source
 
     def to_layers(self) -> Layers:
         return [
             ConditionalLayer(self.add_eos, self.condition),
             ConditionalLayer(
-                PassThroughLayer(self.embedding, "emb", ["code"]), self.condition
+                PassThroughLayer(self.embedding, GraphCoderBatch.get_arg_idx("source")),
+                self.condition,
             ),
-            ConditionalLayer(append_kwarg("tgt_", "emb"), self.condition),
-            ConditionalLayer(
-                PassThroughLayer(Identity(), "x", ["emb"]), self.condition
-            ),
+            # args: *batch_args, *, tgt, memory, emb
+            ConditionalLayer(cat_arg(-3, -1), self.condition),
+            # args: *batch_args, *, tgt, memory, emb (x)
             *[
                 ConditionalLayer(layer, self.condition)
                 for layer in self.code_encoder.to_layers()
             ],
-            ConditionalLayer(append_kwarg("x_", "x"), self.condition),
+            # args: *batch_args, *, tgt, memory, x
+            ConditionalLayer(cat_arg(-2, -1), self.condition),
+            RemoveArgsLayer(-1),
+            # args: *batch_args, *, tgt, memory
         ]

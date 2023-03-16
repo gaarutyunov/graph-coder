@@ -14,6 +14,6 @@
 from catalyst.utils import get_rank
 
 
-def print_rank0(fmt: str, *args, sep=' ', end='\n', file=None):
+def print_rank0(fmt: str, *args, sep=" ", end="\n", file=None):
     if get_rank() in [0, -1]:
         print(fmt, *args, sep=sep, end=end, file=file)

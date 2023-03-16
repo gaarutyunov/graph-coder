@@ -18,6 +18,4 @@ from graph_coder.pipe import Layers, PassThroughLayer, PipeModule
 
 class TransformerDecoderPipe(nn.TransformerDecoder, PipeModule):
     def to_layers(self) -> Layers:
-        return [
-            PassThroughLayer(layer, "tgt", ["tgt", "memory"]) for layer in self.layers
-        ]
+        return [PassThroughLayer(layer, [-2, -1], -2) for layer in self.layers]

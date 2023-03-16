@@ -13,6 +13,5 @@
 #  limitations under the License.
 
 from .generator import *
-from .documenter import *
 from .base import *
 from .generator_pipe import *

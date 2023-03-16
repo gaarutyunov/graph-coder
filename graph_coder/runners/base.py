@@ -12,23 +12,25 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import abc
-from typing import Dict, Optional
+from typing import Dict, Generic, Optional, TypeVar
 
 import torch
 from catalyst import dl, metrics
 from catalyst.core import IRunner
-from deepspeed import PipelineModule
 from torch import nn
 
 from graph_coder.utils import summary
 
 
-class GraphCoderRunnerBase(dl.Runner, abc.ABC):
+TM = TypeVar("TM", bound=nn.Module)
+
+
+class GraphCoderRunnerBase(dl.Runner, abc.ABC, Generic[TM]):
     """Base class for graph-coder runners."""
 
     def __init__(
         self,
-        model: nn.Module,
+        model: TM,
         device: Optional[torch.device] = None,
         print_summary: bool = True,
         detect_anomaly: bool = True,

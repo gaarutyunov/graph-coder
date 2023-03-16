@@ -16,11 +16,12 @@ import shutil
 from collections import OrderedDict
 from pathlib import Path
 
+import graph_coder.config.functional as F
+
 import torch
 from catalyst.registry import REGISTRY
 
 from graph_coder.config import ConfigBuilder
-import graph_coder.config.functional as F
 from graph_coder.models import GraphCoderGenerator
 from graph_coder.modules import PerformerEncoder, TokenGTEncoder
 from graph_coder.runners import GraphCoderGeneratorRunner

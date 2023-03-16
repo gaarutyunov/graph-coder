@@ -15,7 +15,7 @@
 from performer_pytorch.performer_pytorch import cast_tuple
 from torch import nn
 
-from graph_coder.pipe import Layers, PassThroughLayer, PipeModule
+from graph_coder.pipe import Layers, PassThroughLayer, PipeModule, RemoveArgsLayer
 
 from .performer_encoder_base import PerformerEncoderBase
 from .performer_pipe import PerformerPipe
@@ -95,12 +95,13 @@ class PerformerEncoderPipe(PipeModule, PerformerEncoderBase[PerformerPipe]):
 
     def to_layers(self) -> Layers:
         layers = [
-            PassThroughLayer(
-                self.pos_emb, "x", ["x"], lambda res, **kwargs: kwargs["x"] + res
-            ),
-            PassThroughLayer(self.dropout, "x", ["x"]),
-            PassThroughLayer(self.layer_pos_emb, "pos_emb", ["x"]),
+            PassThroughLayer(self.pos_emb, -1, -1, lambda res, *args: args[-1] + res),
+            PassThroughLayer(self.dropout, -1, -1),
+            PassThroughLayer(self.layer_pos_emb, -1),
+            # args: *batch_args, *, x, pos_emb
             *self.performer.to_layers(),
+            RemoveArgsLayer(-1),
+            # args: *batch_args, *, x
         ]
 
         return layers

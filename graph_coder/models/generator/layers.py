@@ -39,9 +39,6 @@ class TextLayer(nn.Module, typing.Generic[TE]):
         if not batch.has_docstring:
             return kwargs
 
-        x: typing.List[torch.Tensor] = kwargs["x_"]  # type: ignore[assignment]
-        tgt: typing.List[torch.Tensor] = kwargs["tgt_"]  # type: ignore[assignment]
-
         eos = torch.empty(
             (batch.batch_size, 1),
             device=batch.docstring.device,
@@ -50,10 +47,16 @@ class TextLayer(nn.Module, typing.Generic[TE]):
         text = torch.cat([batch.docstring, eos], dim=1)
 
         emb = self.embedding(text)
-        tgt.append(emb)
+        if "tgt" in kwargs:
+            kwargs["tgt"] = torch.cat([kwargs["tgt"], emb], dim=1)
+        else:
+            kwargs["tgt"] = emb
 
         text_encoded = self.text_encoder(emb)
-        x.append(text_encoded)
+        if "memory" in kwargs:
+            kwargs["memory"] = torch.cat([kwargs["memory"], text_encoded], dim=1)
+        else:
+            kwargs["memory"] = text_encoded
 
         return kwargs
 
@@ -74,9 +77,6 @@ class CodeLayer(nn.Module, typing.Generic[TE]):
         if not batch.has_source:
             return kwargs
 
-        x: typing.List[torch.Tensor] = kwargs["x_"]  # type: ignore[assignment]
-        tgt: typing.List[torch.Tensor] = kwargs["tgt_"]  # type: ignore[assignment]
-
         eos = torch.empty(
             (batch.batch_size, 1),
             device=batch.source.device,
@@ -85,10 +85,16 @@ class CodeLayer(nn.Module, typing.Generic[TE]):
         text = torch.cat([eos, batch.source, torch.clone(eos)], dim=1)
 
         emb = self.embedding(text)
-        tgt.append(emb)
+        if "tgt" in kwargs:
+            kwargs["tgt"] = torch.cat([kwargs["tgt"], emb], dim=1)
+        else:
+            kwargs["tgt"] = emb
 
         source_code_encoded = self.code_encoder(emb)
-        x.append(source_code_encoded)
+        if "memory" in kwargs:
+            kwargs["memory"] = torch.cat([kwargs["memory"], source_code_encoded], dim=1)
+        else:
+            kwargs["memory"] = source_code_encoded
 
         return kwargs
 
@@ -107,24 +113,37 @@ class GraphLayer(nn.Module, typing.Generic[TE]):
         if not batch.has_graph:
             return kwargs
 
-        x: typing.List[torch.Tensor] = kwargs["x_"]  # type: ignore[assignment]
-        tgt: typing.List[torch.Tensor] = kwargs["tgt_"]  # type: ignore[assignment]
-        result: typing.Dict[str, torch.Tensor] = kwargs["result_"]  # type: ignore[assignment]
+        x_ = self.graph_encoder(
+            kwargs["edge_index"],
+            kwargs["edge_data"],
+            kwargs["node_data"],
+            kwargs["node_num"],
+            kwargs["edge_num"],
+            kwargs["lap_eigvec"],
+        )
 
-        x_ = self.graph_encoder(**kwargs)
-
-        x.append(x_)
+        if "memory" in kwargs:
+            kwargs["memory"] = torch.cat([kwargs["memory"], x_], dim=1)
+        else:
+            kwargs["memory"] = x_
 
         (
             _,
             padded_feature,
             padding_mask,
-            result["padded_node_mask"],
-            result["padded_edge_mask"],
+            kwargs["padded_node_mask"],
+            kwargs["padded_edge_mask"],
         ) = self.graph_encoder.graph_encoder.graph_feature.process_batch(  # type: ignore[union-attr]
-            batch
+            kwargs["node_data"],
+            kwargs["edge_data"],
+            kwargs["edge_index"],
+            kwargs["node_num"],
+            kwargs["edge_num"],
         )  # type: ignore[operator]
         padded_feature = padded_feature.masked_fill(padding_mask[..., None], float("0"))
-        tgt.append(padded_feature)
+        if "tgt" in kwargs:
+            kwargs["tgt"] = torch.cat([kwargs["tgt"], padded_feature], dim=1)
+        else:
+            kwargs["tgt"] = padded_feature
 
         return kwargs

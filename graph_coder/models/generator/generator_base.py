@@ -11,7 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from typing import Any, Dict, Generic, List, TypeVar
+from typing import Any, Dict, Generic, List, Tuple, TypeVar, Union
 
 import torch
 from torch import nn
@@ -32,12 +32,15 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
         vocab_size: int,
         eos_token_id: int = 0,
         max_length: int = 64,
+        max_seq_length: int = 512,
     ) -> None:
         super().__init__()
         self.layers = layers
         self.hidden_size = hidden_size
         self.eos_token_id = eos_token_id
         self.vocab_size = vocab_size
+        self.max_length = max_length
+        self.max_seq_length = max_seq_length
         self.decoder = decoder
         self.dense = nn.Linear(hidden_size, hidden_size)
         self.lm_head = nn.Linear(hidden_size, vocab_size, bias=False)
@@ -46,21 +49,15 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
         )
 
     def forward(self, **kwargs: torch.Tensor) -> Dict[str, torch.Tensor]:
-        new_kwargs: Dict[str, Any] = {
-            **kwargs,
-            "x_": [],
-            "tgt_": [],
-            "result_": {},
+        for layer in self.layers:
+            kwargs = layer(**kwargs)
+
+        result: Dict[str, Any] = {
+            "padded_node_mask": kwargs["padded_node_mask"],
+            "padded_edge_mask": kwargs["padded_edge_mask"],
         }
 
-        for layer in self.layers:
-            new_kwargs = layer(**new_kwargs)
-
-        x = torch.cat(new_kwargs["x_"], dim=1)
-        tgt = torch.cat(new_kwargs["tgt_"], dim=1)
-        result: Dict[str, Any] = new_kwargs["result_"]
-
-        out = self.decoder(tgt, x)
+        out = self.decoder(kwargs["tgt"], kwargs["memory"])
         hidden_states = torch.tanh(self.dense(out)).contiguous()
 
         batch = GraphCoderBatch.from_dict(kwargs)
@@ -91,3 +88,34 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
             )
 
         return result
+
+    def generate(self, **kwargs: torch.Tensor) -> Dict[str, torch.Tensor]:
+        kwargs["source"], kwargs["source_attn_mask"] = self._predict_code_token(
+            **kwargs
+        )
+
+        for i in range(self.max_seq_length):
+            new_token, attn_mask = self._predict_code_token(**kwargs)
+
+            kwargs["source"] = torch.cat([kwargs["source"], new_token], dim=1)
+            kwargs["source_attn_mask"] = torch.cat(
+                [kwargs["source_attn_mask"], attn_mask], dim=1
+            )
+
+        return {
+            "source": kwargs["source"],
+            "docstring": kwargs["docstring"],
+        }
+
+    def _predict_code_token(
+        self, **kwargs: Union[torch.Tensor, List[torch.Tensor]]
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        for layer in self.layers:
+            kwargs = layer(**kwargs)
+
+        out = self.decoder(kwargs["tgt"], kwargs["memory"])
+        hidden_states = torch.tanh(self.dense(out)).contiguous()
+        token = self.lm_head(hidden_states[:, -1:])
+        attn_mask = torch.ones_like(token, device=token.device)
+
+        return token, attn_mask

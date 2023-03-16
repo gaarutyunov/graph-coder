@@ -79,11 +79,11 @@ class PerformerPipe(PipeModule, Performer):
             shift_tokens,
         )
 
-    def performer_redraw(self, **kwargs):
+    def performer_redraw(self, *args):
         if self.auto_check_redraw:
             self.proj_updater.redraw_projections()
 
-        return kwargs
+        return args
 
     def to_layers(self) -> Layers:
         layers = [self.performer_redraw]
@@ -95,21 +95,26 @@ class PerformerPipe(PipeModule, Performer):
                 args_route[i][arg_name] = r
 
         for (f, g), args_map in zip(self.net.layers, args_route):
+            f_args, g_args = [-2], [-2]
+
+            if "pos_emb" in args_map and args_map["pos_emb"][0]:
+                f_args.append(-1)
+
+            if "pos_emb" in args_map and args_map["pos_emb"][1]:
+                g_args.append(-1)
             layers.extend(
                 [
                     PassThroughLayer(
                         f,
-                        "x",
-                        ["x"] + [k for k, v in args_map.items() if v[0]],
-                        callback=lambda res, **kwargs: kwargs["x"] + res,
-                        args_mode="kwargs",
+                        f_args,
+                        -2,
+                        callback=lambda res, *args: args[-2] + res,
                     ),
                     PassThroughLayer(
                         g,
-                        "x",
-                        ["x"] + [k for k, v in args_map.items() if v[1]],
-                        callback=lambda res, **kwargs: kwargs["x"] + res,
-                        args_mode="kwargs",
+                        g_args,
+                        -2,
+                        callback=lambda res, *args: args[-2] + res,
                     ),
                 ]
             )

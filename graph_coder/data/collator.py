@@ -11,7 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import torch
 from catalyst.utils import get_device
@@ -76,7 +76,8 @@ def collate_ast(
     device: torch.device = get_device(),
     dtype: torch.dtype = torch.float,
     graph_dtype: torch.dtype = torch.long,
-) -> Dict[str, torch.Tensor]:
+    use_dict: bool = True,
+) -> torch.Union[Dict[str, torch.Tensor], Tuple[torch.Tensor, ...]]:
     """Collate a batch of examples into a batch of tensors."""
     idx = []
     edge_index = []
@@ -150,7 +151,7 @@ def collate_ast(
         .data
     )
 
-    return GraphCoderBatch(
+    res = GraphCoderBatch(
         idx=torch.tensor(idx, dtype=torch.long, device=device),
         edge_index=torch.cat(edge_index, dim=1),
         node_num=torch.tensor(node_num, dtype=torch.long, device=device),
@@ -171,4 +172,9 @@ def collate_ast(
         },
         node_data_=node_data_,
         edge_data_=edge_data_,
-    ).to_dict()
+    )
+
+    if use_dict:
+        return res.to_dict()
+
+    return res.to_tuple()

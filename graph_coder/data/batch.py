@@ -13,9 +13,28 @@
 #  limitations under the License.
 
 import dataclasses
-from typing import Any, Dict
+from typing import Dict, Tuple, Type
 
 import torch
+
+__ARGS_MAPPING__ = {
+    "idx": 0,
+    "source": 1,
+    "source_attn_mask": 2,
+    "docstring": 3,
+    "docstring_attn_mask": 4,
+    "edge_index": 5,
+    "edge_data": 6,
+    "edge_data_attn_mask": 7,
+    "node_data": 8,
+    "node_data_attn_mask": 9,
+    "node_num": 10,
+    "edge_num": 11,
+    "lap_eigval": 12,
+    "lap_eigvec": 13,
+}
+
+ARGS_SIZE = len(__ARGS_MAPPING__)
 
 
 @dataclasses.dataclass
@@ -117,9 +136,29 @@ class GraphCoderBatch:
             "lap_eigvec": self.lap_eigvec,
         }
 
-    @staticmethod
-    def from_dict(obj: Dict[str, Any]) -> "GraphCoderBatch":
-        return GraphCoderBatch(
+    def to_tuple(self) -> Tuple[torch.Tensor, ...]:
+        return (
+            self.idx,
+            self.source,
+            self.source_attn_mask,
+            self.docstring,
+            self.docstring_attn_mask,
+            self.edge_index,
+            self.edge_data,
+            self.edge_data_attn_mask,
+            self.node_data,
+            self.node_data_attn_mask,
+            self.node_num,
+            self.edge_num,
+            self.lap_eigval,
+            self.lap_eigvec,
+        )
+
+    @classmethod
+    def from_dict(
+        cls: Type["GraphCoderBatch"], obj: Dict[str, torch.Tensor]
+    ) -> "GraphCoderBatch":
+        return cls(
             idx=obj["idx"],
             source_={
                 "input_ids": obj["source"],
@@ -143,3 +182,42 @@ class GraphCoderBatch:
             lap_eigval=obj["lap_eigval"],
             lap_eigvec=obj["lap_eigvec"],
         )
+
+    @classmethod
+    def from_tuple(
+        cls: Type["GraphCoderBatch"], obj: Tuple[torch.Tensor, ...]
+    ) -> "GraphCoderBatch":
+        return cls(
+            idx=obj[0],
+            source_={
+                "input_ids": obj[1],
+                "attention_mask": obj[2],
+            },
+            docstring_={
+                "input_ids": obj[3],
+                "attention_mask": obj[4],
+            },
+            edge_index=obj[5],
+            edge_data_={
+                "input_ids": obj[6],
+                "attention_mask": obj[7],
+            },
+            node_data_={
+                "input_ids": obj[8],
+                "attention_mask": obj[9],
+            },
+            node_num=obj[10],
+            edge_num=obj[11],
+            lap_eigval=obj[12],
+            lap_eigvec=obj[13],
+        )
+
+    @classmethod
+    def get_arg_idx(cls: Type["GraphCoderBatch"], name: str) -> int:
+        return __ARGS_MAPPING__[name]
+
+    @classmethod
+    def get_arg(
+        cls: Type["GraphCoderBatch"], name: str, obj: Tuple[torch.Tensor, ...]
+    ) -> torch.Tensor:
+        return obj[cls.get_arg_idx(name)]

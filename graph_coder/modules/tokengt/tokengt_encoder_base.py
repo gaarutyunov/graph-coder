@@ -73,8 +73,23 @@ class TokenGTEncoderBase(nn.Module, Generic[TGE]):
         if self.embed_out is not None:
             self.embed_out.reset_parameters()
 
-    def forward(self, **kwargs: torch.Tensor):
-        x = self.graph_encoder(**kwargs)
+    def forward(
+        self,
+        edge_index,
+        edge_data,
+        node_data,
+        node_num,
+        edge_num,
+        lap_eigvec,
+    ):
+        x = self.graph_encoder(
+            edge_index,
+            edge_data,
+            node_data,
+            node_num,
+            edge_num,
+            lap_eigvec,
+        )
 
         x = self.layer_norm(self.activation_fn(self.lm_head_transform_weight(x)))
 

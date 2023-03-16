@@ -15,7 +15,7 @@ from typing import Optional
 
 from torch import nn
 
-from graph_coder.pipe import Layers, PassThroughLayer, PipeModule
+from graph_coder.pipe import Layers, PassThroughLayer, PipeModule, RemoveArgsLayer
 
 from .tokengt_encoder_base import TokenGTEncoderBase
 from .tokengt_graph_encoder_pipe import TokenGTGraphEncoderPipe
@@ -99,9 +99,10 @@ class TokenGTEncoderPipe(TokenGTEncoderBase[PipeModule], PipeModule):
     def to_layers(self) -> Layers:
         layers = [
             *self.graph_encoder.to_layers(),
-            PassThroughLayer(self.lm_head_transform_weight, "x", ["x"]),
-            PassThroughLayer(self.activation_fn, "x", ["x"]),
-            PassThroughLayer(self.layer_norm, "x", ["x"]),
+            # args: *batch_args, *, x, padding_mask
+            PassThroughLayer(self.lm_head_transform_weight, -2, -2),
+            PassThroughLayer(self.activation_fn, -2, -2),
+            PassThroughLayer(self.layer_norm, -2, -2),
         ]
 
         return layers

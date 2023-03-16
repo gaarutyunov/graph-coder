@@ -16,6 +16,7 @@ from typing import List
 from torch.nn import Identity
 
 from graph_coder.pipe import Layers, PassThroughLayer, PipeModule
+from ...data import GraphCoderBatch
 
 from .tokengt_graph_encoder import TokenGTGraphEncoder
 from .tokengt_graph_encoder_layer_pipe import TokenGTGraphEncoderLayerPipe
@@ -66,39 +67,52 @@ class TokenGTGraphEncoderPipe(TokenGTGraphEncoder, PipeModule):
             causal=causal,
         )
 
-    def performer_redraw(self, **kwargs):
+    def performer_redraw(self, *args):
         if self.performer and self.performer_auto_check_redraw:
             self.performer_proj_updater.redraw_projections()
 
-        return kwargs
+        return args
 
     def to_layers(self) -> Layers:
         layers = [
             self.performer_redraw,
-            self.graph_feature,
+            PassThroughLayer(
+                self.graph_feature,
+                [
+                    GraphCoderBatch.get_arg_idx(name)
+                    for name in [
+                        "edge_index",
+                        "edge_data",
+                        "node_data",
+                        "node_num",
+                        "edge_num",
+                        "lap_eigvec",
+                    ]
+                ],
+            ),
         ]
+        # args: *batch_args, *, x, padding_mask
 
         if self.quant_noise is not None:
-            layers.append(PassThroughLayer(self.quant_noise, "x", ["x"]))
+            layers.append(PassThroughLayer(self.quant_noise, -2, -2))
 
         if self.emb_layer_norm is not None:
-            layers.append(PassThroughLayer(self.emb_layer_norm, "x", ["x"]))
+            layers.append(PassThroughLayer(self.emb_layer_norm, -2, -2))
 
         layers.append(
             PassThroughLayer(
                 self.dropout_module,
-                "x",
-                ["x"],
-                lambda res, **kwargs: res.transpose(0, 1),
+                -2,
+                -2,
+                lambda res, *args: res.transpose(0, 1),
             )
         )
         for layer in self.layers:
             layers.extend(layer.to_layers())
+        # args: *batch_args, *, x, padding_mask
 
         layers.append(
-            PassThroughLayer(
-                Identity(), "x", ["x"], lambda res, **kwargs: res.transpose(0, 1)
-            )
+            PassThroughLayer(Identity(), -2, -2, lambda res, *args: res.transpose(0, 1))
         )
 
         return layers

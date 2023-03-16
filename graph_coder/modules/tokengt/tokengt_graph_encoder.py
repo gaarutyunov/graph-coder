@@ -40,7 +40,6 @@
 
 from typing import Optional
 
-import torch
 import torch.nn as nn
 from fairseq.modules import FairseqDropout, LayerDropModuleList, LayerNorm
 from fairseq.modules.quant_noise import quant_noise as apply_quant_noise_
@@ -298,14 +297,19 @@ class TokenGTGraphEncoder(nn.Module):
 
     def forward(
         self,
-        **kwargs: torch.Tensor,
+        edge_index,
+        edge_data,
+        node_data,
+        node_num,
+        edge_num,
+        lap_eigvec,
     ):
         if self.performer and self.performer_auto_check_redraw:
             self.performer_proj_updater.redraw_projections()
 
-        res = self.graph_feature(**kwargs)
-        x = res["x"]
-        padding_mask = res["padding_mask"]
+        x, padding_mask = self.graph_feature(
+            edge_index, edge_data, node_data, node_num, edge_num, lap_eigvec
+        )
 
         # x: B x T x C
 

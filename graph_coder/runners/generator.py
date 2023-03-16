@@ -11,7 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from typing import Any, Mapping
+from typing import Any, Generic, Mapping, TypeVar
 
 import torch
 from torch import nn
@@ -20,12 +20,15 @@ from graph_coder.data import GraphCoderBatch
 from graph_coder.runners.base import GraphCoderRunnerBase
 
 
-class GraphCoderGeneratorRunner(GraphCoderRunnerBase):
+TMM = TypeVar("TMM", bound=nn.Module)
+
+
+class GraphCoderGeneratorRunner(GraphCoderRunnerBase[TMM], Generic[TMM]):
     """Runner for graph-coder generator model"""
 
     def __init__(
         self,
-        model: nn.Module,
+        model: TMM,
         eos_token_id: int,
         vocab_size: int,
         *args,

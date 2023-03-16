@@ -13,15 +13,19 @@
 #  limitations under the License.
 
 import torch
+from deepspeed import PipelineEngine
 
 from graph_coder.runners.generator import GraphCoderGeneratorRunner
 
 
-class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner):
+class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
     """Runner for graph-coder generator model"""
+
     def _run_loader(self) -> None:
         if self.is_train_loader:
             with torch.set_grad_enabled(self.is_train_loader):
                 self.model.train_batch(data_iter=iter(self.loader))
         else:
-            raise NotImplementedError("only training is implemented for pipeline parallel model")
+            raise NotImplementedError(
+                "only training is implemented for pipeline parallel model"
+            )

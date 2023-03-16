@@ -14,8 +14,14 @@
 import torch
 from torch import nn
 
-from graph_coder.data import GraphCoderBatch
-from graph_coder.pipe import ConditionalLayer, Layers, PassThroughLayer, PipeModule
+from graph_coder.data import ARGS_SIZE, GraphCoderBatch
+from graph_coder.pipe import (
+    ConditionalLayer,
+    Layers,
+    PassThroughLayer,
+    PipeModule,
+    RemoveArgsLayer,
+)
 
 from .generator_base import GraphCoderGeneratorBase
 from .layers_pipe import CodeLayerPipe, GraphLayerPipe, TextLayerPipe
@@ -49,68 +55,48 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
         )
         self.criterion = criterion
 
-    def get_states(self, **kwargs):
-        batch = GraphCoderBatch.from_dict(kwargs)
+    def get_states(self, *args):
+        batch = GraphCoderBatch.from_tuple(args)
 
-        hidden_states = kwargs["hidden_states"]
+        hidden_states = args[-1]
+        largs = list(args)
         if batch.has_docstring:
-            kwargs["text_states"] = hidden_states[:, : batch.docstring_size]
+            largs.append(hidden_states[:, : batch.docstring_size])
 
         if batch.has_graph:
             if batch.has_docstring:
-                start = batch.docstring_size + 1
+                start = batch.docstring_size
             else:
                 start = 0
             if batch.has_source:
-                end = batch.source_size + 1
+                end = batch.source_size
             else:
-                end = 0
-            kwargs["graph_states"] = hidden_states[:, start : -end - 1]
+                end = -1
+            largs.append(hidden_states[:, start:-end])
 
         if batch.has_source:
-            kwargs["code_states"] = hidden_states[:, -batch.source_size - 1 : -1]
+            largs.append(hidden_states[:, -batch.source_size :])
 
-        return kwargs
+        return tuple(largs)
 
-    def has_source(self, **kwargs):
-        return GraphCoderBatch.from_dict(kwargs).has_source
+    def has_source(self, *args):
+        return GraphCoderBatch.from_tuple(args).has_source
 
-    def has_docstring(self, **kwargs):
-        return GraphCoderBatch.from_dict(kwargs).has_docstring
+    def has_docstring(self, *args):
+        return GraphCoderBatch.from_tuple(args).has_docstring
 
-    def has_graph(self, **kwargs):
-        return GraphCoderBatch.from_dict(kwargs).has_graph
+    def has_graph(self, *args):
+        return GraphCoderBatch.from_tuple(args).has_graph
 
-    def tgt_and_memory(self, **kwargs):
-        kwargs["tgt"] = torch.cat(kwargs["tgt_"], dim=1)
-        kwargs["memory"] = torch.cat(kwargs["x_"], dim=1)
-
-        return kwargs
-
-    def add_accums(self, **kwargs):
-        kwargs["tgt_"] = []
-        kwargs["x_"] = []
-        kwargs["result_"] = {}
-
-        return kwargs
-
-    def calc_logits(self, **kwargs):
-        batch = GraphCoderBatch.from_dict(kwargs)
+    def calc_loss(self, *args):
+        batch = GraphCoderBatch.from_tuple(args)
 
         lm_logits = []
         target_ids = []
 
         if batch.has_docstring:
             target_ids.append(batch.docstring[batch.docstring_attn_mask.bool()])
-            lm_logits.append(kwargs["docstring_result"][batch.docstring_attn_mask.bool()])
-            # add eos token
-            device = batch.docstring.device
-            target_ids.append(torch.tensor([self.eos_token_id], device=device))
-            lm_logits.append(
-                torch.tensor([self.eos_token_id], device=device).repeat(
-                    1, self.vocab_size
-                )
-            )
+            lm_logits.append(args[-3][batch.docstring_attn_mask.bool()])
         if batch.has_graph:
             target_ids.extend(
                 [
@@ -119,34 +105,14 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
                 ]
             )
             lm_logits.append(
-                kwargs["graph_result"][kwargs["result_"]["padded_node_mask"].bool()][
-                    batch.node_data_attn_mask.bool()
-                ]
+                args[-1][args[ARGS_SIZE].bool()][batch.node_data_attn_mask.bool()]
             )
             lm_logits.append(
-                kwargs["graph_result"][kwargs["result_"]["padded_edge_mask"].bool()][
-                    batch.edge_data_attn_mask.bool()
-                ]
-            )
-            # add eos token
-            device = batch.node_data.device
-            target_ids.append(torch.tensor([self.eos_token_id], device=device))
-            lm_logits.append(
-                torch.tensor([self.eos_token_id], device=device).repeat(
-                    1, self.vocab_size
-                )
+                args[-1][args[ARGS_SIZE + 1].bool()][batch.edge_data_attn_mask.bool()]
             )
         if batch.has_source:
             target_ids.append(batch.source[batch.source_attn_mask.bool()])
-            lm_logits.append(kwargs["source_result"][batch.source_attn_mask.bool()])
-            # add eos token
-            device = batch.source.device
-            target_ids.append(torch.tensor([self.eos_token_id], device=device))
-            lm_logits.append(
-                torch.tensor([self.eos_token_id], device=device).repeat(
-                    1, self.vocab_size
-                )
-            )
+            lm_logits.append(args[-2][batch.source_attn_mask.bool()])
 
         target_ids_ = torch.cat(target_ids)
         lm_logits_ = torch.cat(lm_logits, dim=0)
@@ -157,58 +123,72 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
         return self.criterion(shift_logits, shift_labels)
 
     def to_layers(self) -> Layers:
-        layers = [
-            self.add_accums,
-        ]
+        layers = []
 
         for layer in self.layers:
             layers.extend(layer.to_layers())
 
         layers.extend(
             [
-                self.tgt_and_memory,
+                # args: *batch_args, padded_node_mask, padded_edge_mask, tgt, memory
                 *self.decoder.to_layers(),
+                RemoveArgsLayer(-1),
+                # args: *batch_args, padded_node_mask, padded_edge_mask, tgt
                 PassThroughLayer(
                     self.dense,
-                    "hidden_states",
-                    ["tgt"],
-                    callback=lambda res, **kwargs: torch.tanh(res).contiguous(),
+                    -1,
+                    -1,
+                    callback=lambda res, *args: torch.tanh(res).contiguous(),
                 ),
+                # args: *batch_args, padded_node_mask, padded_edge_mask, tgt (hidden_states)
                 self.get_states,
+                # args: *batch_args, padded_node_mask, padded_edge_mask, \
+                #       hidden_states, text_states?, graph_states, code_states
                 ConditionalLayer(
-                    PassThroughLayer(self.lm_head, "docstring_result", ["text_states"]),
+                    PassThroughLayer(self.lm_head, -3, -3),
                     self.has_docstring,
                 ),
+                # args: *batch_args, padded_node_mask, padded_edge_mask, \
+                #       hidden_states, docstring_result?, graph_states, code_states
                 ConditionalLayer(
                     PassThroughLayer(
                         self.lm_graph_head,
-                        "graph_result",
-                        ["graph_states"],
-                        callback=lambda res, **kwargs: res.view(
+                        -2,
+                        callback=lambda res, *args: res.view(
                             res.size(0), -1, self.hidden_size
                         ),
                     ),
                     self.has_graph,
                 ),
+                # args: *batch_args, padded_node_mask, padded_edge_mask, \
+                #       hidden_states, docstring_result?, graph_states, code_states, graph_result
                 ConditionalLayer(
-                    PassThroughLayer(self.lm_head, "source_result", ["code_states"]),
+                    PassThroughLayer(self.lm_head, -2, -2),
                     self.has_source,
                 ),
+                # args: *batch_args, padded_node_mask, padded_edge_mask, \
+                #       hidden_states, docstring_result?, graph_states, source_result, graph_result
                 ConditionalLayer(
                     PassThroughLayer(
                         self.lm_head,
-                        "graph_result",
-                        ["graph_result"],
-                        callback=lambda res, **kwargs: res.view(
+                        -1,
+                        -1,
+                        callback=lambda res, *args: res.view(
                             res.size(0),
-                            kwargs["graph_states"].size(1),
+                            args[-3].size(1),
                             -1,
                             self.vocab_size,
                         ),
                     ),
                     self.has_graph,
                 ),
-                self.calc_logits
+                # args: *batch_args, padded_node_mask, padded_edge_mask, \
+                #       hidden_states, docstring_result?, graph_states, source_result, graph_result
+                RemoveArgsLayer(-3),
+                # args: *batch_args, padded_node_mask, padded_edge_mask, \
+                #       hidden_states, docstring_result?, source_result, graph_result
+                self.calc_loss
+                # torch.Tensor (loss)
             ]
         )
 

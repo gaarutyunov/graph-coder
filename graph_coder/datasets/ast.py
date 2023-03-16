@@ -38,7 +38,7 @@ from graph_coder.ast import F
 
 from graph_coder.data import AstExample
 from graph_coder.logger import AsyncLogger
-from graph_coder.utils import run_async, print_rank0
+from graph_coder.utils import print_rank0, run_async
 from .base import BaseDataset
 from .registry import register
 
@@ -294,8 +294,12 @@ class AstDataset(BaseDataset[AstExample]):
         assert self.index is not None, "Run .introspect() first"
         print_rank0(f"Summary for {self.__class__.__name__}:\n", file=out)
         print_rank0(f"- Number of graphs: {len(self.index):,}", file=out)
-        print_rank0(f"- Avg. number of nodes: {self.index['nodes'].mean():.0f}", file=out)
-        print_rank0(f"- Avg. number of edges: {self.index['edges'].mean():.0f}", file=out)
+        print_rank0(
+            f"- Avg. number of nodes: {self.index['nodes'].mean():.0f}", file=out
+        )
+        print_rank0(
+            f"- Avg. number of edges: {self.index['edges'].mean():.0f}", file=out
+        )
         print_rank0(
             f"- Number of documented graphs: {self.index['has_docstring'].sum():,}",
             file=out,

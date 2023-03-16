@@ -222,7 +222,9 @@ def test_performer_pipe():
     loader = DataLoader(
         dataset,
         batch_size=2,
-        collate_fn=partial(collate_ast, tokenizer=tokenizer, max_length=8),
+        collate_fn=partial(
+            collate_ast, tokenizer=tokenizer, max_length=8, use_dict=False
+        ),
     )
     embedding = nn.Embedding(
         len(tokenizer.vocab), 16, padding_idx=tokenizer.pad_token_id
@@ -274,15 +276,15 @@ def test_performer_pipe():
         vocab_size=len(tokenizer.vocab),
         eos_token_id=tokenizer.eos_token_id,
         max_length=8,
-        criterion=criterion
+        criterion=criterion,
     )
 
     layers = generator.to_layers()
 
     for batch in loader:
-        kwargs = batch
+        args = batch
 
         for layer in layers:
-            kwargs = layer(**kwargs)
+            args = layer(*args)
 
-        assert torch.is_floating_point(kwargs)
+        assert torch.is_floating_point(args)

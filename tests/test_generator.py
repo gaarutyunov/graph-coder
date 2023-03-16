@@ -174,6 +174,7 @@ def test_generator_pipe():
         collate_ast,
         tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"),
         max_length=4,
+        use_dict=False,
     )
     dataset = AstDataset(
         collate_fn=collator,
@@ -221,14 +222,14 @@ def test_generator_pipe():
         vocab_size=len(tokenizer.vocab),
         eos_token_id=tokenizer.eos_token_id,
         max_length=4,
-        criterion=criterion
+        criterion=criterion,
     )
 
     layers = generator.to_layers()
 
     for batch in loader:
-        kwargs = batch
+        args = batch
         for layer in layers:
-            kwargs = layer(**kwargs)
+            args = layer(*args)
 
-        assert torch.is_floating_point(kwargs)
+        assert torch.is_floating_point(args)

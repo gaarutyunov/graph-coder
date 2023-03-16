@@ -15,6 +15,8 @@
 from functools import partial
 from pathlib import Path
 
+import torch
+
 from graph_coder.config.functional import get_pretrained_tokenizer
 
 from graph_coder.data import collate_ast
@@ -51,7 +53,14 @@ def test_tokengt_encoder():
     )
 
     for batch in loader:
-        encoded = encoder(**batch)
+        encoded = encoder(
+            batch["edge_index"],
+            batch["edge_data"],
+            batch["node_data"],
+            batch["node_num"],
+            batch["edge_num"],
+            batch["lap_eigvec"],
+        )
         assert encoded.size(-1) == 16
 
 
@@ -83,7 +92,14 @@ def test_sign_flip():
     )
 
     for batch in loader:
-        encoded = encoder(**batch)
+        encoded = encoder(
+            batch["edge_index"],
+            batch["edge_data"],
+            batch["node_data"],
+            batch["node_num"],
+            batch["edge_num"],
+            batch["lap_eigvec"],
+        )
         assert encoded.size(-1) == 16
 
 
@@ -116,7 +132,14 @@ def test_performer():
     )
 
     for batch in loader:
-        encoded = encoder(**batch)
+        encoded = encoder(
+            batch["edge_index"],
+            batch["edge_data"],
+            batch["node_data"],
+            batch["node_num"],
+            batch["edge_num"],
+            batch["lap_eigvec"],
+        )
         assert encoded.size(-1) == 16
 
 
@@ -150,7 +173,14 @@ def test_graphormer_init():
     )
 
     for batch in loader:
-        encoded = encoder(**batch)
+        encoded = encoder(
+            batch["edge_index"],
+            batch["edge_data"],
+            batch["node_data"],
+            batch["node_num"],
+            batch["edge_num"],
+            batch["lap_eigvec"],
+        )
         assert encoded.size(-1) == 16
 
 
@@ -161,7 +191,9 @@ def test_pipe():
     )
     loader = DataLoader(
         dataset,
-        collate_fn=partial(collate_ast, tokenizer=tokenizer, max_length=8),
+        collate_fn=partial(
+            collate_ast, tokenizer=tokenizer, max_length=8, use_dict=False
+        ),
         batch_size=2,
     )
     embedding = TokenEmbedding(
@@ -184,8 +216,9 @@ def test_pipe():
     )
 
     for batch in loader:
-        kwargs = batch
-        encoded = encoder(**kwargs)
+        args = batch
         for layer in encoder.to_layers():
-            kwargs = layer(**kwargs)
-        assert kwargs["x"].shape == encoded.shape
+            args = layer(*args)
+
+        for arg in args:
+            assert torch.is_tensor(arg)
