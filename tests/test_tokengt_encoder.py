@@ -218,7 +218,7 @@ def test_pipe():
     for batch in loader:
         args = batch
         for layer in encoder.to_layers():
-            args = layer(*args)
+            args = layer(args)
 
         for arg in args:
             assert torch.is_tensor(arg)

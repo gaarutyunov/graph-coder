@@ -94,7 +94,7 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
             **kwargs
         )
 
-        for i in range(self.max_seq_length):
+        for i in range(self.max_seq_length - 1):
             new_token, attn_mask = self._predict_code_token(**kwargs)
 
             kwargs["source"] = torch.cat([kwargs["source"], new_token], dim=1)
@@ -115,7 +115,8 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
 
         out = self.decoder(kwargs["tgt"], kwargs["memory"])
         hidden_states = torch.tanh(self.dense(out)).contiguous()
-        token = self.lm_head(hidden_states[:, -1:])
+        logits = self.lm_head(hidden_states[:, -1:])
+        token = logits.argmax(dim=-1)[0]
         attn_mask = torch.ones_like(token, device=token.device)
 
         return token, attn_mask

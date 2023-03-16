@@ -18,7 +18,7 @@ import torch
 from torch import nn
 
 from graph_coder.data import GraphCoderBatch
-from graph_coder.pipe import Kwargs
+from graph_coder.pipe import Args, Kwarg
 
 TE = typing.TypeVar("TE", bound=nn.Module)
 
@@ -32,8 +32,8 @@ class TextLayer(nn.Module, typing.Generic[TE]):
 
     def forward(
         self,
-        **kwargs: Kwargs,
-    ) -> typing.Dict[str, Kwargs]:
+        **kwargs: Kwarg,
+    ) -> typing.Dict[str, Kwarg]:
         batch = GraphCoderBatch.from_dict(kwargs)
 
         if not batch.has_docstring:
@@ -70,8 +70,8 @@ class CodeLayer(nn.Module, typing.Generic[TE]):
 
     def forward(
         self,
-        **kwargs: Kwargs,
-    ) -> typing.Dict[str, Kwargs]:
+        **kwargs: Kwarg,
+    ) -> typing.Dict[str, Kwarg]:
         batch = GraphCoderBatch.from_dict(kwargs)
 
         if not batch.has_source:
@@ -106,8 +106,8 @@ class GraphLayer(nn.Module, typing.Generic[TE]):
 
     def forward(
         self,
-        **kwargs: Kwargs,
-    ) -> typing.Dict[str, Kwargs]:
+        **kwargs: Kwarg,
+    ) -> typing.Dict[str, Kwarg]:
         batch = GraphCoderBatch.from_dict(kwargs)
 
         if not batch.has_graph:

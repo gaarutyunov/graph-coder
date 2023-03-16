@@ -230,6 +230,6 @@ def test_generator_pipe():
     for batch in loader:
         args = batch
         for layer in layers:
-            args = layer(*args)
+            args = layer(args)
 
         assert torch.is_floating_point(args)

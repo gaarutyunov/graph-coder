@@ -17,10 +17,26 @@ from typing import Callable, Union
 import torch
 from torch import nn
 
-from .types import Kwargs
+from .types import Args
 
 
-class PassThroughLayer(nn.Module):
+class PipeLayer(nn.Module):
+    """Special pipe layer that has one argument which is a tuple of actual positional `args`"""
+
+    def __init__(
+        self, inner: typing.Optional[typing.Union[nn.Module, Callable]] = None
+    ) -> None:
+        super().__init__()
+        self.inner = inner
+
+    def forward(self, args):
+        if self.inner is not None:
+            return self.inner(*args)
+
+        return args
+
+
+class PassThroughLayer(PipeLayer):
     """Layer that calls inner module with args from `inp` and returns them into `out`.
 
     Args:
@@ -42,8 +58,7 @@ class PassThroughLayer(nn.Module):
         callback: typing.Optional[typing.Callable] = None,
         args_getter: typing.Optional[typing.Callable] = None,
     ):
-        super().__init__()
-        self.inner = inner
+        super().__init__(inner)
         self.inp = inp
         self.out = out
         self.args_getter: Callable = args_getter or self._default_args_getter
@@ -56,10 +71,12 @@ class PassThroughLayer(nn.Module):
 
     def forward(
         self,
-        *args: Kwargs,
-    ) -> typing.Tuple[Kwargs, ...]:
+        args: Args,
+    ) -> Args:
         selected_args = self.args_getter(*args)
 
+        if self.inner is None:
+            raise ValueError("inner module is not defined")
         if isinstance(selected_args, (list, tuple)):
             res = self.inner(*selected_args)
         else:
@@ -105,7 +122,7 @@ class PassThroughLayer(nn.Module):
         return self.inner.__repr__()
 
 
-class ConditionalLayer(nn.Module):
+class ConditionalLayer(PipeLayer):
     """Layer that calls inner module conditionally.
 
     Args:
@@ -114,28 +131,31 @@ class ConditionalLayer(nn.Module):
     """
 
     def __init__(self, inner: Union[nn.Module, Callable], condition: Callable) -> None:
-        super().__init__()
+        super().__init__(inner)
         self.inner = inner
         self.condition = condition
 
-    def forward(self, *args, **kwargs):
-        if not self.condition(*args, **kwargs):
+    def forward(self, args):
+        if not self.condition(*args):
             return args
 
-        return self.inner(*args, **kwargs)
+        if isinstance(self.inner, PipeLayer):
+            return self.inner(args)
+
+        return self.inner(*args)
 
     def __repr__(self):
         return self.inner.__repr__()
 
 
-class RemoveArgsLayer(nn.Module):
+class RemoveArgsLayer(PipeLayer):
     """Layer that removes args from `*args` by indexes."""
 
     def __init__(self, *idx: int) -> None:
         super().__init__()
         self.idx = idx
 
-    def forward(self, *args, **kwargs):
+    def forward(self, args):
         largs = list(args)
         for i in self.idx:
             del largs[i]
@@ -143,19 +163,19 @@ class RemoveArgsLayer(nn.Module):
         return tuple(largs)
 
 
-class CloneLayer(nn.Module):
+class CloneLayer(PipeLayer):
     """Layer that clones input."""
 
     def forward(self, x):
         return torch.clone(x)
 
 
-class ReorderLayer(nn.Module):
+class ReorderLayer(PipeLayer):
     """Layer that reorders args in `*args` by indexes."""
 
     def __init__(self, *idx: int) -> None:
         super().__init__()
         self.idx = idx
 
-    def forward(self, *args, **kwargs):
+    def forward(self, args):
         return tuple([args[i] for i in self.idx])

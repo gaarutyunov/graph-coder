@@ -15,7 +15,7 @@ from typing import List
 
 from torch.nn import Identity
 
-from graph_coder.pipe import Layers, PassThroughLayer, PipeModule
+from graph_coder.pipe import Layers, PassThroughLayer, PipeLayer, PipeModule
 from ...data import GraphCoderBatch
 
 from .tokengt_graph_encoder import TokenGTGraphEncoder
@@ -74,8 +74,8 @@ class TokenGTGraphEncoderPipe(TokenGTGraphEncoder, PipeModule):
         return args
 
     def to_layers(self) -> Layers:
-        layers = [
-            self.performer_redraw,
+        layers: Layers = [
+            PipeLayer(self.performer_redraw),
             PassThroughLayer(
                 self.graph_feature,
                 [

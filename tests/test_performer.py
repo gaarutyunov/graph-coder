@@ -285,6 +285,6 @@ def test_performer_pipe():
         args = batch
 
         for layer in layers:
-            args = layer(*args)
+            args = layer(args)
 
         assert torch.is_floating_point(args)

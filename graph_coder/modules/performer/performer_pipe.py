@@ -17,7 +17,7 @@ from performer_pytorch import Performer
 from performer_pytorch.reversible import SequentialSequence
 from torch import nn
 
-from graph_coder.pipe import Layers, PassThroughLayer, PipeModule
+from graph_coder.pipe import Layers, PassThroughLayer, PipeLayer, PipeModule
 
 
 class PerformerPipe(PipeModule, Performer):
@@ -86,7 +86,7 @@ class PerformerPipe(PipeModule, Performer):
         return args
 
     def to_layers(self) -> Layers:
-        layers = [self.performer_redraw]
+        layers: Layers = [PipeLayer(self.performer_redraw)]
 
         args_route: List[Dict[str, Tuple[bool, ...]]] = [{}] * len(self.net.layers)
 

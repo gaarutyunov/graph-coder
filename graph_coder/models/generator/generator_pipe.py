@@ -55,7 +55,7 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
         )
         self.criterion = criterion
 
-    def get_states(self, *args):
+    def get_states(self, args):
         batch = GraphCoderBatch.from_tuple(args)
 
         hidden_states = args[-1]
@@ -88,7 +88,7 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
     def has_graph(self, *args):
         return GraphCoderBatch.from_tuple(args).has_graph
 
-    def calc_loss(self, *args):
+    def calc_loss(self, args):
         batch = GraphCoderBatch.from_tuple(args)
 
         lm_logits = []
