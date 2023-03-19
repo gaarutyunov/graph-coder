@@ -5,4 +5,4 @@ code_encoder:
   depth: 1
   heads: 2
   causal: true
-  max_seq_len: 130
+  max_seq_len: 1024
