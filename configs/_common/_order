@@ -1,3 +1,4 @@
+log_path
 tokenizer
 collator
 criterion
@@ -13,5 +14,4 @@ optimizer
 scheduler
 runner
 engine
-log_path
 run
