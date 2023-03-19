@@ -15,3 +15,4 @@
 from .generator import *
 from .base import *
 from .generator_pipe import *
+from .human_eval import *

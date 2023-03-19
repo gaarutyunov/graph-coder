@@ -28,12 +28,9 @@ from os import PathLike
 from pathlib import Path
 from typing import Any, Mapping, Optional, Union
 
-import numpy as np
 import pandas as pd
 from catalyst.core import Engine
-from human_eval.data import read_problems, stream_jsonl, write_jsonl
-from human_eval.evaluation import estimate_pass_at_k, evaluate_functional_correctness
-from human_eval.execution import check_correctness
+from human_eval.evaluation import evaluate_functional_correctness
 from torch.utils.data import DataLoader, Dataset, Subset
 from tqdm import tqdm
 from transformers import PreTrainedTokenizerBase
