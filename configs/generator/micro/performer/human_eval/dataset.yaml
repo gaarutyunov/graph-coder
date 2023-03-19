@@ -1,0 +1,13 @@
+dataset:
+  _target_: graph_coder.datasets.HumanEvalDataset
+  _var_: dataset
+  root: ~/human-eval
+  index_file: index.jsonl
+  batch_size: 1
+  collate_fn:
+    _var_: collator
+  random_seed: 42
+  in_memory: true
+  print_summary: true
+  filter_index:
+    - _target_: graph_coder.config.F.filter_is_processed

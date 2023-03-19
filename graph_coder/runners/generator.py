@@ -38,9 +38,8 @@ class GraphCoderGeneratorRunner(GraphCoderRunnerBase[TMM], Generic[TMM]):
         self.eos_token_id = eos_token_id
         self.vocab_size = vocab_size
 
-    def predict_batch(self, batch: GraphCoderBatch, **kwargs) -> Mapping[str, Any]:
-        # TODO: split prediction into graph and source
-        return {"predictions": self.model(batch, **kwargs)}
+    def predict_batch(self, batch: Mapping[str, Any], **kwargs) -> Mapping[str, Any]:
+        return self.model.generate(**batch)  # type: ignore[operator]
 
     def _calc_loss(self, **kwargs: torch.Tensor) -> torch.Tensor:
         """Calculate loss for the given batch"""

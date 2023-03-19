@@ -12,18 +12,19 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import ast
+import typing
 from pathlib import Path
 from typing import AsyncGenerator, Dict, Optional, Union
 
 import networkx as nx
 
-from .ast import AstDataset
+from .ast import AstDataset, TAEx
 
 from .registry import register
 
 
 @register("func_ast")
-class FuncAstDataset(AstDataset):
+class FuncAstDataset(AstDataset[TAEx], typing.Generic[TAEx]):
     async def _parse_source(
         self, file: Path
     ) -> AsyncGenerator[Dict[str, Union[nx.Graph, Optional[int]]], None]:

@@ -31,6 +31,7 @@ class GraphCoderGenerator(GraphCoderGeneratorBase[nn.Module]):
         vocab_size: int,
         eos_token_id: int = 0,
         max_length: int = 64,
+        max_seq_length: int = 512,
     ) -> None:
         super().__init__(
             layers=[
@@ -43,6 +44,7 @@ class GraphCoderGenerator(GraphCoderGeneratorBase[nn.Module]):
             vocab_size=vocab_size,
             eos_token_id=eos_token_id,
             max_length=max_length,
+            max_seq_length=max_seq_length,
         )
         self.embedding = embedding
         self.text_encoder = text_encoder

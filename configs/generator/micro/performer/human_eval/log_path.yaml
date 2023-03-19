@@ -1,0 +1,6 @@
+log_path:
+  _target_: graph_coder.config.F.get_log_path
+  _var_: log_path
+  _mode_: call
+  root: logs/generator/micro/performer
+  create: false

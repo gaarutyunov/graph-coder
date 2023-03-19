@@ -77,8 +77,12 @@ def collate_ast(
     dtype: torch.dtype = torch.float,
     graph_dtype: torch.dtype = torch.long,
     use_dict: bool = True,
+    num_samples: int = 1,
 ) -> torch.Union[Dict[str, torch.Tensor], Tuple[torch.Tensor, ...]]:
     """Collate a batch of examples into a batch of tensors."""
+    if num_samples > 1:
+        assert len(batch) == 1, "You can only repeat with batch_size = 1"
+        batch = batch * num_samples
     idx = []
     edge_index = []
     edge_data = []

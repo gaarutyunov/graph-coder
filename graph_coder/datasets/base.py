@@ -35,6 +35,7 @@ TEx = typing.TypeVar("TEx")
 class BaseDataset(Dataset, abc.ABC, typing.Generic[TEx]):
     def __init__(
         self,
+        root: typing.Union[os.PathLike, str],
         logger: ILogger,
         collate_fn: typing.Optional[typing.Callable] = None,
         random_seed: typing.Optional[int] = None,
@@ -44,6 +45,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[TEx]):
         in_memory: bool = False,
         preprocess: bool = True,
     ):
+        self.root = Path(root).expanduser()
         self._logger = logger
         self._loaders: Dict[str, DataLoader] = {}
         self.batch_size = batch_size
@@ -55,6 +57,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[TEx]):
         self.preprocess = preprocess
         self._cache: Dict[int, TEx] = {}
         self._is_processed: typing.Optional[bool] = None
+        self.download()
 
     @abc.abstractmethod
     def __len__(self):
@@ -122,6 +125,9 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[TEx]):
                 [self._get_data_loader(dataset) for dataset in datasets],
             )
         )
+
+    def download(self):
+        """Download dataset"""
 
     def process(self):
         """Preprocesses the dataset by getting each item and saving it into `processed_dir`"""

@@ -45,8 +45,11 @@ from .registry import register
 FilterFn = typing.Callable[[pd.DataFrame], pd.DataFrame]
 
 
+TAEx = typing.TypeVar("TAEx", bound=AstExample)
+
+
 @register("ast")
-class AstDataset(BaseDataset[AstExample]):
+class AstDataset(BaseDataset[TAEx], typing.Generic[TAEx]):
     def __init__(
         self,
         root: typing.Union[os.PathLike, str],
@@ -65,9 +68,9 @@ class AstDataset(BaseDataset[AstExample]):
         filter_index: Optional[Union[typing.Iterable[FilterFn], FilterFn]] = None,
         processed_dir: Optional[typing.Union[os.PathLike, str]] = None,
     ) -> None:
-        self.root = Path(root).expanduser()
-        self.log_file = self.root / log_file
+        self.log_file = Path(root).expanduser() / log_file
         super().__init__(
+            root,
             AsyncLogger(self.log_file),
             collate_fn,
             random_seed,
@@ -110,7 +113,7 @@ class AstDataset(BaseDataset[AstExample]):
     def __len__(self):
         return len(self.index)
 
-    def __getitem__(self, index: int) -> AstExample:
+    def __getitem__(self, index: int) -> TAEx:
         item = self._get_item(index)
         if item is not None:
             return item
@@ -130,7 +133,7 @@ class AstDataset(BaseDataset[AstExample]):
             source=graph_source,
             graph=F.graph_to_data(index, graph),
             docstring=F.get_docstring(node),
-        )
+        )  # type: ignore[return-value]
 
     @lru_cache(maxsize=16)
     def _get_source(self, path: str, encoding: str = "utf-8") -> List[str]:

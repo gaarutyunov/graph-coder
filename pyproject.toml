@@ -7,9 +7,9 @@ readme = "README.md"
 packages = [{include = "graph_coder"}]
 
 [tool.poetry.dependencies]
-python = "3.9"
+python = "~3.9"
 catalyst = "^22.4"
-astmonkey = {git = "https://github.com/jepler/astmonkey.git", tag = "ast-fixes"}
+astmonkey = {git = "https://github.com/jepler/astmonkey.git", rev = "ast-fixes"}
 networkx = "^2.8.8"
 aiofiles = "^22.1.0"
 pandas = "^1.5.2"
@@ -29,7 +29,8 @@ deepspeed = "^0.8.0"
 humanize = "^4.6.0"
 nest-asyncio = "^1.5.6"
 black = {version = "^23.1.0", extras = ["d", "jupyter"]}
-performer-pytorch = {git = "https://github.com/gaarutyunov/performer-pytorch.git", tag = "main"}
+performer-pytorch = {git = "https://github.com/gaarutyunov/performer-pytorch.git", rev = "main"}
+human-eval = {git = "https://github.com/gaarutyunov/human-eval.git", rev = "master"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
@@ -40,14 +41,15 @@ no-implicit-optional = "^1.3"
 types-aiofiles = "^22.1.0.6"
 types-tqdm = "^4.64.7.11"
 pandas-stubs = "^1.5.2.230105"
-poetry2conda = "^0.3.0"
 types-pyyaml = "^6.0.12.3"
 torch-tb-profiler = "^0.4.1"
 autoflake = "^2.0.1"
 ufmt = "^2.0.1"
+poetry2conda = {git = "https://github.com/gaarutyunov/poetry2conda.git", rev = "master"}
 
 [tool.poetry2conda]
 name = "graph-coder"
+channels = ["pytorch", "conda-forge", "nvidia"]
 
 [tool.poetry2conda.dependencies]
 torch = { name = "pytorch", channel = "pytorch" }
@@ -64,6 +66,9 @@ deepspeed = { channel = "pip" }
 black = { channel = "conda-forge" }
 nest-asyncio = { channel = "conda-forge" }
 
+[tool.poetry2conda.condaonly]
+pytorch-cuda = { channel = "pytorch", version = "11.7" }
+
 [tool.black]
 line-length = 88
 target-version = ["py39"]
@@ -74,7 +79,7 @@ exclude = "tests/.*data"
 exclude = "tests/.*data"
 
 [tool.ufmt]
-excludes = ["tests/data", "tests/func_data"]
+excludes = ["tests/data", "tests/func_data", "tests/human_eval_data"]
 
 [tool.coverage.run]
 omit = ["tests/*"]
@@ -94,7 +99,7 @@ exclude = "tests/.*data"
 quiet = true
 in-place = true
 recursive = true
-imports = ["einops", "performer_pytorch", "torch", "deepspeed"]
+imports = ["einops", "performer_pytorch", "torch", "deepspeed", "catalyst"]
 
 [build-system]
 requires = ["poetry-core"]

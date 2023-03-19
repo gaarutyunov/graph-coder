@@ -13,3 +13,4 @@ log.txt
 index.jsonl
 poetry.lock
 __processed__
+tests/human_eval_data

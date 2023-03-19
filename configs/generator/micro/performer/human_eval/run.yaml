@@ -1,0 +1,10 @@
+run:
+  - _call_: evaluate
+    engine:
+      _var_: engine
+    loader:
+      _target_: graph_coder.config.F.get_key
+      obj:
+        _var_: dataset.loaders
+      key: infer
+      _mode_: call

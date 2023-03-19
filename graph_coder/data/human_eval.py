@@ -4,16 +4,29 @@
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import dataclasses
 
-from .ast import *
-from .base import *
-from .func_ast import *
-from .registry import *
-from .human_eval import *
+from graph_coder.data import AstExample
+
+
+@dataclasses.dataclass
+class HumanEvalMeta:
+    """Human-eval task metadata"""
+
+    task_id: str
+    canonical_solution: str
+    test: str
+    prompt: str
+    entry_point: str
+
+
+@dataclasses.dataclass
+class HumanEvalExample(AstExample, HumanEvalMeta):
+    """Human-eval ast dataset item"""

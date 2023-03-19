@@ -100,7 +100,12 @@ def get_keys(obj: Dict[str, Any], keys: List[str]) -> Dict[str, Any]:
     return {k: v for k, v in obj.items() if k in keys}
 
 
-def get_log_path(root: str) -> str:
+def get_key(obj: Dict[str, Any], key: str) -> Any:
+    """Get key value from dict"""
+    return obj[key]
+
+
+def get_log_path(root: str, create: bool = True) -> str:
     """Get log path with model version"""
     path = pathlib.Path(root)
     path.mkdir(exist_ok=True, parents=True)
@@ -114,7 +119,8 @@ def get_log_path(root: str) -> str:
 
     versions = sorted(versions)
 
-    new_path = path / f"version{versions[-1]+1}"
+    new_version = versions[-1] + int(create)
+    new_path = path / f"version{new_version}"
     new_path.mkdir(exist_ok=True, parents=True)
 
     return str(new_path)

@@ -93,10 +93,14 @@ def test_get_activity():
 def test_log_path():
     root = pathlib.Path(__file__).parent / "logs" / "test_logs"
 
-    for i in range(1, 20):
+    shutil.rmtree(root, ignore_errors=True)
+
+    for i in range(0, 20):
         _ = F.get_log_path(str(root))
 
-    for i in range(1, 20):
+    for i in range(1, 21):
         assert (root / f"version{i}").exists()
+
+    assert Path(F.get_log_path(str(root), create=False)).stem == "version20"
 
     shutil.rmtree(root)

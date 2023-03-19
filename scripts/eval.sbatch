@@ -17,9 +17,9 @@
 
 #SBATCH --mail-user=germanarutyunov@gmail.com
 #SBATCH --mail-type=ALL
-#SBATCH --job-name=gc-train
-#SBATCH --output="logs/slurm/train/"%j.out
-#SBATCH --error="logs/slurm/train/"%j.err
+#SBATCH --job-name=gc-eval
+#SBATCH --output="logs/slurm/evaluate/"%j.out
+#SBATCH --error="logs/slurm/evaluate/"%j.err
 #SBATCH --constraint="type_a|type_b|type_c"
 #SBATCH --gpus-per-node=1
 #SBATCH --nodes=1
