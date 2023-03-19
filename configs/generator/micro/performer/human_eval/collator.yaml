@@ -3,7 +3,7 @@ collator:
   _var_: collator
   max_length: 4
   max_seq_length: 128
-  num_samples: 1
+  num_samples: 100
   tokenizer:
     _var_: tokenizer
   device:
