@@ -104,5 +104,3 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
                 loader.dataset,
                 data_sampler=sampler,
             )
-
-            assert not self.loaders[key].pin_memory
