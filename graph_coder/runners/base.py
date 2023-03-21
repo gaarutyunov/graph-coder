@@ -91,11 +91,8 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC, Generic[TM]):
             return
 
         set_global_seed(self.seed + max(0, self.engine.process_index) + self.epoch_step)
-        loaders = self.get_loaders()
         self.loaders = {
-            key: self.engine.prepare(value)
-            for key, value in loaders.items()
-            if key != "train"
+           "train": self.get_loaders()["train"]
         }
 
     def _setup_components(self) -> None:
