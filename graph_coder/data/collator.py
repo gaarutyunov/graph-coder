@@ -14,7 +14,6 @@
 from typing import Dict, List, Tuple
 
 import torch
-from catalyst.utils import get_device
 from torch.functional import F
 from transformers import PreTrainedTokenizerFast
 
@@ -29,7 +28,6 @@ def pad(
     num: List[List[int]],
     tokenizer: PreTrainedTokenizerFast,
     max_length: int = 64,
-    device: torch.device = get_device(),
     dtype: torch.dtype = torch.long,
 ) -> List[Dict[str, torch.Tensor]]:
     """Pad a batch of strings restoring the original packs."""
@@ -40,7 +38,7 @@ def pad(
             return_tensors="pt",
             truncation=True,
             max_length=max_length,
-        ).to(device)
+        )
     ).data
     inputs_ids = []
     attention_mask = []
@@ -73,7 +71,6 @@ def collate_ast(
     tokenizer: PreTrainedTokenizerFast,
     max_length: int = 64,
     max_seq_length: int = 8192,
-    device: torch.device = get_device(),
     dtype: torch.dtype = torch.float,
     graph_dtype: torch.dtype = torch.long,
     use_dict: bool = True,
@@ -100,7 +97,7 @@ def collate_ast(
 
         graph_data = data.graph
         edge_index_ = (
-            torch.tensor(graph_data.edge_index, dtype=torch.long, device=device)
+            torch.tensor(graph_data.edge_index, dtype=torch.long)
             .t()
             .contiguous()
         )
@@ -124,7 +121,6 @@ def collate_ast(
         batch=node_data + edge_data,
         num=[node_num, edge_num],
         max_length=max_length,
-        device=device,
         tokenizer=tokenizer,
         dtype=graph_dtype,
     )
@@ -138,7 +134,6 @@ def collate_ast(
             truncation=True,
             max_length=max_seq_length,
         )
-        .to(device)
         .data
     )
 
@@ -151,15 +146,14 @@ def collate_ast(
             truncation=True,
             max_length=max_seq_length,
         )
-        .to(device)
         .data
     )
 
     res = GraphCoderBatch(
-        idx=torch.tensor(idx, dtype=torch.long, device=device),
+        idx=torch.tensor(idx, dtype=torch.long),
         edge_index=torch.cat(edge_index, dim=1),
-        node_num=torch.tensor(node_num, dtype=torch.long, device=device),
-        edge_num=torch.tensor(edge_num, dtype=torch.long, device=device),
+        node_num=torch.tensor(node_num, dtype=torch.long),
+        edge_num=torch.tensor(edge_num, dtype=torch.long),
         lap_eigval=torch.cat(
             [F.pad(i, (0, max_n - i.size(1)), value=float("0")) for i in lap_eigvals]
         ),

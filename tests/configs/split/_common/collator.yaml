@@ -5,10 +5,6 @@ collator:
   max_seq_length: 512
   tokenizer:
     _var_: tokenizer
-  device:
-    _target_: catalyst.utils.get_device
-    _var_: device
-    _mode_: call
   dtype:
     _target_: graph_coder.config.F.get_dtype
     _var_: dtype

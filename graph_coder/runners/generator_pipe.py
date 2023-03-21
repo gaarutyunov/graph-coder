@@ -103,7 +103,6 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
             self.loaders[key] = self.model.deepspeed_io(
                 loader.dataset,
                 data_sampler=sampler,
-                pin_memory=False
             )
 
             assert not self.loaders[key].pin_memory
