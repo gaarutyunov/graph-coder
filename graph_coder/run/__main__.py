@@ -26,13 +26,24 @@ from graph_coder.utils import run_model
     default="configs",
     help="Config directory",
 )
+@click.option(
+    "--spawn",
+    is_flag=True,
+    default=False,
+    help="Use `spawn` method for multiprocessing",
+)
 @click.argument("path", nargs=-1)
 def main(
     root: str,
+    spawn: bool,
     path: List[str],
 ):
     """Run a model from a config `root` directory with and path parts specified by `PATH`.
     If `root` is a path to a file, it will be used as the config file."""
+    if spawn:
+        from torch.multiprocessing import set_start_method
+
+        set_start_method("spawn")
     run_model(root, *path)
 
 
