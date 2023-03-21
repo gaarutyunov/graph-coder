@@ -31,4 +31,4 @@ chmod +x ./scripts/prepare.sh
 source ./scripts/prepare.sh
 
 # Train model
-ACCELERATE_LOG_LEVEL=DEBUG CUDA_VISIBLE_DEVICES="0,1" python -m graph_coder.run --root "$1" "${@:2}"
+ACCELERATE_LOG_LEVEL=DEBUG torchrun --standalone --nproc-per-node="gpu" graph_coder.run --root "$1" "${@:2}"
