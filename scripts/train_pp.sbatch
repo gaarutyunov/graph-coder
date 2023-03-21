@@ -31,4 +31,4 @@ chmod +x ./scripts/prepare.sh
 source ./scripts/prepare.sh
 
 # Train model
-ACCELERATE_LOG_LEVEL=DEBUG torchrun --standalone --nproc-per-node="gpu" graph_coder.run --root "$1" "${@:2}"
+ACCELERATE_LOG_LEVEL=DEBUG torchrun --standalone --nproc_per_node="gpu" graph_coder.run --root "$1" "${@:2}"
