@@ -11,9 +11,13 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from catalyst.utils import get_rank
+import os
+
+
+def get_local_rank() -> int:
+    return int(os.environ.get("LOCAL_RANK", "-1"))
 
 
 def print_rank0(fmt: str, *args, sep=" ", end="\n", file=None):
-    if get_rank() in [0, -1]:
+    if get_local_rank() in [0, -1]:
         print(fmt, *args, sep=sep, end=end, file=file)
