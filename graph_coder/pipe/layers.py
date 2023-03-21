@@ -17,7 +17,7 @@ from typing import Callable, Union
 import torch
 from torch import nn
 
-from .types import Args, Arg
+from .types import Arg, Args
 
 
 class PipeLayer(nn.Module):

@@ -3,6 +3,7 @@ engine:
   _var_: engine
   deepspeed_plugin:
     _target_: accelerate.utils.dataclasses.DeepSpeedPlugin
+    multiprocessing_context: spawn
     hf_ds_config:
       _target_: accelerate.utils.deepspeed.HfDeepSpeedConfig
       config_file_or_dict:

@@ -44,6 +44,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[TEx]):
         batch_size: int = 1,
         in_memory: bool = False,
         preprocess: bool = True,
+        multiprocessing_context: typing.Optional[str] = None,
     ):
         self.root = Path(root).expanduser()
         self._logger = logger
@@ -57,6 +58,7 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[TEx]):
         self.preprocess = preprocess
         self._cache: Dict[int, TEx] = {}
         self._is_processed: typing.Optional[bool] = None
+        self.multiprocessing_context = multiprocessing_context
         self.download()
 
     @abc.abstractmethod
@@ -156,7 +158,10 @@ class BaseDataset(Dataset, abc.ABC, typing.Generic[TEx]):
 
     def _get_data_loader(self, subset: Subset) -> DataLoader:
         return DataLoader(
-            subset, collate_fn=self.collate_fn, batch_size=self.batch_size
+            subset,
+            collate_fn=self.collate_fn,
+            batch_size=self.batch_size,
+            multiprocessing_context=self.multiprocessing_context,
         )
 
     def _get_item(self, index: int) -> typing.Optional[TEx]:

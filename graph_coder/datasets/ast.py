@@ -67,6 +67,7 @@ class AstDataset(BaseDataset[TAEx], typing.Generic[TAEx]):
         print_summary: bool = False,
         filter_index: Optional[Union[typing.Iterable[FilterFn], FilterFn]] = None,
         processed_dir: Optional[typing.Union[os.PathLike, str]] = None,
+        multiprocessing_context: typing.Optional[str] = None,
     ) -> None:
         self.log_file = Path(root).expanduser() / log_file
         super().__init__(
@@ -79,6 +80,7 @@ class AstDataset(BaseDataset[TAEx], typing.Generic[TAEx]):
             batch_size,
             in_memory,
             preprocess,
+            multiprocessing_context
         )
         if processed_dir is not None:
             self._processed_dir = Path(processed_dir).expanduser()

@@ -15,15 +15,15 @@ from collections import defaultdict
 from typing import Dict, Iterator, Union
 
 import torch
+
+from catalyst.core import IRunner, IRunnerError
+from catalyst.core.misc import get_loader_num_samples
+from catalyst.utils import maybe_recursive_call, set_global_seed
+from deepspeed import PipelineEngine
 from deepspeed.runtime.data_pipeline.data_sampling.data_sampler import (
     DeepSpeedDataSampler,
 )
-
-from catalyst.core import IRunnerError, IRunner
-from catalyst.core.misc import get_loader_num_samples
-from catalyst.utils import set_global_seed, maybe_recursive_call
-from deepspeed import PipelineEngine
-from deepspeed.runtime.dataloader import RepeatingLoader, DeepSpeedDataLoader
+from deepspeed.runtime.dataloader import DeepSpeedDataLoader, RepeatingLoader
 from torch.utils.data import DataLoader, DistributedSampler, RandomSampler
 
 from graph_coder.runners.generator import GraphCoderGeneratorRunner
@@ -101,5 +101,7 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
             )
             # Build a loader and make it repeating.
             self.loaders[key] = self.model.deepspeed_io(
-                loader.dataset, data_sampler=sampler
+                loader.dataset,
+                data_sampler=sampler,
+                multiprocessing_context=self.model.multiprocessing_context,
             )
