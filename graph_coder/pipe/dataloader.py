@@ -11,7 +11,9 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from .module import *
-from .types import *
-from .layers import *
-from .dataloader import *
+from deepspeed.runtime.dataloader import RepeatingLoader
+
+
+class PipeLoaderWrapper(RepeatingLoader):
+    def __next__(self):
+        return tuple([super().__next__()])

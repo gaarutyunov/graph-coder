@@ -23,9 +23,10 @@ from deepspeed import PipelineEngine
 from deepspeed.runtime.data_pipeline.data_sampling.data_sampler import (
     DeepSpeedDataSampler,
 )
-from deepspeed.runtime.dataloader import DeepSpeedDataLoader, RepeatingLoader
+from deepspeed.runtime.dataloader import DeepSpeedDataLoader
 from torch.utils.data import DataLoader, DistributedSampler, RandomSampler
 
+from graph_coder.pipe.dataloader import PipeLoaderWrapper
 from graph_coder.runners.generator import GraphCoderGeneratorRunner
 
 
@@ -67,9 +68,9 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
     def _run_loader(self) -> None:
         with torch.set_grad_enabled(self.is_train_loader):
             if self.is_train_loader:
-                self.model.train_batch(data_iter=RepeatingLoader(self.loader))
+                self.model.train_batch(data_iter=PipeLoaderWrapper(self.loader))
             else:
-                self.model.eval_batch(data_iter=RepeatingLoader(self.loader))
+                self.model.eval_batch(data_iter=PipeLoaderWrapper(self.loader))
 
     def _setup_loaders(self) -> None:
         """Pass this to setup loader with deepspeed engine in `_setup_components`"""

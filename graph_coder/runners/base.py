@@ -15,7 +15,6 @@ import abc
 from typing import Dict, Generic, Optional, TypeVar
 
 import torch
-from accelerate import DistributedType
 
 from catalyst import dl, metrics
 from catalyst.core import IRunner
