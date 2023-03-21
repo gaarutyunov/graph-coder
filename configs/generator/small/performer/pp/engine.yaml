@@ -43,6 +43,7 @@ engine:
             warmup_max_lr: 0.02
             warmup_num_steps: 10000
         data_efficiency:
+          enabled: true
           data_sampling:
             enabled: true
             num_workers: 2
