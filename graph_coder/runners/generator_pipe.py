@@ -103,5 +103,5 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
             self.loaders[key] = self.model.deepspeed_io(
                 loader.dataset,
                 data_sampler=sampler,
-                multiprocessing_context=self.model.multiprocessing_context,
+                pin_memory=False
             )
