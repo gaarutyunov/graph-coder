@@ -11,10 +11,12 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+from collections import defaultdict
 from typing import Dict, Iterator, Union
 
 import torch
 
+from catalyst.core import IRunner
 from catalyst.utils import set_global_seed
 from deepspeed import PipelineEngine
 from deepspeed.runtime.dataloader import RepeatingLoader
@@ -36,6 +38,16 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
             else:
                 self.model.eval_batch(data_iter=self.loader)
 
+    def on_epoch_start(self, runner: IRunner):
+        """Event handler."""
+        self.epoch_step += 1
+        self.epoch_metrics: Dict = defaultdict(None)
+        # storage for pure epoch-based metrics, like lr/momentum
+        self.epoch_metrics["_epoch_"] = {}
+
+        assert self.loaders is not None
+        set_global_seed(self.seed + max(0, self.engine.process_index) + self.epoch_step)
+
     def _setup_loaders(self) -> None:
         """Pass this to setup loader with deepspeed engine in `_setup_components`"""
 
@@ -45,7 +57,7 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
         self.model = self._setup_model()  # type: ignore[assignment]
         self.criterion = self._setup_criterion()
         self.loaders = {}
-        
+
         (
             self.model,
             train_loader,
