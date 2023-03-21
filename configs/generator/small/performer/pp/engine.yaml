@@ -1,5 +1,5 @@
 engine:
-  _target_: catalyst.engines.torch.GPUEngine
+  _target_: graph_coder.engine.DeepspeedEngine
   _var_: engine
   deepspeed_plugin:
     _target_: accelerate.utils.dataclasses.DeepSpeedPlugin

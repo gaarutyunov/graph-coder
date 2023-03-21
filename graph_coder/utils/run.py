@@ -11,7 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-
+from pathlib import Path
 
 from catalyst.contrib.scripts.run import run_from_params
 
@@ -22,6 +22,10 @@ def run_model(root: str, *args: str):
     """Run a model from a config `root` directory with and path parts specified by `args`.
 
     If `root` is a path to a file, it will be used as the config file."""
-    experiment_params = ConfigBuilder(root, *args).load().build()
+    builder = ConfigBuilder(root, *args)
+    experiment_params = builder.load().build()
+
+    if "log_path" in experiment_params:
+        builder.save(Path(experiment_params["log_path"]).expanduser() / "config.yaml")
 
     run_from_params(experiment_params)
