@@ -63,7 +63,6 @@ catalyst = { channel = "pip" }
 transformers = { channel = "pip" }
 chardet = { channel = "pip" }
 pytorch-fast-transformers = { channel = "pip" }
-deepspeed = { channel = "pip" }
 black = { channel = "conda-forge" }
 nest-asyncio = { channel = "conda-forge" }
 
