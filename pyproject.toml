@@ -31,6 +31,7 @@ nest-asyncio = "^1.5.6"
 black = {version = "^23.1.0", extras = ["d", "jupyter"]}
 performer-pytorch = {git = "https://github.com/gaarutyunov/performer-pytorch.git", rev = "main"}
 human-eval = {git = "https://github.com/gaarutyunov/human-eval.git", rev = "master"}
+accelerate = {git = "https://github.com/gaarutyunov/accelerate.git", rev = "main"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"

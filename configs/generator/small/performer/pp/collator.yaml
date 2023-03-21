@@ -1,0 +1,22 @@
+collator:
+  _target_: graph_coder.data.collate_ast
+  _var_: collator
+  max_length: 8
+  max_seq_length: 512
+  use_dict: false
+  tokenizer:
+    _var_: tokenizer
+  device:
+    _target_: catalyst.utils.get_device
+    _var_: device
+    _mode_: call
+  dtype:
+    _target_: graph_coder.config.F.get_dtype
+    _var_: dtype
+    name: float
+    _mode_: call
+  graph_dtype:
+    _target_: graph_coder.config.F.get_dtype
+    _var_: graph_dtype
+    name: long
+    _mode_: call
