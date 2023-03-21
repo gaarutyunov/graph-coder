@@ -88,11 +88,20 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC, Generic[TM]):
         """Pass this to setup loader with deepspeed engine in `_setup_components`"""
         if self.engine.distributed_type != DistributedType.DEEPSPEED:
             super()._setup_loaders()
+            return
+
+        set_global_seed(self.seed + max(0, self.engine.process_index) + self.epoch_step)
+        loaders = self.get_loaders()
+        self.loaders = {
+            key: self.engine.prepare(value)
+            for key, value in loaders.items()
+            if key != "train"
+        }
 
     def _setup_components(self) -> None:
         """Sets up components using deepspeed engine"""
         if self.engine.distributed_type != DistributedType.DEEPSPEED:
-            super()._setup_loaders()
+            super()._setup_components()
             return
         set_global_seed(self.seed + max(0, self.engine.process_index) + self.epoch_step)
         self.model = self._setup_model()
@@ -101,4 +110,4 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC, Generic[TM]):
         (
             self.model,
             self.loaders["train"],
-        ) = self.engine.prepare(self.model, self.loaders["train"])
+        ) = self.engine.prepare(self.model, self.get_loaders()["train"])
