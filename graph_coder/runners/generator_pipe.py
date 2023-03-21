@@ -44,7 +44,8 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
         set_global_seed(self.seed + max(0, self.engine.process_index) + self.epoch_step)
         self.model = self._setup_model()  # type: ignore[assignment]
         self.criterion = self._setup_criterion()
-
+        self.loaders = {}
+        
         (
             self.model,
             train_loader,
