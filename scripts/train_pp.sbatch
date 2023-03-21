@@ -31,4 +31,4 @@ chmod +x ./scripts/prepare.sh
 source ./scripts/prepare.sh
 
 # Train model
-ACCELERATE_LOG_LEVEL=DEBUG python -m torch.distributed.launch --nproc_per_node=2 graph_coder.run.__main__.py --root "$1" "${@:2}"
+ACCELERATE_LOG_LEVEL=DEBUG python -m torch.distributed.launch --nproc_per_node=2 graph_coder/run/__main__.py --root "$1" "${@:2}"
