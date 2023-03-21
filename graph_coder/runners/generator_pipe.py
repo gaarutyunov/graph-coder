@@ -15,11 +15,16 @@ from collections import defaultdict
 from typing import Dict, Iterator, Union
 
 import torch
+from deepspeed.runtime.data_pipeline.data_sampling.data_sampler import (
+    DeepSpeedDataSampler,
+)
 
-from catalyst.utils import set_global_seed
+from catalyst.core import IRunnerError, IRunner
+from catalyst.core.misc import get_loader_num_samples
+from catalyst.utils import set_global_seed, maybe_recursive_call
 from deepspeed import PipelineEngine
-from deepspeed.runtime.dataloader import RepeatingLoader
-from torch.utils.data import DataLoader, DistributedSampler
+from deepspeed.runtime.dataloader import RepeatingLoader, DeepSpeedDataLoader
+from torch.utils.data import DataLoader, DistributedSampler, RandomSampler
 
 from graph_coder.runners.generator import GraphCoderGeneratorRunner
 
@@ -28,7 +33,36 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
     """Runner for graph-coder generator model"""
 
     model: PipelineEngine
+    loader: Union[DeepSpeedDataLoader, DataLoader]
     loaders: Dict[str, Union[DataLoader, Iterator]]
+
+    def on_loader_start(self, runner: IRunner):
+        """Event handler."""
+        assert self.loader is not None
+        self.is_train_loader: bool = self.loader_key.startswith("train")
+        self.is_valid_loader: bool = self.loader_key.startswith("valid")
+        self.is_infer_loader: bool = self.loader_key.startswith("infer")
+        assert self.is_train_loader or self.is_valid_loader or self.is_infer_loader
+        self.loader_batch_size: int = self.loader.batch_size
+        self.loader_batch_len: int = len(self.loader)
+        if isinstance(self.loader.data_sampler, (DistributedSampler, RandomSampler)):
+            self.loader_sample_len: int = self.loader.data_sampler.num_samples
+        elif isinstance(self.loader.data_sampler, DeepSpeedDataSampler):
+            self.loader_sample_len: int = self.loader.data_sampler.total_samples
+        else:
+            self.loader_sample_len: int = get_loader_num_samples(self.loader)
+        self.loader_batch_step: int = 0
+        self.loader_sample_step: int = 0
+        self.loader_metrics: Dict = defaultdict(None)
+
+        if self.loader_batch_len == 0:
+            raise IRunnerError(f"DataLoader with name {self.loader_key} is empty.")
+        set_global_seed(self.seed + max(0, self.engine.process_index) + self.epoch_step)
+
+        maybe_recursive_call(self.model, "train", mode=self.is_train_loader)
+        if isinstance(self.loader.data_sampler, DistributedSampler):
+            self.loader.data_sampler.set_epoch(self.epoch_step)
+        self.loss_metric.reset()
 
     def _run_loader(self) -> None:
         with torch.set_grad_enabled(self.is_train_loader):
