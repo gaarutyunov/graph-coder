@@ -187,7 +187,9 @@ class GraphCoderBatch:
     def from_tuple(
         cls: Type["GraphCoderBatch"], obj: Tuple[torch.Tensor, ...]
     ) -> "GraphCoderBatch":
-        assert len(obj) >= ARGS_SIZE, f"Expected len to be at least {ARGS_SIZE}, got: {len(obj)}\n{obj}"
+        assert (
+            len(obj) >= ARGS_SIZE
+        ), f"Expected len to be at least {ARGS_SIZE}, got: {len(obj)}\n{obj}"
         return cls(
             idx=obj[0],
             source_={

@@ -19,9 +19,10 @@ from accelerate import DistributedType
 
 from catalyst import dl, metrics
 from catalyst.core import IRunner
-from torch import nn
 
 from catalyst.utils import set_global_seed
+from torch import nn
+
 from graph_coder.utils import summary
 
 TM = TypeVar("TM", bound=nn.Module)
@@ -100,6 +101,4 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC, Generic[TM]):
         (
             self.model,
             self.loaders["train"],
-        ) = self.engine.prepare(
-            self.model, self.loaders["train"]
-        )
+        ) = self.engine.prepare(self.model, self.loaders["train"])
