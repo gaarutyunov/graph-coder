@@ -20,7 +20,6 @@ from accelerate import DistributedType
 from catalyst import dl, metrics
 from catalyst.core import IRunner
 
-from catalyst.utils import set_global_seed
 from torch import nn
 
 from graph_coder.utils import summary
@@ -83,28 +82,3 @@ class GraphCoderRunnerBase(dl.Runner, abc.ABC, Generic[TM]):
     @abc.abstractmethod
     def _calc_loss(self, **kwargs: torch.Tensor) -> torch.Tensor:
         """Method that calculates loss for a batch."""
-
-    def _setup_loaders(self) -> None:
-        """Pass this to setup loader with deepspeed engine in `_setup_components`"""
-        if self.engine.distributed_type != DistributedType.DEEPSPEED:
-            super()._setup_loaders()
-            return
-
-        set_global_seed(self.seed + max(0, self.engine.process_index) + self.epoch_step)
-        self.loaders = {
-           "train": self.get_loaders()["train"]
-        }
-
-    def _setup_components(self) -> None:
-        """Sets up components using deepspeed engine"""
-        if self.engine.distributed_type != DistributedType.DEEPSPEED:
-            super()._setup_components()
-            return
-        set_global_seed(self.seed + max(0, self.engine.process_index) + self.epoch_step)
-        self.model = self._setup_model()
-        self.criterion = self._setup_criterion()
-
-        (
-            self.model,
-            self.loaders["train"],
-        ) = self.engine.prepare(self.model, self.get_loaders()["train"])

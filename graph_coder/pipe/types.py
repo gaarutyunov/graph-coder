@@ -21,5 +21,6 @@ from torch import nn
 
 Layer = typing.Union[nn.Module, LayerSpec, TiedLayerSpec, typing.Callable]
 Layers = typing.List[Layer]
-Args = typing.Tuple[torch.Tensor, ...]
+Arg = torch.Tensor
+Args = typing.Tuple[Arg, ...]
 Kwarg = torch.Tensor

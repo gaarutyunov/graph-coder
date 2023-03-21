@@ -17,7 +17,7 @@ from typing import Callable, Union
 import torch
 from torch import nn
 
-from .types import Args
+from .types import Args, Arg
 
 
 class PipeLayer(nn.Module):
@@ -29,7 +29,7 @@ class PipeLayer(nn.Module):
         super().__init__()
         self.inner = inner
 
-    def forward(self, args):
+    def forward(self, *args):
         if self.inner is not None:
             return self.inner(*args)
 
@@ -71,7 +71,7 @@ class PassThroughLayer(PipeLayer):
 
     def forward(
         self,
-        args: Args,
+        *args: Arg,
     ) -> Args:
         selected_args = self.args_getter(*args)
 
@@ -135,12 +135,9 @@ class ConditionalLayer(PipeLayer):
         self.inner = inner
         self.condition = condition
 
-    def forward(self, args):
+    def forward(self, *args):
         if not self.condition(*args):
             return args
-
-        if isinstance(self.inner, PipeLayer):
-            return self.inner(args)
 
         return self.inner(*args)
 
@@ -155,7 +152,7 @@ class RemoveArgsLayer(PipeLayer):
         super().__init__()
         self.idx = idx
 
-    def forward(self, args):
+    def forward(self, *args):
         largs = list(args)
         for i in self.idx:
             del largs[i]
@@ -177,5 +174,5 @@ class ReorderLayer(PipeLayer):
         super().__init__()
         self.idx = idx
 
-    def forward(self, args):
+    def forward(self, *args):
         return tuple([args[i] for i in self.idx])
