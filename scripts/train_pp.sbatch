@@ -23,7 +23,7 @@
 #SBATCH --constraint="type_a|type_b|type_c"
 #SBATCH --gpus-per-node=2
 #SBATCH --nodes=1
-#SBATCH --cpus-per-gpu=1
+#SBATCH --cpus-per-gpu=2
 #SBATCH --time=7-0:0
 
 # Load modules and activate virtual environment
