@@ -101,6 +101,7 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
         loader = self.model.deepspeed_io(
             loader.dataset,
             data_sampler=sampler,
+            collate_fn=loader.collate_fn
         )
 
         return PipeLoaderWrapper(loader)
