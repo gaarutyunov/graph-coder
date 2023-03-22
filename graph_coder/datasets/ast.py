@@ -80,7 +80,7 @@ class AstDataset(BaseDataset[TAEx], typing.Generic[TAEx]):
             batch_size,
             in_memory,
             preprocess,
-            multiprocessing_context
+            multiprocessing_context,
         )
         if processed_dir is not None:
             self._processed_dir = Path(processed_dir).expanduser()

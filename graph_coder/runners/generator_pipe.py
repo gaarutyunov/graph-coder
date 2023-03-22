@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 from collections import defaultdict
-from typing import Dict, Iterator, Union
+from typing import Any, Dict, Iterator, Union
 
 import torch
 
@@ -23,7 +23,7 @@ from deepspeed import PipelineEngine
 from deepspeed.runtime.data_pipeline.data_sampling.data_sampler import (
     DeepSpeedDataSampler,
 )
-from deepspeed.runtime.dataloader import DeepSpeedDataLoader
+from deepspeed.runtime.dataloader import DeepSpeedDataLoader, RepeatingLoader
 from torch.utils.data import DataLoader, DistributedSampler, RandomSampler
 
 from graph_coder.pipe.dataloader import PipeLoaderWrapper
@@ -44,14 +44,18 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
         self.is_valid_loader: bool = self.loader_key.startswith("valid")
         self.is_infer_loader: bool = self.loader_key.startswith("infer")
         assert self.is_train_loader or self.is_valid_loader or self.is_infer_loader
-        self.loader_batch_size: int = self.loader.batch_size
+        self.loader_batch_size: Union[Any, int, None] = self.loader.batch_size
         self.loader_batch_len: int = len(self.loader)
-        if isinstance(self.loader.data_sampler, (DistributedSampler, RandomSampler)):
-            self.loader_sample_len: int = self.loader.data_sampler.num_samples
-        elif isinstance(self.loader.data_sampler, DeepSpeedDataSampler):
-            self.loader_sample_len: int = self.loader.data_sampler.total_samples
+        if isinstance(self.loader, DeepSpeedDataLoader):
+            sampler = self.loader.data_sampler
         else:
-            self.loader_sample_len: int = get_loader_num_samples(self.loader)
+            sampler = self.loader.sampler
+        if isinstance(sampler, (DistributedSampler, RandomSampler)):
+            self.loader_sample_len: int = sampler.num_samples
+        elif isinstance(sampler, DeepSpeedDataSampler):
+            self.loader_sample_len = sampler.total_samples
+        else:
+            self.loader_sample_len = get_loader_num_samples(self.loader)
         self.loader_batch_step: int = 0
         self.loader_sample_step: int = 0
         self.loader_metrics: Dict = defaultdict(None)
@@ -68,9 +72,11 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
     def _run_loader(self) -> None:
         with torch.set_grad_enabled(self.is_train_loader):
             if self.is_train_loader:
-                self.model.train_batch(data_iter=PipeLoaderWrapper(self.loader))
+                self.model.train_batch(data_iter=RepeatingLoader(self.loader))
+            elif self.is_valid_loader:
+                self.model.eval_batch(data_iter=RepeatingLoader(self.loader))
             else:
-                self.model.eval_batch(data_iter=PipeLoaderWrapper(self.loader))
+                NotImplementedError("Inference is not yet supported")
 
     def _setup_loaders(self) -> None:
         """Pass this to setup loader with deepspeed engine in `_setup_components`"""
@@ -80,28 +86,21 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
         set_global_seed(self.seed + max(0, self.engine.process_index) + self.epoch_step)
         self.model = self._setup_model()  # type: ignore[assignment]
         self.criterion = self._setup_criterion()
-        self.loaders = {}
 
-        (
-            self.model,
-            train_loader,
-        ) = self.engine.prepare(self.model, self.get_loaders()["train"])
+        self.model = self.engine.prepare(self.model)
 
-        loaders = self.get_loaders()
+        self.loaders = {k: self._wrap_loader(v) for k, v in self.get_loaders().items()}
 
-        for key, loader in loaders.items():
-            if key == "train":
-                self.loaders[key] = train_loader.loader
-                continue
+    def _wrap_loader(self, loader: DataLoader):
+        sampler: DistributedSampler = DistributedSampler(
+            loader.dataset,
+            num_replicas=self.model.dp_world_size,
+            rank=self.model.mpu.get_data_parallel_rank(),
+            shuffle=False,
+        )
+        loader = self.model.deepspeed_io(
+            loader.dataset,
+            data_sampler=sampler,
+        )
 
-            sampler = DistributedSampler(
-                loader.dataset,
-                num_replicas=self.model.dp_world_size,
-                rank=self.model.mpu.get_data_parallel_rank(),
-                shuffle=False,
-            )
-            # Build a loader and make it repeating.
-            self.loaders[key] = self.model.deepspeed_io(
-                loader.dataset,
-                data_sampler=sampler,
-            )
+        return PipeLoaderWrapper(loader)

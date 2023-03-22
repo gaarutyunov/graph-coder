@@ -11,9 +11,16 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from deepspeed.runtime.dataloader import RepeatingLoader
+import torch
+import wrapt
 
 
-class PipeLoaderWrapper(RepeatingLoader):
+class _DataLoaderIterWrapper(wrapt.ObjectProxy):
     def __next__(self):
-        return tuple([super().__next__()])
+        # second item in tuple is the outputs, that we don't use in the model
+        return tuple([self.__wrapped__.__next__(), tuple(torch.empty(1, 1))])
+
+
+class PipeLoaderWrapper(wrapt.ObjectProxy):
+    def __iter__(self):
+        return _DataLoaderIterWrapper(self.__wrapped__.__iter__())

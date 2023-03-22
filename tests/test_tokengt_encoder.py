@@ -23,6 +23,8 @@ from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
 from graph_coder.modules import TokenEmbedding, TokenGTEncoder, TokenGTEncoderPipe
 
+from graph_coder.pipe import PipeLayerWrapper, PipeLoaderWrapper
+
 from torch import nn as nn
 from torch.utils.data import DataLoader
 
@@ -189,12 +191,14 @@ def test_pipe():
     dataset = AstDataset(
         root=Path(__file__).parent / "./data",
     )
-    loader = DataLoader(
-        dataset,
-        collate_fn=partial(
-            collate_ast, tokenizer=tokenizer, max_length=8, use_dict=False
-        ),
-        batch_size=2,
+    loader = PipeLoaderWrapper(
+        DataLoader(
+            dataset,
+            collate_fn=partial(
+                collate_ast, tokenizer=tokenizer, max_length=8, use_dict=False
+            ),
+            batch_size=2,
+        )
     )
     embedding = TokenEmbedding(
         embedding=nn.Embedding(len(tokenizer.vocab), 16, padding_idx=1),
@@ -215,10 +219,16 @@ def test_pipe():
         encoder_attention_heads=2,
     )
 
-    for batch in loader:
-        args = batch
-        for layer in encoder.to_layers():
-            args = layer(*args)
+    layers = PipeLayerWrapper.wrap(encoder.to_layers())
 
-        for arg in args:
+    for i, batch in enumerate(loader):
+        inputs, outputs = batch
+        for layer in layers:
+            if i == len(layers) - 1:
+                args = (inputs, outputs)
+            else:
+                args = (inputs,)
+            inputs = layer(*args)
+
+        for arg in inputs:
             assert torch.is_tensor(arg)

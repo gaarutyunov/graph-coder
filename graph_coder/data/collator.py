@@ -97,9 +97,7 @@ def collate_ast(
 
         graph_data = data.graph
         edge_index_ = (
-            torch.tensor(graph_data.edge_index, dtype=torch.long)
-            .t()
-            .contiguous()
+            torch.tensor(graph_data.edge_index, dtype=torch.long).t().contiguous()
         )
         lap_eigval, lap_eigvec = lap_eig(edge_index_, len(graph_data.x), dtype=dtype)
         lap_eigval = lap_eigval[None, :].expand_as(lap_eigvec)
@@ -125,29 +123,23 @@ def collate_ast(
         dtype=graph_dtype,
     )
 
-    source_ = (
-        tokenizer(
-            sources,
-            padding=True,
-            return_tensors="pt",
-            return_attention_mask=True,
-            truncation=True,
-            max_length=max_seq_length,
-        )
-        .data
-    )
+    source_ = tokenizer(
+        sources,
+        padding=True,
+        return_tensors="pt",
+        return_attention_mask=True,
+        truncation=True,
+        max_length=max_seq_length,
+    ).data
 
-    docstring_ = (
-        tokenizer(
-            docstrings,
-            padding=True,
-            return_tensors="pt",
-            return_attention_mask=True,
-            truncation=True,
-            max_length=max_seq_length,
-        )
-        .data
-    )
+    docstring_ = tokenizer(
+        docstrings,
+        padding=True,
+        return_tensors="pt",
+        return_attention_mask=True,
+        truncation=True,
+        max_length=max_seq_length,
+    ).data
 
     res = GraphCoderBatch(
         idx=torch.tensor(idx, dtype=torch.long),

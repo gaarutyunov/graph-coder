@@ -19,6 +19,7 @@ from graph_coder.pipe import (
     ConditionalLayer,
     Layers,
     PassThroughLayer,
+    pipe_wrap,
     PipeModule,
     RemoveArgsLayer,
 )
@@ -122,6 +123,7 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
 
         return self.criterion(shift_logits, shift_labels)
 
+    @pipe_wrap
     def to_layers(self) -> Layers:
         layers = []
 

@@ -28,6 +28,7 @@ from graph_coder.modules import (
     TransformerDecoderPipe,
     TransformerEncoderPipe,
 )
+from graph_coder.pipe import PipeLoaderWrapper
 from graph_coder.runners import GraphCoderGeneratorRunner
 from torch import nn
 from torch.utils.data import DataLoader
@@ -172,7 +173,7 @@ def test_generator_pipe():
     tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
     collator = partial(
         collate_ast,
-        tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"),
+        tokenizer=tokenizer,
         max_length=4,
         use_dict=False,
     )
@@ -180,10 +181,12 @@ def test_generator_pipe():
         collate_fn=collator,
         root=Path(__file__).parent / "./data",
     )
-    loader = DataLoader(
-        dataset,
-        batch_size=2,
-        collate_fn=collator,
+    loader = PipeLoaderWrapper(
+        DataLoader(
+            dataset,
+            batch_size=2,
+            collate_fn=collator,
+        )
     )
     embedding = nn.Embedding(
         len(tokenizer.vocab), 16, padding_idx=tokenizer.pad_token_id
@@ -227,9 +230,13 @@ def test_generator_pipe():
 
     layers = generator.to_layers()
 
-    for batch in loader:
-        args = batch
+    for i, batch in enumerate(loader):
+        inputs, outputs = batch
         for layer in layers:
-            args = layer(*args)
+            if i == len(layers) - 1:
+                args = (inputs, outputs)
+            else:
+                args = (inputs,)
+            inputs = layer(*args)
 
-        assert torch.is_floating_point(args)
+        assert torch.is_floating_point(inputs)

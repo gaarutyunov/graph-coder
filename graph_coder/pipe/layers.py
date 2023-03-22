@@ -11,6 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import functools
 import typing
 from typing import Callable, Union
 
@@ -176,3 +177,28 @@ class ReorderLayer(PipeLayer):
 
     def forward(self, *args):
         return tuple([args[i] for i in self.idx])
+
+
+class PipeLayerWrapper(nn.Module):
+    """Wraps a layer to support pipe parallelism"""
+
+    def __init__(self, inner: typing.Union[typing.Callable, nn.Module]) -> None:
+        super().__init__()
+        self.inner = inner
+
+    def forward(self, inputs, outputs=None):
+        return self.inner(*inputs)
+
+    @classmethod
+    def wrap(cls, layers: typing.List[typing.Any]):
+        return [cls(layer) for layer in layers]
+
+
+def pipe_wrap(fn):
+    """Used to wrap `to_layers()` function on Pipe layer. Use it on the top Pipe layer"""
+
+    @functools.wraps(fn)
+    def inner(*args, **kwargs):
+        return PipeLayerWrapper.wrap(fn(*args, **kwargs))
+
+    return inner
