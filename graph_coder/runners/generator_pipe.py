@@ -20,6 +20,7 @@ from catalyst.core import IRunner, IRunnerError
 from catalyst.core.misc import get_loader_num_samples
 from catalyst.utils import maybe_recursive_call, set_global_seed
 from deepspeed import PipelineEngine
+from deepspeed.runtime.constants import ROUTE_TRAIN, ROUTE_EVAL, ROUTE_PREDICT
 from deepspeed.runtime.data_pipeline.data_sampling.data_sampler import (
     DeepSpeedDataSampler,
 )
@@ -28,6 +29,13 @@ from torch.utils.data import DataLoader, DistributedSampler, RandomSampler
 
 from graph_coder.pipe.dataloader import PipeLoaderWrapper
 from graph_coder.runners.generator import GraphCoderGeneratorRunner
+
+
+__KEY_TO_ROUTE_MAP__ = {
+    "train": ROUTE_TRAIN,
+    "valid": ROUTE_EVAL,
+    "infer": ROUTE_PREDICT
+}
 
 
 class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
@@ -89,9 +97,9 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
 
         self.model = self.engine.prepare(self.model)
 
-        self.loaders = {k: self._wrap_loader(v) for k, v in self.get_loaders().items()}
+        self.loaders = {k: self._wrap_loader(k, v) for k, v in self.get_loaders().items()}
 
-    def _wrap_loader(self, loader: DataLoader):
+    def _wrap_loader(self, key: str, loader: DataLoader):
         sampler: DistributedSampler = DistributedSampler(
             loader.dataset,
             num_replicas=self.model.dp_world_size,
@@ -104,6 +112,7 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
             collate_fn=loader.collate_fn,
             batch_size=loader.batch_size,
             num_local_io_workers=4,
+            route=__KEY_TO_ROUTE_MAP__[key]
         )
 
         return PipeLoaderWrapper(loader)
