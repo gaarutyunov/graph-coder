@@ -66,6 +66,7 @@ chardet = { channel = "pip" }
 pytorch-fast-transformers = { channel = "pip" }
 black = { channel = "conda-forge" }
 nest-asyncio = { channel = "conda-forge" }
+wrapt = { channel = "pip" }
 
 [tool.poetry2conda.condaonly]
 pytorch-cuda = { channel = "pytorch", version = "11.7" }
