@@ -4,7 +4,7 @@ graph_encoder:
   embedding:
     _var_: token_embedding
   lap_node_id: true
-  lap_node_id_sign_flip: true
+  lap_node_id_sign_flip: false
   type_id: true
   encoder_embed_dim: 64
   encoder_ffn_embed_dim: 128
