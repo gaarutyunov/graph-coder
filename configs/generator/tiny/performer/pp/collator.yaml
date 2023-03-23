@@ -11,8 +11,3 @@ collator:
     _var_: dtype
     name: float
     _mode_: call
-  graph_dtype:
-    _target_: graph_coder.config.F.get_dtype
-    _var_: graph_dtype
-    name: long
-    _mode_: call
