@@ -36,6 +36,11 @@ class PipeLayer(nn.Module):
 
         return args
 
+    def __repr__(self):
+        if self.inner is None:
+            return super().__repr__()
+        return self.inner.__repr__()
+
 
 class PassThroughLayer(PipeLayer):
     """Layer that calls inner module with args from `inp` and returns them into `out`.
@@ -119,9 +124,6 @@ class PassThroughLayer(PipeLayer):
 
         return tuple(largs)
 
-    def __repr__(self):
-        return self.inner.__repr__()
-
 
 class ConditionalLayer(PipeLayer):
     """Layer that calls inner module conditionally.
@@ -133,7 +135,6 @@ class ConditionalLayer(PipeLayer):
 
     def __init__(self, inner: Union[nn.Module, Callable], condition: Callable) -> None:
         super().__init__(inner)
-        self.inner = inner
         self.condition = condition
 
     def forward(self, *args):
@@ -141,9 +142,6 @@ class ConditionalLayer(PipeLayer):
             return args
 
         return self.inner(*args)
-
-    def __repr__(self):
-        return self.inner.__repr__()
 
 
 class RemoveArgsLayer(PipeLayer):
@@ -179,13 +177,8 @@ class ReorderLayer(PipeLayer):
         return tuple([args[i] for i in self.idx])
 
 
-class PipeLayerWrapper(nn.Module):
+class PipeLayerWrapper(PipeLayer):
     """Wraps a layer to support pipe parallelism"""
-
-    def __init__(self, inner: typing.Union[typing.Callable, nn.Module]) -> None:
-        super().__init__()
-        self.inner = inner
-
     def forward(self, inputs, outputs=None):
         return self.inner(*inputs)
 

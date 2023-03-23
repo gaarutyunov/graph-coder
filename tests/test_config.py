@@ -104,3 +104,32 @@ def test_log_path():
     assert Path(F.get_log_path(str(root), create=False)).stem == "version20"
 
     shutil.rmtree(root)
+
+
+def test_change_key_type():
+    config = OrderedDict(
+        d=OrderedDict(
+            _target_="graph_coder.config.F.change_key_type",
+            obj=OrderedDict(
+                {
+                    "1": "true"
+                }
+            ),
+            name="int",
+            _mode_="call"
+        )
+    )
+    config_other = OrderedDict(
+        d=OrderedDict(
+            {
+                "1": "true"
+            }
+        )
+    )
+
+    conf = REGISTRY.get_from_params(**config)
+    conf_other = REGISTRY.get_from_params(**config_other)
+
+    for k_other, k in zip(conf_other["d"].keys(), conf["d"].keys()):
+        assert isinstance(k_other, str)
+        assert isinstance(k, int)

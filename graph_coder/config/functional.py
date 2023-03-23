@@ -12,6 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 """Functional utilities to use in config files"""
+import builtins
 import pathlib
 import re
 from typing import Any, Dict, List
@@ -124,3 +125,9 @@ def get_log_path(root: str, create: bool = True) -> str:
     new_path.mkdir(exist_ok=True, parents=True)
 
     return str(new_path)
+
+
+def change_key_type(obj: Dict[Any, Any], name: str):
+    """Change key type of dictionary by type name"""
+    t = getattr(builtins, name)
+    return {t(k): v for k, v in obj.items()}

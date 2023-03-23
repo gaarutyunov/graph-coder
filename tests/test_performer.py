@@ -16,6 +16,7 @@ from functools import partial
 from pathlib import Path
 
 import torch
+from torch.optim import Adam
 
 from graph_coder.config import ConfigBuilder
 from graph_coder.config.functional import get_pretrained_tokenizer
@@ -282,7 +283,12 @@ def test_performer_pipe():
         criterion=criterion,
     )
 
+    optimizer = Adam(
+        params=generator.parameters()
+    )
+
     layers = generator.to_layers()
+    layer_outputs = []
 
     for i, batch in enumerate(loader):
         inputs, outputs = batch
@@ -292,5 +298,12 @@ def test_performer_pipe():
             else:
                 args = (inputs,)
             inputs = layer(*args)
+            layer_outputs.append(inputs)
 
         assert torch.is_floating_point(inputs)
+
+        loss: torch.Tensor = inputs
+
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()

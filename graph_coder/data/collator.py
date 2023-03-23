@@ -28,7 +28,6 @@ def pad(
     num: List[List[int]],
     tokenizer: PreTrainedTokenizerFast,
     max_length: int = 64,
-    dtype: torch.dtype = torch.long,
 ) -> List[Dict[str, torch.Tensor]]:
     """Pad a batch of strings restoring the original packs."""
     encoding = (
@@ -58,8 +57,8 @@ def pad(
 
     return [
         {
-            "input_ids": torch.cat(inputs_ids).type(dtype),
-            "attention_mask": torch.cat(attention_mask).type(dtype),
+            "input_ids": torch.cat(inputs_ids),
+            "attention_mask": torch.cat(attention_mask),
         }
         for inputs_ids, attention_mask in zip(inputs_ids, attention_mask)
     ]
@@ -71,7 +70,6 @@ def collate_ast(
     max_length: int = 64,
     max_seq_length: int = 8192,
     dtype: torch.dtype = torch.float,
-    graph_dtype: torch.dtype = torch.long,
     use_dict: bool = True,
     num_samples: int = 1,
 ) -> torch.Union[Dict[str, torch.Tensor], Tuple[torch.Tensor, ...]]:
@@ -116,7 +114,6 @@ def collate_ast(
         num=[node_num, edge_num],
         max_length=max_length,
         tokenizer=tokenizer,
-        dtype=graph_dtype,
     )
 
     source_ = tokenizer(

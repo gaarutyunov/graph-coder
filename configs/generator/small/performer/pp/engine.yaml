@@ -3,6 +3,12 @@ engine:
   _var_: engine
   deepspeed_plugin:
     _target_: accelerate.utils.dataclasses.DeepSpeedPlugin
+    requires_grad_special_cases:
+      _target_: graph_coder.config.F.change_key_type
+      obj:
+        12: false
+      name: int
+      _mode_: call
     hf_ds_config:
       _target_: accelerate.utils.deepspeed.HfDeepSpeedConfig
       config_file_or_dict:
