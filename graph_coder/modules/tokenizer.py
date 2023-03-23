@@ -196,19 +196,20 @@ class GraphFeatureTokenizer(nn.Module):
         d = eigvec.size(1)
 
         sign_flip = torch.rand(b, d, device=eigvec.device, dtype=eigvec.dtype)
-        sign_flip[sign_flip >= 0.5] = 1
-        sign_flip[sign_flip < 0.5] = -1
+        sign_flip[sign_flip >= 0.5] = 1.0
+        sign_flip[sign_flip < 0.5] = -1.0
         sign_flip = sign_flip[:, None, :].expand(b, max_n, d)
         sign_flip = sign_flip[node_mask]
         return sign_flip
 
     def handle_eigvec(self, eigvec, node_mask, sign_flip):
+        eigvec = eigvec.float() / 1000
         if sign_flip and self.training:
             sign_flip = self.get_random_sign_flip(eigvec, node_mask)
             eigvec = eigvec * sign_flip
         else:
             pass
-        return eigvec.float() / 1000
+        return eigvec
 
     @staticmethod
     def get_index_embed(node_id, node_mask, padded_index):
