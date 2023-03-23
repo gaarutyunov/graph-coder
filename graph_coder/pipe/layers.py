@@ -179,6 +179,7 @@ class ReorderLayer(PipeLayer):
 
 class PipeLayerWrapper(PipeLayer):
     """Wraps a layer to support pipe parallelism"""
+
     def forward(self, inputs, outputs=None):
         return self.inner(*inputs)
 

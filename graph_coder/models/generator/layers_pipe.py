@@ -71,7 +71,12 @@ class TextLayerPipe(TextLayer[PipeModule], PipeModule):
     def to_layers(self) -> Layers:
         return [
             ConditionalLayer(self.add_eos, self.condition),
-            ConditionalLayer(PassThroughLayer(self.embedding, 3), self.condition),
+            ConditionalLayer(
+                PassThroughLayer(
+                    self.embedding, GraphCoderBatch.get_arg_idx("docstring")
+                ),
+                self.condition,
+            ),
             # args: *batch_args, tgt
             ConditionalLayer(
                 PassThroughLayer(CloneLayer(), -1),
@@ -100,45 +105,40 @@ class GraphLayerPipe(GraphLayer[PipeModule], PipeModule):
 
     def cat_target_and_memory(self, *args):
         batch = GraphCoderBatch.from_tuple(args)
-        (
-            _,
-            padded_feature,
-            padding_mask,
-            padded_node_mask,
-            padded_edge_mask,
-        ) = self.graph_encoder.graph_encoder.graph_feature.process_batch(  # type: ignore[union-attr]
+        padded_feature = self.graph_encoder.graph_encoder.graph_feature.process_batch(  # type: ignore[union-attr]
             batch.node_data,
             batch.edge_data,
             batch.edge_index,
             batch.node_num,
             batch.edge_num,
+            batch.padded_node_mask,
+            batch.padded_edge_mask,
         )  # type: ignore[operator]
-        padded_feature = padded_feature.masked_fill(padding_mask[..., None], float("0"))
-
-        return (
-            *cat_arg(-2, -1)(*cat_arg(-3, padded_feature)(*args))[:-1],
-            padded_node_mask,
-            padded_edge_mask,
+        padded_feature = padded_feature.masked_fill(
+            batch.padding_mask[..., None], float("0")
         )
+
+        memory = torch.cat([args[-2], args[-1]], dim=1)
+        tgt = torch.cat([args[-3], padded_feature], dim=1)
+
+        return *batch.to_tuple(), tgt, memory
 
     def add_target_and_memory(self, *args):
         batch = GraphCoderBatch.from_tuple(args)
-        (
-            _,
-            padded_feature,
-            padding_mask,
-            padded_node_mask,
-            padded_edge_mask,
-        ) = self.graph_encoder.graph_encoder.graph_feature.process_batch(  # type: ignore[union-attr]
+        padded_feature = self.graph_encoder.graph_encoder.graph_feature.process_batch(  # type: ignore[union-attr]
             batch.node_data,
             batch.edge_data,
             batch.edge_index,
             batch.node_num,
             batch.edge_num,
+            batch.padded_node_mask,
+            batch.padded_edge_mask,
         )  # type: ignore[operator]
-        padded_feature = padded_feature.masked_fill(padding_mask[..., None], float("0"))
+        padded_feature = padded_feature.masked_fill(
+            batch.padding_mask[..., None], float("0")
+        )
 
-        return *args[:-1], padded_feature, args[-1], padded_node_mask, padded_edge_mask
+        return *batch.to_tuple(), padded_feature, args[-1]
 
     def to_layers(self) -> Layers:
         return [
@@ -146,14 +146,11 @@ class GraphLayerPipe(GraphLayer[PipeModule], PipeModule):
                 ConditionalLayer(layer, self.condition)
                 for layer in self.graph_encoder.to_layers()
             ],
-            RemoveArgsLayer(-1),
             # args: *batch_args, tgt?, memory?, x
             ConditionalLayer(self.add_target_and_memory, self.condition_only_graph),
             # args: *batch_args, tgt, memory
             ConditionalLayer(self.cat_target_and_memory, self.condition_docstring),
-            # args: *batch_args, tgt, memory, padded_node_mask, padded_edge_mask
-            ReorderLayer(*range(0, ARGS_SIZE), -2, -1, -4, -3),
-            # args: *batch_args, padded_node_mask, padded_edge_mask, tgt, memory
+            # args: *batch_args, tgt, memory
         ]
 
 

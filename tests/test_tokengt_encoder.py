@@ -62,6 +62,10 @@ def test_tokengt_encoder():
             batch["node_num"],
             batch["edge_num"],
             batch["lap_eigvec"],
+            batch["padded_index"],
+            batch["padding_mask"],
+            batch["padded_node_mask"],
+            batch["padded_edge_mask"],
         )
         assert encoded.size(-1) == 16
 
@@ -101,6 +105,10 @@ def test_sign_flip():
             batch["node_num"],
             batch["edge_num"],
             batch["lap_eigvec"],
+            batch["padded_index"],
+            batch["padding_mask"],
+            batch["padded_node_mask"],
+            batch["padded_edge_mask"],
         )
         assert encoded.size(-1) == 16
 
@@ -141,6 +149,10 @@ def test_performer():
             batch["node_num"],
             batch["edge_num"],
             batch["lap_eigvec"],
+            batch["padded_index"],
+            batch["padding_mask"],
+            batch["padded_node_mask"],
+            batch["padded_edge_mask"],
         )
         assert encoded.size(-1) == 16
 
@@ -182,6 +194,10 @@ def test_graphormer_init():
             batch["node_num"],
             batch["edge_num"],
             batch["lap_eigvec"],
+            batch["padded_index"],
+            batch["padding_mask"],
+            batch["padded_node_mask"],
+            batch["padded_edge_mask"],
         )
         assert encoded.size(-1) == 16
 

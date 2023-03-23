@@ -99,10 +99,10 @@ class TokenGTEncoderPipe(TokenGTEncoderBase[PipeModule], PipeModule):
     def to_layers(self) -> Layers:
         layers = [
             *self.graph_encoder.to_layers(),
-            # args: *batch_args, *, x, padding_mask
-            PassThroughLayer(self.lm_head_transform_weight, -2, -2),
-            PassThroughLayer(self.activation_fn, -2, -2),
-            PassThroughLayer(self.layer_norm, -2, -2),
+            # args: *batch_args, *, x
+            PassThroughLayer(self.lm_head_transform_weight, -1, -1),
+            PassThroughLayer(self.activation_fn, -1, -1),
+            PassThroughLayer(self.layer_norm, -1, -1),
         ]
 
         return layers

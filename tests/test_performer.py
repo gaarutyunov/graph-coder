@@ -16,7 +16,6 @@ from functools import partial
 from pathlib import Path
 
 import torch
-from torch.optim import Adam
 
 from graph_coder.config import ConfigBuilder
 from graph_coder.config.functional import get_pretrained_tokenizer
@@ -34,6 +33,7 @@ from graph_coder.modules.performer.performer_encoder_pipe import PerformerEncode
 from graph_coder.pipe import PipeLoaderWrapper
 from graph_coder.runners import GraphCoderGeneratorRunner
 from torch import nn
+from torch.optim import Adam
 from torch.utils.data import DataLoader
 
 
@@ -283,9 +283,7 @@ def test_performer_pipe():
         criterion=criterion,
     )
 
-    optimizer = Adam(
-        params=generator.parameters()
-    )
+    optimizer = Adam(params=generator.parameters())
 
     layers = generator.to_layers()
     layer_outputs = []

@@ -31,6 +31,10 @@ __ARGS_MAPPING__ = {
     "node_num": 10,
     "edge_num": 11,
     "lap_eigvec": 12,
+    "padded_index": 13,
+    "padding_mask": 14,
+    "padded_node_mask": 15,
+    "padded_edge_mask": 16,
 }
 
 ARGS_SIZE = len(__ARGS_MAPPING__)
@@ -47,6 +51,10 @@ class GraphCoderBatch:
     node_num: torch.Tensor
     edge_num: torch.Tensor
     lap_eigvec: torch.Tensor
+    padded_index: torch.Tensor
+    padding_mask: torch.Tensor
+    padded_node_mask: torch.Tensor
+    padded_edge_mask: torch.Tensor
 
     @property
     def batch_size(self) -> int:
@@ -131,6 +139,10 @@ class GraphCoderBatch:
             "node_num": self.node_num,
             "edge_num": self.edge_num,
             "lap_eigvec": self.lap_eigvec,
+            "padded_index": self.padded_index,
+            "padding_mask": self.padding_mask,
+            "padded_node_mask": self.padded_node_mask,
+            "padded_edge_mask": self.padded_edge_mask,
         }
 
     def to_tuple(self) -> Tuple[torch.Tensor, ...]:
@@ -148,6 +160,10 @@ class GraphCoderBatch:
             self.node_num,
             self.edge_num,
             self.lap_eigvec,
+            self.padded_index,
+            self.padding_mask,
+            self.padded_node_mask,
+            self.padded_edge_mask,
         )
 
     @classmethod
@@ -176,6 +192,10 @@ class GraphCoderBatch:
             node_num=obj["node_num"],
             edge_num=obj["edge_num"],
             lap_eigvec=obj["lap_eigvec"],
+            padded_index=obj["padded_index"],
+            padding_mask=obj["padding_mask"],
+            padded_node_mask=obj["padded_node_mask"],
+            padded_edge_mask=obj["padded_edge_mask"],
         )
 
     @classmethod
@@ -207,6 +227,10 @@ class GraphCoderBatch:
             node_num=obj[10],
             edge_num=obj[11],
             lap_eigvec=obj[12],
+            padded_index=obj[13],
+            padding_mask=obj[14],
+            padded_node_mask=obj[15],
+            padded_edge_mask=obj[16],
         )
 
     @classmethod

@@ -106,10 +106,10 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
                 ]
             )
             lm_logits.append(
-                args[-1][args[ARGS_SIZE].bool()][batch.node_data_attn_mask.bool()]
+                args[-1][batch.padded_node_mask][batch.node_data_attn_mask.bool()]
             )
             lm_logits.append(
-                args[-1][args[ARGS_SIZE + 1].bool()][batch.edge_data_attn_mask.bool()]
+                args[-1][batch.padded_edge_mask][batch.edge_data_attn_mask.bool()]
             )
         if batch.has_source:
             target_ids.append(batch.source[batch.source_attn_mask.bool()])
@@ -132,26 +132,24 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
 
         layers.extend(
             [
-                # args: *batch_args, padded_node_mask, padded_edge_mask, tgt, memory
+                # args: *batch_args, tgt, memory
                 *self.decoder.to_layers(),
                 RemoveArgsLayer(-1),
-                # args: *batch_args, padded_node_mask, padded_edge_mask, tgt
+                # args: *batch_args, tgt
                 PassThroughLayer(
                     self.dense,
                     -1,
                     -1,
                     callback=lambda res, *args: torch.tanh(res).contiguous(),
                 ),
-                # args: *batch_args, padded_node_mask, padded_edge_mask, tgt (hidden_states)
+                # args: *batch_args, tgt (hidden_states)
                 self.get_states,
-                # args: *batch_args, padded_node_mask, padded_edge_mask, \
-                #       hidden_states, text_states?, graph_states, code_states
+                # args: *batch_args, hidden_states, text_states?, graph_states, code_states
                 ConditionalLayer(
                     PassThroughLayer(self.lm_head, -3, -3),
                     self.has_docstring,
                 ),
-                # args: *batch_args, padded_node_mask, padded_edge_mask, \
-                #       hidden_states, docstring_result?, graph_states, code_states
+                # args: *batch_args, hidden_states, docstring_result?, graph_states, code_states
                 ConditionalLayer(
                     PassThroughLayer(
                         self.lm_graph_head,
@@ -162,14 +160,12 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
                     ),
                     self.has_graph,
                 ),
-                # args: *batch_args, padded_node_mask, padded_edge_mask, \
-                #       hidden_states, docstring_result?, graph_states, code_states, graph_result
+                # args: *batch_args, hidden_states, docstring_result?, graph_states, code_states, graph_result
                 ConditionalLayer(
                     PassThroughLayer(self.lm_head, -2, -2),
                     self.has_source,
                 ),
-                # args: *batch_args, padded_node_mask, padded_edge_mask, \
-                #       hidden_states, docstring_result?, graph_states, source_result, graph_result
+                # args: *batch_args, hidden_states, docstring_result?, graph_states, source_result, graph_result
                 ConditionalLayer(
                     PassThroughLayer(
                         self.lm_head,
@@ -184,11 +180,9 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
                     ),
                     self.has_graph,
                 ),
-                # args: *batch_args, padded_node_mask, padded_edge_mask, \
-                #       hidden_states, docstring_result?, graph_states, source_result, graph_result
+                # args: *batch_args, hidden_states, docstring_result?, graph_states, source_result, graph_result
                 RemoveArgsLayer(-3),
-                # args: *batch_args, padded_node_mask, padded_edge_mask, \
-                #       hidden_states, docstring_result?, source_result, graph_result
+                # args: *batch_args, hidden_states, docstring_result?, source_result, graph_result
                 self.calc_loss
                 # torch.Tensor (loss)
             ]

@@ -87,32 +87,36 @@ class TokenGTGraphEncoderPipe(TokenGTGraphEncoder, PipeModule):
                         "node_num",
                         "edge_num",
                         "lap_eigvec",
+                        "padded_index",
+                        "padding_mask",
+                        "padded_node_mask",
+                        "padded_edge_mask",
                     ]
                 ],
             ),
         ]
-        # args: *batch_args, *, x, padding_mask
+        # args: *batch_args, *, x
 
         if self.quant_noise is not None:
-            layers.append(PassThroughLayer(self.quant_noise, -2, -2))
+            layers.append(PassThroughLayer(self.quant_noise, -1, -1))
 
         if self.emb_layer_norm is not None:
-            layers.append(PassThroughLayer(self.emb_layer_norm, -2, -2))
+            layers.append(PassThroughLayer(self.emb_layer_norm, -1, -1))
 
         layers.append(
             PassThroughLayer(
                 self.dropout_module,
-                -2,
-                -2,
+                -1,
+                -1,
                 lambda res, *args: res.transpose(0, 1),
             )
         )
         for layer in self.layers:
             layers.extend(layer.to_layers())
-        # args: *batch_args, *, x, padding_mask
+        # args: *batch_args, *, x
 
         layers.append(
-            PassThroughLayer(Identity(), -2, -2, lambda res, *args: res.transpose(0, 1))
+            PassThroughLayer(Identity(), -1, -1, lambda res, *args: res.transpose(0, 1))
         )
 
         return layers

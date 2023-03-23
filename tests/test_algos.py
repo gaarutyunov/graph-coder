@@ -26,7 +26,9 @@ def eig(sym_mat):
 
     # for eigval, take abs because numpy sometimes computes the first eigenvalue approaching 0 from the negative
     eigvec = torch.from_numpy(EigVec).float()  # [N, N (channels)]
-    eigval = torch.from_numpy(np.sort(np.abs(np.real(EigVal)))).float()  # [N (channels),]
+    eigval = torch.from_numpy(
+        np.sort(np.abs(np.real(EigVal)))
+    ).float()  # [N (channels),]
     return eigvec, eigval  # [N, N (channels)]  [N (channels),]
 
 
@@ -48,9 +50,7 @@ def lap_eig_np(dense_adj, number_of_nodes, in_degree):
 
 
 def test_lap_eig():
-    dataset = FuncAstDataset(
-        root=Path(__file__).parent / "func_data"
-    )
+    dataset = FuncAstDataset(root=Path(__file__).parent / "func_data")
 
     for data in dataset:
         graph_data = data.graph

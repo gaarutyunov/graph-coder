@@ -114,12 +114,16 @@ class GraphLayer(nn.Module, typing.Generic[TE]):
             return kwargs
 
         x_ = self.graph_encoder(
-            kwargs["edge_index"],
-            kwargs["edge_data"],
-            kwargs["node_data"],
-            kwargs["node_num"],
-            kwargs["edge_num"],
-            kwargs["lap_eigvec"],
+            batch.edge_index,
+            batch.edge_data,
+            batch.node_data,
+            batch.node_num,
+            batch.edge_num,
+            batch.lap_eigvec,
+            batch.padded_index,
+            batch.padding_mask,
+            batch.padded_node_mask,
+            batch.padded_edge_mask,
         )
 
         if "memory" in kwargs:
@@ -127,20 +131,18 @@ class GraphLayer(nn.Module, typing.Generic[TE]):
         else:
             kwargs["memory"] = x_
 
-        (
-            _,
-            padded_feature,
-            padding_mask,
-            kwargs["padded_node_mask"],
-            kwargs["padded_edge_mask"],
-        ) = self.graph_encoder.graph_encoder.graph_feature.process_batch(  # type: ignore[union-attr]
-            kwargs["node_data"],
-            kwargs["edge_data"],
-            kwargs["edge_index"],
-            kwargs["node_num"],
-            kwargs["edge_num"],
+        padded_feature = self.graph_encoder.graph_encoder.graph_feature.process_batch(  # type: ignore[union-attr]
+            batch.node_data,
+            batch.edge_data,
+            batch.edge_index,
+            batch.node_num,
+            batch.edge_num,
+            batch.padded_node_mask,
+            batch.padded_edge_mask,
         )  # type: ignore[operator]
-        padded_feature = padded_feature.masked_fill(padding_mask[..., None], float("0"))
+        padded_feature = padded_feature.masked_fill(
+            kwargs["padding_mask"][..., None], float("0")
+        )
         if "tgt" in kwargs:
             kwargs["tgt"] = torch.cat([kwargs["tgt"], padded_feature], dim=1)
         else:

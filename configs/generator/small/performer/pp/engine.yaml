@@ -3,8 +3,6 @@ engine:
   _var_: engine
   deepspeed_plugin:
     _target_: accelerate.utils.dataclasses.DeepSpeedPlugin
-    requires_grad_special_cases:
-      12: false
     hf_ds_config:
       _target_: accelerate.utils.deepspeed.HfDeepSpeedConfig
       config_file_or_dict:

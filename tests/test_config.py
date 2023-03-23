@@ -110,22 +110,12 @@ def test_change_key_type():
     config = OrderedDict(
         d=OrderedDict(
             _target_="graph_coder.config.F.change_key_type",
-            obj=OrderedDict(
-                {
-                    "1": "true"
-                }
-            ),
+            obj=OrderedDict({"1": "true"}),
             name="int",
-            _mode_="call"
+            _mode_="call",
         )
     )
-    config_other = OrderedDict(
-        d=OrderedDict(
-            {
-                "1": "true"
-            }
-        )
-    )
+    config_other = OrderedDict(d=OrderedDict({"1": "true"}))
 
     conf = REGISTRY.get_from_params(**config)
     conf_other = REGISTRY.get_from_params(**config_other)

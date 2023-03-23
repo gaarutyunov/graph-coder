@@ -20,6 +20,7 @@ from graph_coder.pipe import (
     PipeModule,
     RemoveArgsLayer,
 )
+from ...data import GraphCoderBatch
 from .tokengt_graph_encoder_layer import TokenGTGraphEncoderLayer
 
 
@@ -27,80 +28,80 @@ class TokenGTGraphEncoderLayerPipe(TokenGTGraphEncoderLayer, PipeModule):
     def to_layers(self) -> Layers:
         if self.layernorm_style == "prenorm":
             layers: Layers = [
-                PassThroughLayer(CloneLayer(), -2),
-                # args: *batch_args, *, x, padding_mask, residual
-                PassThroughLayer(self.self_attn_layer_norm, -3, -3),
+                PassThroughLayer(CloneLayer(), -1),
+                # args: *batch_args, *, x, residual
+                PassThroughLayer(self.self_attn_layer_norm, -2, -2),
                 PassThroughLayer(
                     self.self_attn,
-                    out=-3,
+                    out=-2,
                     args_getter=lambda *args: (
-                        args[-3],
-                        args[-3],
-                        args[-3],
-                        None,
                         args[-2],
+                        args[-2],
+                        args[-2],
+                        None,
+                        args[GraphCoderBatch.get_arg_idx("padding_mask")],
                         self.return_attention,
                         None,
                         False,
                         self.return_attention,
                     ),
                 ),
-                PassThroughLayer(self.dropout_module, -3, -3),
-                PassThroughLayer(self.drop_path1, -3, -3),
+                PassThroughLayer(self.dropout_module, -2, -2),
+                PassThroughLayer(self.drop_path1, -2, -2),
                 PassThroughLayer(
                     Identity(),
-                    -3,
-                    -3,
+                    -2,
+                    -2,
                     callback=lambda res, *args: res + args[-1],
                 ),
-                PassThroughLayer(Identity(), -1, -3),
-                PassThroughLayer(self.final_layer_norm, -3, -3),
-                PassThroughLayer(self.feedforward, -3, -3),
-                PassThroughLayer(self.drop_path2, -3, -3),
+                PassThroughLayer(Identity(), -1, -2),
+                PassThroughLayer(self.final_layer_norm, -2, -2),
+                PassThroughLayer(self.feedforward, -2, -2),
+                PassThroughLayer(self.drop_path2, -2, -2),
                 PassThroughLayer(
                     Identity(),
-                    -3,
-                    -3,
+                    -2,
+                    -2,
                     callback=lambda res, *args: res + args[-1],
                 ),
                 RemoveArgsLayer(-1),
             ]
         elif self.layernorm_style == "postnorm":
             layers = [
-                PassThroughLayer(CloneLayer(), -2),
-                # args: *batch_args, *, x, padding_mask, residual
+                PassThroughLayer(CloneLayer(), -1),
+                # args: *batch_args, *, x, residual
                 PassThroughLayer(
                     self.self_attn,
-                    out=-3,
+                    out=-2,
                     args_getter=lambda *args: (
-                        args[-3],
-                        args[-3],
-                        args[-3],
-                        None,
                         args[-2],
+                        args[-2],
+                        args[-2],
+                        None,
+                        args[GraphCoderBatch.get_arg_idx("padding_mask")],
                         self.return_attention,
                         None,
                         False,
                         self.return_attention,
                     ),
                 ),
-                PassThroughLayer(self.dropout_module, -3, -3),
+                PassThroughLayer(self.dropout_module, -2, -2),
                 PassThroughLayer(
                     Identity(),
-                    -3,
-                    -3,
+                    -2,
+                    -2,
                     callback=lambda res, *args: res + args[-1],
                 ),
-                PassThroughLayer(self.self_attn_layer_norm, -3, -3),
-                PassThroughLayer(Identity(), -1, -3),
-                PassThroughLayer(self.feedforward, -3, -3),
+                PassThroughLayer(self.self_attn_layer_norm, -2, -2),
+                PassThroughLayer(Identity(), -1, -2),
+                PassThroughLayer(self.feedforward, -2, -2),
                 PassThroughLayer(
                     Identity(),
-                    -3,
-                    -3,
+                    -2,
+                    -2,
                     callback=lambda res, *args: res + args[-1],
                 ),
-                PassThroughLayer(self.final_layer_norm, -3, -3),
+                PassThroughLayer(self.final_layer_norm, -2, -2),
             ]
         else:
             raise NotImplementedError

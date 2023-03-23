@@ -25,13 +25,11 @@
 #  limitations under the License.
 
 import math
-from typing import Optional, Tuple
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
-from graph_coder.data import GraphCoderBatch
+from graph_coder.data import get_index_and_mask, GraphCoderBatch
 
 
 def init_params(module, n_layers):
@@ -89,8 +87,9 @@ class GraphFeatureTokenizer(nn.Module):
         edge_index,
         node_num,
         edge_num,
-        perturb: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, ...]:
+        padded_node_mask,
+        padded_edge_mask,
+    ) -> torch.Tensor:
         node_feature = self.embedding(node_data)  # [sum(node_num), T, 1]
         assert node_feature.size(-1) == 1, "Use embedding with output dim equal to 1"
         node_feature = node_feature.squeeze(-1)  # [sum(node_num), T]
@@ -98,67 +97,11 @@ class GraphFeatureTokenizer(nn.Module):
         edge_feature = self.embedding(edge_data)  # [sum(edge_num), T, 1]
         edge_feature = edge_feature.squeeze(-1)  # [sum(edge_num), T]
 
-        return self.get_batch(
-            node_feature,
-            edge_index,
-            edge_feature,
-            node_num,
-            edge_num,
-            perturb,
-        )
-
-    @staticmethod
-    def get_batch(
-        node_feature: torch.Tensor,
-        edge_index: torch.Tensor,
-        edge_feature: torch.Tensor,
-        node_num: torch.Tensor,
-        edge_num: torch.Tensor,
-        perturb: Optional[torch.Tensor] = None,
-    ):
         seq_len = [n + e for n, e in zip(node_num, edge_num)]
         b = len(seq_len)
         d = node_feature.size(-1)
         max_len = max(seq_len)
-        max_n = max(node_num)
         device = edge_index.device
-
-        token_pos = torch.arange(max_len, device=device)[None, :].expand(
-            b, max_len
-        )  # [B, T]
-
-        seq_len_ = torch.tensor(seq_len, device=device, dtype=torch.long)[
-            :, None
-        ]  # [B, 1]
-        node_num = node_num[:, None]  # [B, 1]
-        edge_num = edge_num[:, None]  # [B, 1]
-
-        node_index = torch.arange(max_n, device=device, dtype=torch.long)[
-            None, :
-        ].expand(
-            b, max_n
-        )  # [B, max_n]
-        node_index = node_index[None, node_index < node_num].repeat(
-            2, 1
-        )  # [2, sum(node_num)]
-
-        padded_node_mask = torch.less(token_pos, node_num)
-        padded_edge_mask = torch.logical_and(
-            torch.greater_equal(token_pos, node_num),
-            torch.less(token_pos, node_num + edge_num),
-        )
-
-        padded_index = torch.zeros(
-            b, max_len, 2, device=device, dtype=torch.long
-        )  # [B, T, 2]
-        padded_index[padded_node_mask, :] = node_index.t()
-        padded_index[padded_edge_mask, :] = edge_index.t()
-
-        if perturb is not None:
-            perturb_mask = padded_node_mask[:, :max_n]  # [B, max_n]
-            node_feature = node_feature + perturb[perturb_mask].type(
-                node_feature.dtype
-            )  # [sum(node_num), D]
 
         padded_feature = torch.zeros(
             b, max_len, d, device=device, dtype=node_feature.dtype
@@ -166,72 +109,7 @@ class GraphFeatureTokenizer(nn.Module):
         padded_feature[padded_node_mask, :] = node_feature
         padded_feature[padded_edge_mask, :] = edge_feature
 
-        padding_mask = torch.greater_equal(token_pos, seq_len_)  # [B, T]
-        return (
-            padded_index,
-            padded_feature,
-            padding_mask,
-            padded_node_mask,
-            padded_edge_mask,
-        )
-
-    @staticmethod
-    @torch.no_grad()
-    def get_node_mask(node_num, device):
-        b = len(node_num)
-        max_n = max(node_num)
-        node_index = torch.arange(max_n, device=device, dtype=torch.long)[
-            None, :
-        ].expand(
-            b, max_n
-        )  # [B, max_n]
-        node_num = node_num[:, None]  # [B, 1]
-        node_mask = torch.less(node_index, node_num)  # [B, max_n]
-        return node_mask
-
-    @staticmethod
-    @torch.no_grad()
-    def get_random_sign_flip(eigvec, node_mask):
-        b, max_n = node_mask.size()
-        d = eigvec.size(1)
-
-        sign_flip = torch.rand(b, d, device=eigvec.device, dtype=eigvec.dtype)
-        sign_flip[sign_flip >= 0.5] = 1.0
-        sign_flip[sign_flip < 0.5] = -1.0
-        sign_flip = sign_flip[:, None, :].expand(b, max_n, d)
-        sign_flip = sign_flip[node_mask]
-        return sign_flip
-
-    def handle_eigvec(self, eigvec, node_mask, sign_flip):
-        if sign_flip and self.training:
-            sign_flip = self.get_random_sign_flip(eigvec, node_mask)
-            eigvec = eigvec * sign_flip
-        else:
-            pass
-        return eigvec
-
-    @staticmethod
-    def get_index_embed(node_id, node_mask, padded_index):
-        """
-        :param node_id: Tensor([sum(node_num), D])
-        :param node_mask: BoolTensor([B, max_n])
-        :param padded_index: LongTensor([B, T, 2])
-        :return: Tensor([B, T, 2D])
-        """
-        b, max_n = node_mask.size()
-        max_len = padded_index.size(1)
-        d = node_id.size(-1)
-
-        padded_node_id = torch.zeros(
-            b, max_n, d, device=node_id.device, dtype=node_id.dtype
-        )  # [B, max_n, D]
-        padded_node_id[node_mask] = node_id
-
-        padded_node_id = padded_node_id[:, :, None, :].expand(b, max_n, 2, d)
-        padded_index = padded_index[..., None].expand(b, max_len, 2, d)
-        index_embed = padded_node_id.gather(1, padded_index)  # [B, T, 2, D]
-        index_embed = index_embed.view(b, max_len, 2 * d)
-        return index_embed
+        return padded_feature
 
     def get_type_embed(self, padded_index):
         """
@@ -250,31 +128,27 @@ class GraphFeatureTokenizer(nn.Module):
         node_num,
         edge_num,
         lap_eigvec,
+        padded_index,
+        padding_mask,
+        padded_node_mask,
+        padded_edge_mask,
     ):
-        padded_index, padded_feature, padding_mask, _, _ = self.process_batch(
-            node_data, edge_data, edge_index, node_num, edge_num
+        padded_feature = self.process_batch(
+            node_data,
+            edge_data,
+            edge_index,
+            node_num,
+            edge_num,
+            padded_node_mask,
+            padded_edge_mask,
         )
-        node_mask = self.get_node_mask(
-            node_num, padded_feature.device
-        )  # [B, max(n_node)]
 
         if self.lap_node_id:
-            eigvec = lap_eigvec
-            if self.lap_eig_dropout is not None:
-                eigvec = self.lap_eig_dropout(lap_eigvec[..., None, None]).view(
-                    lap_eigvec.size()
-                )
-            lap_node_id = self.handle_eigvec(
-                eigvec, node_mask, self.lap_node_id_sign_flip
-            )
-            lap_index_embed = self.get_index_embed(
-                lap_node_id, node_mask, padded_index
-            )  # [B, T, 2Dl]
-            padded_feature = padded_feature + self.lap_encoder(lap_index_embed)
+            padded_feature = padded_feature + self.lap_encoder(lap_eigvec)
 
         if self.type_id:
             padded_feature = padded_feature + self.get_type_embed(padded_index)
 
         padded_feature = padded_feature.masked_fill(padding_mask[..., None], float("0"))
 
-        return padded_feature, padding_mask  # [B, T, D], [B, T]
+        return padded_feature  # [B, T, D]
