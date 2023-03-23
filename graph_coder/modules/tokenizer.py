@@ -196,8 +196,8 @@ class GraphFeatureTokenizer(nn.Module):
         d = eigvec.size(1)
 
         sign_flip = torch.rand(b, d, device=eigvec.device, dtype=eigvec.dtype)
-        sign_flip[sign_flip >= 0.5] = 1.0
-        sign_flip[sign_flip < 0.5] = -1.0
+        sign_flip[sign_flip >= 0.5] = 1
+        sign_flip[sign_flip < 0.5] = -1
         sign_flip = sign_flip[:, None, :].expand(b, max_n, d)
         sign_flip = sign_flip[node_mask]
         return sign_flip
@@ -208,7 +208,7 @@ class GraphFeatureTokenizer(nn.Module):
             eigvec = eigvec * sign_flip
         else:
             pass
-        return eigvec
+        return eigvec.float() / 1000
 
     @staticmethod
     def get_index_embed(node_id, node_mask, padded_index):
