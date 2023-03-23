@@ -72,6 +72,7 @@ def collate_ast(
     dtype: torch.dtype = torch.float,
     use_dict: bool = True,
     num_samples: int = 1,
+    lap_node_id_k: int = 8
 ) -> torch.Union[Dict[str, torch.Tensor], Tuple[torch.Tensor, ...]]:
     """Collate a batch of examples into a batch of tensors."""
     if num_samples > 1:
@@ -96,7 +97,7 @@ def collate_ast(
             torch.tensor(graph_data.edge_index, dtype=torch.long).t().contiguous()
         )
         _, lap_eigvec = lap_eig(edge_index_, len(graph_data.x), dtype=dtype)
-        lap_eigvecs.append((lap_eigvec * 1000).long())
+        lap_eigvecs.append(lap_eigvec)
 
         idx.append(graph_data.idx)
         edge_index.append(edge_index_)
@@ -134,14 +135,26 @@ def collate_ast(
         max_length=max_seq_length,
     ).data
 
+    lap_eigvec_ = torch.cat(
+        [F.pad(i, (0, max_n - i.size(1)), value=float("0")) for i in lap_eigvecs]
+    )
+
+    lap_dim = lap_eigvec_.size(-1)
+    if lap_node_id_k > lap_dim:
+        lap_eigvec_ = F.pad(
+            lap_eigvec_,
+            (0, lap_node_id_k - lap_dim),
+            value=float("0"),
+        )  # [sum(n_node), Dl]
+    else:
+        lap_eigvec_ = lap_eigvec_[:, : lap_node_id_k]  # [sum(n_node), Dl]
+
     res = GraphCoderBatch(
         idx=torch.tensor(idx, dtype=torch.long),
         edge_index=torch.cat(edge_index, dim=1),
         node_num=torch.tensor(node_num, dtype=torch.long),
         edge_num=torch.tensor(edge_num, dtype=torch.long),
-        lap_eigvec=torch.cat(
-            [F.pad(i, (0, max_n - i.size(1)), value=0) for i in lap_eigvecs]
-        ),
+        lap_eigvec=lap_eigvec_,
         source_={
             "input_ids": source_["input_ids"].type(torch.long),
             "attention_mask": source_["attention_mask"].type(torch.long),

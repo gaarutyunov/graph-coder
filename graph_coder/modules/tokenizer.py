@@ -203,7 +203,6 @@ class GraphFeatureTokenizer(nn.Module):
         return sign_flip
 
     def handle_eigvec(self, eigvec, node_mask, sign_flip):
-        eigvec = eigvec.float() / 1000
         if sign_flip and self.training:
             sign_flip = self.get_random_sign_flip(eigvec, node_mask)
             eigvec = eigvec * sign_flip
@@ -260,18 +259,10 @@ class GraphFeatureTokenizer(nn.Module):
         )  # [B, max(n_node)]
 
         if self.lap_node_id:
-            lap_dim = lap_eigvec.size(-1)
-            if self.lap_node_id_k > lap_dim:
-                eigvec = F.pad(
-                    lap_eigvec,
-                    (0, self.lap_node_id_k - lap_dim),
-                    value=float("0"),
-                )  # [sum(n_node), Dl]
-            else:
-                eigvec = lap_eigvec[:, : self.lap_node_id_k]  # [sum(n_node), Dl]
+            eigvec = lap_eigvec
             if self.lap_eig_dropout is not None:
-                eigvec = self.lap_eig_dropout(eigvec[..., None, None]).view(
-                    eigvec.size()
+                eigvec = self.lap_eig_dropout(lap_eigvec[..., None, None]).view(
+                    lap_eigvec.size()
                 )
             lap_node_id = self.handle_eigvec(
                 eigvec, node_mask, self.lap_node_id_sign_flip
