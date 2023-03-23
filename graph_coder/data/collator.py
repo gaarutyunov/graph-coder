@@ -65,7 +65,6 @@ def pad(
     ]
 
 
-@torch.no_grad()
 def collate_ast(
     batch: List[AstExample],
     tokenizer: PreTrainedTokenizerFast,
