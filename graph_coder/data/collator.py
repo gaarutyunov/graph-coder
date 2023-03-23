@@ -88,7 +88,6 @@ def collate_ast(
     edge_num = []
     sources = []
     docstrings = []
-    lap_eigvals = []
     lap_eigvecs = []
 
     for data in batch:
@@ -99,9 +98,7 @@ def collate_ast(
         edge_index_ = (
             torch.tensor(graph_data.edge_index, dtype=torch.long).t().contiguous()
         )
-        lap_eigval, lap_eigvec = lap_eig(edge_index_, len(graph_data.x), dtype=dtype)
-        lap_eigval = lap_eigval[None, :].expand_as(lap_eigvec)
-        lap_eigvals.append(lap_eigval)
+        _, lap_eigvec = lap_eig(edge_index_, len(graph_data.x), dtype=dtype)
         lap_eigvecs.append(lap_eigvec)
 
         idx.append(graph_data.idx)
@@ -146,9 +143,6 @@ def collate_ast(
         edge_index=torch.cat(edge_index, dim=1),
         node_num=torch.tensor(node_num, dtype=torch.long),
         edge_num=torch.tensor(edge_num, dtype=torch.long),
-        lap_eigval=torch.cat(
-            [F.pad(i, (0, max_n - i.size(1)), value=float("0")) for i in lap_eigvals]
-        ),
         lap_eigvec=torch.cat(
             [F.pad(i, (0, max_n - i.size(1)), value=float("0")) for i in lap_eigvecs]
         ),

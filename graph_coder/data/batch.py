@@ -30,8 +30,7 @@ __ARGS_MAPPING__ = {
     "node_data_attn_mask": 9,
     "node_num": 10,
     "edge_num": 11,
-    "lap_eigval": 12,
-    "lap_eigvec": 13,
+    "lap_eigvec": 12,
 }
 
 ARGS_SIZE = len(__ARGS_MAPPING__)
@@ -47,7 +46,6 @@ class GraphCoderBatch:
     node_data_: Dict[str, torch.Tensor]
     node_num: torch.Tensor
     edge_num: torch.Tensor
-    lap_eigval: torch.Tensor
     lap_eigvec: torch.Tensor
 
     @property
@@ -132,7 +130,6 @@ class GraphCoderBatch:
             "node_data_attn_mask": self.node_data_attn_mask,
             "node_num": self.node_num,
             "edge_num": self.edge_num,
-            "lap_eigval": self.lap_eigval,
             "lap_eigvec": self.lap_eigvec,
         }
 
@@ -150,7 +147,6 @@ class GraphCoderBatch:
             self.node_data_attn_mask,
             self.node_num,
             self.edge_num,
-            self.lap_eigval,
             self.lap_eigvec,
         )
 
@@ -179,7 +175,6 @@ class GraphCoderBatch:
             },
             node_num=obj["node_num"],
             edge_num=obj["edge_num"],
-            lap_eigval=obj["lap_eigval"],
             lap_eigvec=obj["lap_eigvec"],
         )
 
@@ -211,8 +206,7 @@ class GraphCoderBatch:
             },
             node_num=obj[10],
             edge_num=obj[11],
-            lap_eigval=obj[12],
-            lap_eigvec=obj[13],
+            lap_eigvec=obj[12],
         )
 
     @classmethod
