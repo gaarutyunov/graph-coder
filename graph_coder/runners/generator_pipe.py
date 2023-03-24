@@ -84,11 +84,14 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
             for _ in range(len(self.loader)):
                 self._run_event("on_batch_start")
                 if self.is_train_loader:
-                    self.model.train_batch(data_iter=loader)
+                    loss = self.model.train_batch(data_iter=loader)
                 elif self.is_valid_loader:
-                    self.model.eval_batch(data_iter=loader)
+                    loss = self.model.eval_batch(data_iter=loader)
                 else:
                     NotImplementedError("Inference is not yet supported")
+
+                self.batch_metrics["loss"] = loss.item()
+                self.loss_metric.update(loss.item(), self.batch_size)
                 self._run_event("on_batch_end")
 
     def _setup_loaders(self) -> None:
