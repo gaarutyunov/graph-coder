@@ -13,12 +13,7 @@
 #  limitations under the License.
 from torch.nn import Identity
 
-from graph_coder.pipe import (
-    Layers,
-    PassThroughLayer,
-    PipeModule,
-    RemoveArgsLayer,
-)
+from graph_coder.pipe import Layers, PassThroughLayer, PipeModule, RemoveArgsLayer
 from ...data import GraphCoderBatch
 from .tokengt_graph_encoder_layer import TokenGTGraphEncoderLayer
 

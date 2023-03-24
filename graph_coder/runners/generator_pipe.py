@@ -24,7 +24,7 @@ from deepspeed.runtime.constants import ROUTE_EVAL, ROUTE_PREDICT, ROUTE_TRAIN
 from deepspeed.runtime.data_pipeline.data_sampling.data_sampler import (
     DeepSpeedDataSampler,
 )
-from deepspeed.runtime.dataloader import DeepSpeedDataLoader, RepeatingLoader
+from deepspeed.runtime.dataloader import DeepSpeedDataLoader
 from torch.utils.data import DataLoader, DistributedSampler, RandomSampler
 
 from graph_coder.pipe.dataloader import PipeLoaderWrapper

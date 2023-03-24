@@ -300,7 +300,7 @@ def test_performer_pipe():
 
         assert torch.is_floating_point(inputs)
 
-        loss: torch.Tensor = inputs
+        loss: torch.Tensor = inputs  # type: ignore[annotation-unchecked]
 
         loss.backward()
         optimizer.step()

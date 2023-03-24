@@ -15,7 +15,6 @@ import functools
 import typing
 from typing import Callable, Union
 
-import torch
 from torch import nn
 
 from .types import Arg, Args
