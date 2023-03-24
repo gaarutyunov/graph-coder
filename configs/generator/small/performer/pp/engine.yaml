@@ -41,3 +41,8 @@ engine:
             warmup_min_lr: 0
             warmup_max_lr: 0.02
             warmup_num_steps: 10000
+        comms_logger:
+          enabled: true
+          verbose: true
+          prof_all: true
+          debug: true
