@@ -1,0 +1,8 @@
+text_encoder:
+  _target_: graph_coder.modules.PerformerEncoderPipe
+  _var_: text_encoder
+  dim: 256
+  depth: 32
+  heads: 64
+  causal: true
+  max_seq_len: 1024

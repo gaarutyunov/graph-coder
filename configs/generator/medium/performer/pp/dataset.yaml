@@ -1,0 +1,18 @@
+dataset:
+  _target_: graph_coder.datasets.FuncAstDataset
+  _var_: dataset
+  root: ~/git-py/raw/python
+  processed_dir: ~/git-py/func/python
+  index_file: func_index.jsonl
+  batch_size: 16
+  collate_fn:
+    _var_: collator
+  random_seed: 42
+  in_memory: true
+  print_summary: true
+  filter_index:
+    - _target_: graph_coder.config.F.filter_is_processed
+    - _target_: graph_coder.config.F.filter_unique_by_column
+      column: hash
+    - _target_: graph_coder.config.F.filter_max_tokens
+      max_tokens: 256
