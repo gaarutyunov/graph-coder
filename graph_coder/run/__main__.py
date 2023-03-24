@@ -58,4 +58,9 @@ if __name__ == "__main__":
         message=".*the loss during ``runner.handle_batch``?.*",
         category=UserWarning,
     )
+    warnings.filterwarnings(
+        "ignore",
+        message="The .grad attribute of a Tensor that is not a leaf Tensor is being accessed.*",
+        category=UserWarning,
+    )
     main()
