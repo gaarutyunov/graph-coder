@@ -244,7 +244,6 @@ def test_dtype():
         assert batch.edge_data.dtype == torch.long
         assert batch.docstring.dtype == torch.long
         assert batch.source.dtype == torch.long
-        assert batch.lap_eigvec.dtype == torch.half
 
 
 def test_in_memory():
@@ -283,7 +282,6 @@ def test_in_memory():
             assert batch.edge_data.dtype == torch.long
             assert batch.docstring.dtype == torch.long
             assert batch.source.dtype == torch.long
-            assert batch.lap_eigvec.dtype == torch.float
 
 
 def test_filters_size():

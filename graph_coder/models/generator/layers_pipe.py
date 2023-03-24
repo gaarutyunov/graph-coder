@@ -15,7 +15,7 @@ import typing
 
 import torch
 
-from graph_coder.data import ARGS_SIZE, GraphCoderBatch
+from graph_coder.data import GraphCoderBatch
 from graph_coder.pipe import (
     CloneLayer,
     ConditionalLayer,
@@ -23,7 +23,6 @@ from graph_coder.pipe import (
     PassThroughLayer,
     PipeModule,
     RemoveArgsLayer,
-    ReorderLayer,
 )
 
 from .layers import CodeLayer, GraphLayer, TextLayer

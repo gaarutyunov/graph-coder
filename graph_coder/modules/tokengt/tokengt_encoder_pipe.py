@@ -15,7 +15,7 @@ from typing import Optional
 
 from torch import nn
 
-from graph_coder.pipe import Layers, PassThroughLayer, PipeModule, RemoveArgsLayer
+from graph_coder.pipe import Layers, PassThroughLayer, PipeModule
 
 from .tokengt_encoder_base import TokenGTEncoderBase
 from .tokengt_graph_encoder_pipe import TokenGTGraphEncoderPipe

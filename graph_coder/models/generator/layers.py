@@ -18,7 +18,7 @@ import torch
 from torch import nn
 
 from graph_coder.data import GraphCoderBatch
-from graph_coder.pipe import Args, Kwarg
+from graph_coder.pipe import Kwarg
 
 TE = typing.TypeVar("TE", bound=nn.Module)
 
@@ -119,7 +119,6 @@ class GraphLayer(nn.Module, typing.Generic[TE]):
             batch.node_data,
             batch.node_num,
             batch.edge_num,
-            batch.lap_eigvec,
             batch.padded_index,
             batch.padding_mask,
             batch.padded_node_mask,

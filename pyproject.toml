@@ -101,7 +101,7 @@ exclude = "tests/.*data"
 quiet = true
 in-place = true
 recursive = true
-imports = ["einops", "performer_pytorch", "torch", "deepspeed", "catalyst", "human_eval", "numpy"]
+imports = ["einops", "performer_pytorch", "torch", "deepspeed", "catalyst", "human_eval", "numpy", "graph_coder"]
 
 [build-system]
 requires = ["poetry-core"]

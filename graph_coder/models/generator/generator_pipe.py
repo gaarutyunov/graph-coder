@@ -14,7 +14,7 @@
 import torch
 from torch import nn
 
-from graph_coder.data import ARGS_SIZE, GraphCoderBatch
+from graph_coder.data import GraphCoderBatch
 from graph_coder.pipe import (
     ConditionalLayer,
     Layers,

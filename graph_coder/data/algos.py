@@ -18,6 +18,7 @@ import torch
 from torch.linalg import eigh
 
 
+@torch.jit.script
 def lap_eig(
     edge_index: torch.Tensor, num_nodes: int, dtype: torch.dtype = torch.float
 ) -> Tuple[torch.Tensor, torch.Tensor]:

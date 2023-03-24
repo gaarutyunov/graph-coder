@@ -86,7 +86,6 @@ class TokenGTGraphEncoderPipe(TokenGTGraphEncoder, PipeModule):
                         "node_data",
                         "node_num",
                         "edge_num",
-                        "lap_eigvec",
                         "padded_index",
                         "padding_mask",
                         "padded_node_mask",
