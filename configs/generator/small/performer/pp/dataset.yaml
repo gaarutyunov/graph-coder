@@ -4,7 +4,7 @@ dataset:
   root: ~/git-py/raw/python
   processed_dir: ~/git-py/func/python
   index_file: func_index.jsonl
-  batch_size: 32
+  batch_size: 16
   collate_fn:
     _var_: collator
   random_seed: 42
