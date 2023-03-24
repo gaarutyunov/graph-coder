@@ -91,7 +91,7 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
 
     def _run_loader(self) -> None:
         with torch.set_grad_enabled(self.is_train_loader):
-            loader = RepeatingLoader(self.loader)
+            loader = iter(RepeatingLoader(self.loader))
 
             for _ in range(len(self.loader)):
                 self._run_event("on_batch_start")
