@@ -94,6 +94,17 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
                 self.loss_metric.update(loss.item(), self.batch_size)
                 self._run_event("on_batch_end")
 
+    def on_batch_start(self, runner: "IRunner"):
+        """Event handler."""
+        self.batch_size = self.loader_batch_size
+
+        # we have an batch per each worker...
+        self.batch_step += self.engine.num_processes
+        self.loader_batch_step += self.engine.num_processes
+        self.sample_step += self.batch_size * self.engine.num_processes
+        self.loader_sample_step += self.batch_size * self.engine.num_processes
+        self.batch_metrics: Dict = defaultdict(None)
+
     def _setup_loaders(self) -> None:
         """Pass this to setup loader with deepspeed engine in `_setup_components`"""
 
