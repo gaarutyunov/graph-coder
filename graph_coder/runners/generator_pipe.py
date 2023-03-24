@@ -28,8 +28,8 @@ from deepspeed.runtime.dataloader import DeepSpeedDataLoader
 from torch.utils.data import DataLoader, DistributedSampler, RandomSampler
 
 from graph_coder.pipe.dataloader import PipeLoaderWrapper
+from graph_coder.runners import TMM
 from graph_coder.runners.generator import GraphCoderGeneratorRunner
-
 
 __KEY_TO_ROUTE_MAP__ = {
     "train": ROUTE_TRAIN,
@@ -44,6 +44,18 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
     model: PipelineEngine
     loader: Union[DeepSpeedDataLoader, DataLoader]
     loaders: Dict[str, Union[DataLoader, Iterator]]
+
+    def __init__(
+        self,
+        model: TMM,
+        eos_token_id: int,
+        vocab_size: int,
+        num_workers: int = 2,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(model, eos_token_id, vocab_size, *args, **kwargs)
+        self.num_workers = num_workers
 
     def on_loader_start(self, runner: IRunner):
         """Event handler."""
@@ -132,7 +144,7 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
             data_sampler=sampler,
             collate_fn=loader.collate_fn,
             batch_size=loader.batch_size,
-            num_local_io_workers=4,
+            num_local_io_workers=self.num_workers,
             route=__KEY_TO_ROUTE_MAP__[key],
         )
 
