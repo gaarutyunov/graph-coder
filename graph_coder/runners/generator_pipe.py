@@ -80,14 +80,16 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
     def _run_loader(self) -> None:
         with torch.set_grad_enabled(self.is_train_loader):
             loader = iter(self.loader)
-            
+
             for _ in range(len(self.loader)):
+                self._run_event("on_batch_start")
                 if self.is_train_loader:
                     self.model.train_batch(data_iter=loader)
                 elif self.is_valid_loader:
                     self.model.eval_batch(data_iter=loader)
                 else:
                     NotImplementedError("Inference is not yet supported")
+                self._run_event("on_batch_end")
 
     def _setup_loaders(self) -> None:
         """Pass this to setup loader with deepspeed engine in `_setup_components`"""
