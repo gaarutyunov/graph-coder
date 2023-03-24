@@ -159,13 +159,6 @@ class RemoveArgsLayer(PipeLayer):
         return tuple(largs)
 
 
-class CloneLayer(PipeLayer):
-    """Layer that clones input."""
-
-    def forward(self, x):
-        return torch.clone(x)
-
-
 class ReorderLayer(PipeLayer):
     """Layer that reorders args in `*args` by indexes."""
 

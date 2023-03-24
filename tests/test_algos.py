@@ -58,7 +58,7 @@ def test_lap_eig():
         edge_index = (
             torch.tensor(graph_data.edge_index, dtype=torch.long).t().contiguous()
         )
-        lap_eigval, lap_eigvec = lap_eig(edge_index, N)
+        lap_eigval, lap_eigvec = lap_eig(edge_index, N, edge_index.device)
 
         dense_adj = torch.zeros([N, N], dtype=torch.bool)
         dense_adj[edge_index[0, :], edge_index[1, :]] = True

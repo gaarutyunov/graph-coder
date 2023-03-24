@@ -14,10 +14,10 @@
 import typing
 
 import torch
+from torch.nn import Identity
 
 from graph_coder.data import GraphCoderBatch
 from graph_coder.pipe import (
-    CloneLayer,
     ConditionalLayer,
     Layers,
     PassThroughLayer,
@@ -78,7 +78,7 @@ class TextLayerPipe(TextLayer[PipeModule], PipeModule):
             ),
             # args: *batch_args, tgt
             ConditionalLayer(
-                PassThroughLayer(CloneLayer(), -1),
+                PassThroughLayer(Identity(), -1),
                 self.condition,
             ),
             # args: *batch_args, tgt, x
@@ -168,7 +168,7 @@ class CodeLayerPipe(CodeLayer[PipeModule], PipeModule):
 
         largs = list(args)
 
-        largs[idx] = torch.cat([eos, batch.source, torch.clone(eos)], dim=1)
+        largs[idx] = torch.cat([eos, batch.source, eos.clone().detach()], dim=1)
         largs[idx_attn_mask] = torch.cat(
             [torch.ones_like(eos), batch.source_attn_mask, torch.ones_like(eos)],
             dim=1,

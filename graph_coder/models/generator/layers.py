@@ -82,7 +82,7 @@ class CodeLayer(nn.Module, typing.Generic[TE]):
             device=batch.source.device,
             dtype=batch.source.dtype,
         ).fill_(self.eos_token_id)
-        text = torch.cat([eos, batch.source, torch.clone(eos)], dim=1)
+        text = torch.cat([eos, batch.source, eos.clone().detach()], dim=1)
 
         emb = self.embedding(text)
         if "tgt" in kwargs:

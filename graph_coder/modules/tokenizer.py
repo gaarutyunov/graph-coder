@@ -72,10 +72,8 @@ def get_node_mask(node_num, device):
     node_index = torch.arange(max_n, device=device, dtype=torch.long)[None, :].expand(
         b, max_n
     )  # [B, max_n]
-    node_num = torch.tensor(node_num, device=device, dtype=torch.long)[
-        :, None
-    ]  # [B, 1]
-    node_mask = torch.less(node_index, node_num)  # [B, max_n]
+    node_num_ = node_num.clone().detach()[:, None]
+    node_mask = torch.less(node_index, node_num_)  # [B, max_n]
     return node_mask
 
 

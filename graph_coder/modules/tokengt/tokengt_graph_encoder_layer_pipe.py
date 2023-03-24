@@ -14,7 +14,6 @@
 from torch.nn import Identity
 
 from graph_coder.pipe import (
-    CloneLayer,
     Layers,
     PassThroughLayer,
     PipeModule,
@@ -28,7 +27,7 @@ class TokenGTGraphEncoderLayerPipe(TokenGTGraphEncoderLayer, PipeModule):
     def to_layers(self) -> Layers:
         if self.layernorm_style == "prenorm":
             layers: Layers = [
-                PassThroughLayer(CloneLayer(), -1),
+                PassThroughLayer(Identity(), -1),
                 # args: *batch_args, *, x, residual
                 PassThroughLayer(self.self_attn_layer_norm, -2, -2),
                 PassThroughLayer(
@@ -68,7 +67,7 @@ class TokenGTGraphEncoderLayerPipe(TokenGTGraphEncoderLayer, PipeModule):
             ]
         elif self.layernorm_style == "postnorm":
             layers = [
-                PassThroughLayer(CloneLayer(), -1),
+                PassThroughLayer(Identity(), -1),
                 # args: *batch_args, *, x, residual
                 PassThroughLayer(
                     self.self_attn,
