@@ -24,7 +24,7 @@ from deepspeed.runtime.constants import ROUTE_EVAL, ROUTE_PREDICT, ROUTE_TRAIN
 from deepspeed.runtime.data_pipeline.data_sampling.data_sampler import (
     DeepSpeedDataSampler,
 )
-from deepspeed.runtime.dataloader import DeepSpeedDataLoader
+from deepspeed.runtime.dataloader import DeepSpeedDataLoader, RepeatingLoader
 from torch.utils.data import DataLoader, DistributedSampler, RandomSampler
 
 from graph_coder.pipe.dataloader import PipeLoaderWrapper
@@ -91,7 +91,7 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
 
     def _run_loader(self) -> None:
         with torch.set_grad_enabled(self.is_train_loader):
-            loader = iter(self.loader)
+            loader = RepeatingLoader(self.loader)
 
             for _ in range(len(self.loader)):
                 self._run_event("on_batch_start")
