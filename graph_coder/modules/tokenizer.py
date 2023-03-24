@@ -190,7 +190,9 @@ class GraphFeatureTokenizer(nn.Module):
             end = start + edge_num[i]
 
             edge_index_ = edge_index[:, start:end]
-            _, lap_eigvec = lap_eig(edge_index_, node_num[i], dtype=dtype)
+            _, lap_eigvec = lap_eig(
+                edge_index_, node_num[i], dtype=dtype, device=device
+            )
             lap_eigvecs.append(lap_eigvec)
 
             start = end
