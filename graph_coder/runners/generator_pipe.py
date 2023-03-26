@@ -143,7 +143,7 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
             loader.dataset,
             data_sampler=sampler,
             collate_fn=loader.collate_fn,
-            batch_size=loader.batch_size,
+            batch_size=self.model.train_micro_batch_size_per_gpu(),
             num_local_io_workers=self.num_workers,
             route=__KEY_TO_ROUTE_MAP__[key],
         )
