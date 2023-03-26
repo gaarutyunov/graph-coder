@@ -39,14 +39,7 @@ class TextLayer(nn.Module, typing.Generic[TE]):
         if not batch.has_docstring:
             return kwargs
 
-        eos = torch.empty(
-            (batch.batch_size, 1),
-            device=batch.docstring.device,
-            dtype=batch.docstring.dtype,
-        ).fill_(self.eos_token_id)
-        text = torch.cat([batch.docstring, eos], dim=1)
-
-        emb = self.embedding(text)
+        emb = self.embedding(kwargs["docstring"])
         if "tgt" in kwargs:
             kwargs["tgt"] = torch.cat([kwargs["tgt"], emb], dim=1)
         else:
@@ -77,14 +70,7 @@ class CodeLayer(nn.Module, typing.Generic[TE]):
         if not batch.has_source:
             return kwargs
 
-        eos = torch.empty(
-            (batch.batch_size, 1),
-            device=batch.source.device,
-            dtype=batch.source.dtype,
-        ).fill_(self.eos_token_id)
-        text = torch.cat([eos, batch.source, eos.clone().detach()], dim=1)
-
-        emb = self.embedding(text)
+        emb = self.embedding(kwargs["source"])
         if "tgt" in kwargs:
             kwargs["tgt"] = torch.cat([kwargs["tgt"], emb], dim=1)
         else:
@@ -148,3 +134,66 @@ class GraphLayer(nn.Module, typing.Generic[TE]):
             kwargs["tgt"] = padded_feature
 
         return kwargs
+
+
+class LmLayer(nn.Module):
+    """Layer that calculates logits"""
+
+    def __init__(
+        self, vocab_size: int, max_length: int, hidden_size: int, shift: bool = True
+    ) -> None:
+        super().__init__()
+        self.hidden_size = hidden_size
+        self.max_length = max_length
+        self.vocab_size = vocab_size
+        self.shift = shift
+        self.text = nn.Linear(hidden_size, vocab_size, bias=False)
+        self.graph_inner = nn.Linear(hidden_size, hidden_size * max_length, bias=False)
+        self.graph_outer = nn.Linear(hidden_size, vocab_size, bias=False)
+        self.code = nn.Linear(hidden_size, vocab_size, bias=False)
+
+    def forward(self, *args: torch.Tensor):
+        batch = GraphCoderBatch.from_tuple(args)
+        hidden_states = args[-1]
+        lm_logits = []
+
+        if batch.has_docstring:
+            docstring = self.text(hidden_states[:, : batch.docstring_size])
+            lm_logits.append(docstring[batch.docstring_attn_mask.bool()])
+
+        if batch.has_graph:
+            if batch.has_docstring:
+                start = batch.docstring_size
+            else:
+                start = 0
+            if batch.has_source:
+                end = batch.source_size
+            else:
+                end = 1
+
+            graph_states = hidden_states[:, start:-end]
+            graph = self.graph_inner(graph_states)
+            graph = graph.view(graph.size(0), -1, self.hidden_size)
+            graph = self.graph_outer(graph)
+            graph = graph.view(graph.size(0), -1, self.max_length, self.vocab_size)
+            lm_logits.extend(
+                [
+                    graph[batch.padded_node_mask.bool()][
+                        batch.node_data_attn_mask.bool()
+                    ],
+                    graph[batch.padded_edge_mask.bool()][
+                        batch.edge_data_attn_mask.bool()
+                    ],
+                ]
+            )
+
+        if batch.has_source:
+            source = self.code(hidden_states[:, -batch.source_size - 1 : -1])
+            lm_logits.append(source[batch.source_attn_mask.bool()])
+
+        logits = torch.cat(lm_logits, dim=0)
+
+        if self.shift:
+            logits = logits[:-1, :].contiguous()
+
+        return logits

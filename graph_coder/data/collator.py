@@ -104,9 +104,9 @@ def get_index_and_mask(
 
     return (
         padded_index,
-        padding_mask,
-        padded_node_mask,
-        padded_edge_mask,
+        padding_mask.long(),
+        padded_node_mask.long(),
+        padded_edge_mask.long(),
     )
 
 
@@ -118,7 +118,10 @@ def collate_ast(
     max_seq_length: int = 8192,
     use_dict: bool = True,
     num_samples: int = 1,
-) -> torch.Union[Dict[str, torch.Tensor], Tuple[torch.Tensor, ...]]:
+    shift: bool = True,
+) -> torch.Union[
+    Dict[str, torch.Tensor], Tuple[Tuple[torch.Tensor, ...], Tuple[torch.Tensor, ...]]
+]:
     """Collate a batch of examples into a batch of tensors."""
     if num_samples > 1:
         assert len(batch) == 1, "You can only repeat with batch_size = 1"
@@ -157,14 +160,11 @@ def collate_ast(
         tokenizer=tokenizer,
     )
 
-    source_ = tokenizer(
-        sources,
-        padding=True,
-        return_tensors="pt",
-        return_attention_mask=True,
-        truncation=True,
-        max_length=max_seq_length,
-    ).data
+    eos = torch.empty(
+        (len(batch), 1),
+        dtype=torch.long,
+    ).fill_(tokenizer.eos_token_id)
+    eos_attn = torch.ones_like(eos)
 
     docstring_ = tokenizer(
         docstrings,
@@ -174,6 +174,44 @@ def collate_ast(
         truncation=True,
         max_length=max_seq_length,
     ).data
+
+    docstring_ = {
+        "input_ids": torch.cat(
+            [docstring_["input_ids"].long(), eos],
+            dim=1,
+        ),
+        "attention_mask": torch.cat(
+            [
+                docstring_["attention_mask"].long(),
+                eos_attn,
+            ],
+            dim=1,
+        ),
+    }
+
+    source_ = tokenizer(
+        sources,
+        padding=True,
+        return_tensors="pt",
+        return_attention_mask=True,
+        truncation=True,
+        max_length=max_seq_length,
+    ).data
+
+    source_ = {
+        "input_ids": torch.cat(
+            [eos, source_["input_ids"].long(), eos],
+            dim=1,
+        ),
+        "attention_mask": torch.cat(
+            [
+                eos_attn,
+                source_["attention_mask"].long(),
+                eos_attn,
+            ],
+            dim=1,
+        ),
+    }
 
     node_num_, edge_num_ = torch.tensor(node_num, dtype=torch.long), torch.tensor(
         edge_num, dtype=torch.long
@@ -190,14 +228,8 @@ def collate_ast(
         edge_index=edge_index_,
         node_num=node_num_,
         edge_num=edge_num_,
-        source_={
-            "input_ids": source_["input_ids"].type(torch.long),
-            "attention_mask": source_["attention_mask"].type(torch.long),
-        },
-        docstring_={
-            "input_ids": docstring_["input_ids"].type(torch.long),
-            "attention_mask": docstring_["attention_mask"].type(torch.long),
-        },
+        source_=source_,
+        docstring_=docstring_,
         node_data_=node_data_,
         edge_data_=edge_data_,
         padded_index=padded_index,
@@ -206,7 +238,19 @@ def collate_ast(
         padded_edge_mask=padded_edge_mask,
     )
 
-    if use_dict:
-        return res.to_dict()
+    labels = torch.cat(
+        [
+            res.docstring[res.docstring_attn_mask.bool()],
+            res.node_data[res.node_data_attn_mask.bool()],
+            res.edge_data[res.edge_data_attn_mask.bool()],
+            res.source[res.source_attn_mask.bool()],
+        ],
+    )
 
-    return res.to_tuple()
+    if shift:
+        labels = labels[1:].contiguous()
+
+    if use_dict:
+        return {**res.to_dict(), "labels": labels}
+
+    return res.to_tuple(), (labels,)

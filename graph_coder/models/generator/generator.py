@@ -14,7 +14,7 @@
 from torch import nn
 
 from .generator_base import GraphCoderGeneratorBase
-from .layers import CodeLayer, GraphLayer, TextLayer
+from .layers import CodeLayer, GraphLayer, LmLayer, TextLayer
 
 
 class GraphCoderGenerator(GraphCoderGeneratorBase[nn.Module]):
@@ -32,6 +32,7 @@ class GraphCoderGenerator(GraphCoderGeneratorBase[nn.Module]):
         eos_token_id: int = 0,
         max_length: int = 64,
         max_seq_length: int = 512,
+        shift: bool = True,
     ) -> None:
         super().__init__(
             layers=[
@@ -45,6 +46,7 @@ class GraphCoderGenerator(GraphCoderGeneratorBase[nn.Module]):
             eos_token_id=eos_token_id,
             max_length=max_length,
             max_seq_length=max_seq_length,
+            lm_layer=LmLayer(vocab_size, max_length, hidden_size, shift=shift),
         )
         self.embedding = embedding
         self.text_encoder = text_encoder

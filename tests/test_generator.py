@@ -16,6 +16,8 @@ from functools import partial
 from pathlib import Path
 
 import torch
+
+from graph_coder.config import ConfigBuilder
 from graph_coder.config.functional import get_pretrained_tokenizer
 
 from graph_coder.data import collate_ast
@@ -28,7 +30,6 @@ from graph_coder.modules import (
     TransformerDecoderPipe,
     TransformerEncoderPipe,
 )
-from graph_coder.pipe import PipeLoaderWrapper
 from graph_coder.runners import GraphCoderGeneratorRunner
 from torch import nn
 from torch.utils.data import DataLoader
@@ -88,13 +89,30 @@ def test_generator():
     )
 
     for batch in loader:
-        decoded = generator(**batch)
-        if "docstring" in decoded:
-            assert decoded["docstring"].size(-1) == len(tokenizer.vocab)
-        if "graph" in decoded:
-            assert decoded["graph"].size(-1) == len(tokenizer.vocab)
-        if "source" in decoded:
-            assert decoded["source"].size(-1) == len(tokenizer.vocab)
+        logits = generator(**batch)
+
+        assert torch.is_floating_point(logits)
+
+
+def test_generator_config():
+    params = (
+        ConfigBuilder(Path(__file__).parent / "./configs/small.yaml").load().build()
+    )
+
+    assert isinstance(params["runner"], GraphCoderGeneratorRunner)
+    assert (
+        params["runner"].model.embedding
+        == params[
+            "runner"
+        ].model.graph_encoder.graph_encoder.graph_feature.embedding.embedding
+    )
+    assert params["run"][0]["optimizer"].param_groups[0]["params"] == list(
+        params["runner"].model.parameters()
+    )
+
+    for batch in params["dataset"].loaders["train"]:
+        res = params["model"](**batch)
+        assert torch.is_floating_point(res)
 
 
 def test_generator_runner():
@@ -181,12 +199,10 @@ def test_generator_pipe():
         collate_fn=collator,
         root=Path(__file__).parent / "./data",
     )
-    loader = PipeLoaderWrapper(
-        DataLoader(
-            dataset,
-            batch_size=2,
-            collate_fn=collator,
-        )
+    loader = DataLoader(
+        dataset,
+        batch_size=2,
+        collate_fn=collator,
     )
     embedding = nn.Embedding(
         len(tokenizer.vocab), 16, padding_idx=tokenizer.pad_token_id
@@ -213,7 +229,6 @@ def test_generator_pipe():
     decoder = TransformerDecoderPipe(
         decoder_layer=nn.TransformerDecoderLayer(d_model=16, nhead=2), num_layers=2
     )
-    criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
 
     generator = GraphCoderGeneratorPipe(
         embedding=embedding,
@@ -225,7 +240,6 @@ def test_generator_pipe():
         vocab_size=len(tokenizer.vocab),
         eos_token_id=tokenizer.eos_token_id,
         max_length=4,
-        criterion=criterion,
     )
 
     layers = generator.to_layers()
@@ -233,10 +247,7 @@ def test_generator_pipe():
     for i, batch in enumerate(loader):
         inputs, outputs = batch
         for layer in layers:
-            if i == len(layers) - 1:
-                args = (inputs, outputs)
-            else:
-                args = (inputs,)
+            args = (inputs, outputs)
             inputs = layer(*args)
 
         assert torch.is_floating_point(inputs)

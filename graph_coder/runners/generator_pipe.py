@@ -27,7 +27,6 @@ from deepspeed.runtime.data_pipeline.data_sampling.data_sampler import (
 from deepspeed.runtime.dataloader import DeepSpeedDataLoader, RepeatingLoader
 from torch.utils.data import DataLoader, DistributedSampler, RandomSampler
 
-from graph_coder.pipe.dataloader import PipeLoaderWrapper
 from graph_coder.runners import TMM
 from graph_coder.runners.generator import GraphCoderGeneratorRunner
 
@@ -148,4 +147,4 @@ class GraphCoderGeneratorRunnerPipe(GraphCoderGeneratorRunner[PipelineEngine]):
             route=__KEY_TO_ROUTE_MAP__[key],
         )
 
-        return PipeLoaderWrapper(loader)
+        return loader

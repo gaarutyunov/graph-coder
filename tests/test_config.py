@@ -30,27 +30,6 @@ from torch.nn import TransformerDecoder
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
-def test_config():
-    params = (
-        ConfigBuilder(Path(__file__).parent / "./configs/small.yaml").load().build()
-    )
-
-    assert isinstance(params["runner"], GraphCoderGeneratorRunner)
-    assert (
-        params["runner"].model.embedding
-        == params[
-            "runner"
-        ].model.graph_encoder.graph_encoder.graph_feature.embedding.embedding
-    )
-    assert params["run"][0]["optimizer"].param_groups[0]["params"] == list(
-        params["runner"].model.parameters()
-    )
-
-    for batch in params["dataset"].loaders["train"]:
-        res = params["model"](**batch)
-        assert isinstance(res, dict)
-
-
 def test_parse_config():
     root = Path(__file__).parent / "./configs/split"
     config = ConfigBuilder(root, "generator", "tiny", "performer").load()

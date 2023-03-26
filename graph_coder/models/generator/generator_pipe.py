@@ -15,16 +15,10 @@ import torch
 from torch import nn
 
 from graph_coder.data import GraphCoderBatch
-from graph_coder.pipe import (
-    ConditionalLayer,
-    Layers,
-    PassThroughLayer,
-    pipe_wrap,
-    PipeModule,
-    RemoveArgsLayer,
-)
+from graph_coder.pipe import Layers, PassThroughLayer, pipe_wrap, PipeModule
 
 from .generator_base import GraphCoderGeneratorBase
+from .layers import LmLayer
 from .layers_pipe import CodeLayerPipe, GraphLayerPipe, TextLayerPipe
 
 
@@ -35,7 +29,6 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
         text_encoder: PipeModule,
         code_encoder: PipeModule,
         graph_encoder: PipeModule,
-        criterion: nn.Module,
         decoder: PipeModule,
         hidden_size: int,
         vocab_size: int,
@@ -53,32 +46,8 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
             vocab_size=vocab_size,
             eos_token_id=eos_token_id,
             max_length=max_length,
+            lm_layer=LmLayer(vocab_size, max_length, hidden_size),  # type: ignore[arg-type]
         )
-        self.criterion = criterion
-
-    def get_states(self, *args):
-        batch = GraphCoderBatch.from_tuple(args)
-
-        hidden_states = args[-1]
-        largs = []
-        if batch.has_docstring:
-            largs.append(hidden_states[:, : batch.docstring_size])
-
-        if batch.has_graph:
-            if batch.has_docstring:
-                start = batch.docstring_size
-            else:
-                start = 0
-            if batch.has_source:
-                end = batch.source_size
-            else:
-                end = -1
-            largs.append(hidden_states[:, start:-end])
-
-        if batch.has_source:
-            largs.append(hidden_states[:, -batch.source_size :])
-
-        return *args, *largs
 
     def has_source(self, *args):
         return GraphCoderBatch.from_tuple(args).has_source
@@ -88,40 +57,6 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
 
     def has_graph(self, *args):
         return GraphCoderBatch.from_tuple(args).has_graph
-
-    def calc_loss(self, *args):
-        batch = GraphCoderBatch.from_tuple(args)
-
-        lm_logits = []
-        target_ids = []
-
-        if batch.has_docstring:
-            target_ids.append(batch.docstring[batch.docstring_attn_mask.bool()])
-            lm_logits.append(args[-3][batch.docstring_attn_mask.bool()])
-        if batch.has_graph:
-            target_ids.extend(
-                [
-                    batch.node_data[batch.node_data_attn_mask.bool()],
-                    batch.edge_data[batch.edge_data_attn_mask.bool()],
-                ]
-            )
-            lm_logits.append(
-                args[-2][batch.padded_node_mask][batch.node_data_attn_mask.bool()]
-            )
-            lm_logits.append(
-                args[-2][batch.padded_edge_mask][batch.edge_data_attn_mask.bool()]
-            )
-        if batch.has_source:
-            target_ids.append(batch.source[batch.source_attn_mask.bool()])
-            lm_logits.append(args[-1][batch.source_attn_mask.bool()])
-
-        target_ids_ = torch.cat(target_ids)
-        lm_logits_ = torch.cat(lm_logits, dim=0)
-
-        shift_logits = lm_logits_[:-1, :].contiguous()
-        shift_labels = target_ids_[1:].contiguous().long()
-
-        return self.criterion(shift_logits, shift_labels)
 
     @pipe_wrap
     def to_layers(self) -> Layers:
@@ -134,7 +69,6 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
             [
                 # args: *batch_args, tgt, memory
                 *self.decoder.to_layers(),
-                RemoveArgsLayer(-1),
                 # args: *batch_args, tgt
                 PassThroughLayer(
                     self.dense,
@@ -143,43 +77,8 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
                     callback=lambda res, *args: torch.tanh(res).contiguous(),
                 ),
                 # args: *batch_args, tgt (hidden_states)
-                self.get_states,
-                # args: *batch_args, hidden_states, text_states?, graph_states, code_states
-                ConditionalLayer(
-                    PassThroughLayer(self.lm_text, -3, -3),
-                    self.has_docstring,
-                ),
-                # args: *batch_args, hidden_states, docstring_result?, graph_states, code_states
-                ConditionalLayer(
-                    PassThroughLayer(
-                        self.lm_graph,
-                        -2,
-                        -2,
-                        callback=lambda res, *args: res.view(
-                            res.size(0), -1, self.hidden_size
-                        ),
-                    ),
-                    self.has_graph,
-                ),
-                ConditionalLayer(
-                    PassThroughLayer(
-                        self.lm_graph_vocab,
-                        -2,
-                        -2,
-                        callback=lambda res, *args: res.view(
-                            res.size(0), -1, self.max_length, self.vocab_size
-                        ),
-                    ),
-                    self.has_graph,
-                ),
-                # args: *batch_args, hidden_states, docstring_result?, graph_result, code_states
-                ConditionalLayer(
-                    PassThroughLayer(self.lm_code, -1, -1),
-                    self.has_source,
-                ),
-                # args: *batch_args, hidden_states, docstring_result?, graph_result, source_result
-                self.calc_loss
-                # torch.Tensor (loss)
+                LmLayer(self.vocab_size, self.max_length, self.hidden_size),
+                # torch.Tensor (logits)
             ]
         )
 

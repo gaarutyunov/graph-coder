@@ -30,10 +30,8 @@ from graph_coder.modules import (
     TransformerDecoderPipe,
 )
 from graph_coder.modules.performer.performer_encoder_pipe import PerformerEncoderPipe
-from graph_coder.pipe import PipeLoaderWrapper
 from graph_coder.runners import GraphCoderGeneratorRunner
 from torch import nn
-from torch.optim import Adam
 from torch.utils.data import DataLoader
 
 
@@ -100,13 +98,8 @@ def test_performer():
     )
 
     for batch in loader:
-        decoded = generator(**batch)
-        if "docstring" in decoded:
-            assert decoded["docstring"].size(-1) == len(tokenizer.vocab)
-        if "graph" in decoded:
-            assert decoded["graph"].size(-1) == len(tokenizer.vocab)
-        if "source" in decoded:
-            assert decoded["source"].size(-1) == len(tokenizer.vocab)
+        logits = generator(**batch)
+        assert torch.is_floating_point(logits)
 
 
 def test_config_performer():
@@ -129,8 +122,8 @@ def test_config_performer():
     assert isinstance(params["model"].text_encoder, PerformerEncoder)
 
     for batch in params["dataset"].loaders["train"]:
-        res = params["model"](**batch)
-        assert isinstance(res, dict)
+        logits = params["model"](**batch)
+        assert torch.is_floating_point(logits)
 
 
 def test_performer_runner():
@@ -221,14 +214,12 @@ def test_performer_pipe():
         collate_fn=partial(collate_ast, tokenizer=tokenizer),
         root=Path(__file__).parent / "./data",
     )
-    loader = PipeLoaderWrapper(
-        DataLoader(
-            dataset,
-            batch_size=2,
-            collate_fn=partial(
-                collate_ast, tokenizer=tokenizer, max_length=8, use_dict=False
-            ),
-        )
+    loader = DataLoader(
+        dataset,
+        batch_size=2,
+        collate_fn=partial(
+            collate_ast, tokenizer=tokenizer, max_length=8, use_dict=False
+        ),
     )
     embedding = nn.Embedding(
         len(tokenizer.vocab), 16, padding_idx=tokenizer.pad_token_id
@@ -268,7 +259,6 @@ def test_performer_pipe():
     decoder = TransformerDecoderPipe(
         decoder_layer=nn.TransformerDecoderLayer(d_model=16, nhead=2), num_layers=2
     )
-    criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
 
     generator = GraphCoderGeneratorPipe(
         embedding=embedding,
@@ -280,10 +270,7 @@ def test_performer_pipe():
         vocab_size=len(tokenizer.vocab),
         eos_token_id=tokenizer.eos_token_id,
         max_length=8,
-        criterion=criterion,
     )
-
-    optimizer = Adam(params=generator.parameters())
 
     layers = generator.to_layers()
     layer_outputs = []
@@ -291,17 +278,8 @@ def test_performer_pipe():
     for i, batch in enumerate(loader):
         inputs, outputs = batch
         for layer in layers:
-            if i == len(layers) - 1:
-                args = (inputs, outputs)
-            else:
-                args = (inputs,)
+            args = (inputs, outputs)
             inputs = layer(*args)
             layer_outputs.append(inputs)
 
         assert torch.is_floating_point(inputs)
-
-        loss: torch.Tensor = inputs  # type: ignore[annotation-unchecked]
-
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()

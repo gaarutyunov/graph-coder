@@ -155,8 +155,8 @@ class GraphFeatureTokenizer(nn.Module):
         padded_feature = torch.zeros(
             b, max_len, d, device=device, dtype=node_feature.dtype
         )  # [B, T, D]
-        padded_feature[padded_node_mask, :] = node_feature
-        padded_feature[padded_edge_mask, :] = edge_feature
+        padded_feature[padded_node_mask.bool(), :] = node_feature
+        padded_feature[padded_edge_mask.bool(), :] = edge_feature
 
         return padded_feature
 

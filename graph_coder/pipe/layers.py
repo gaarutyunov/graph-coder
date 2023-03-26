@@ -158,17 +158,6 @@ class RemoveArgsLayer(PipeLayer):
         return tuple(largs)
 
 
-class ReorderLayer(PipeLayer):
-    """Layer that reorders args in `*args` by indexes."""
-
-    def __init__(self, *idx: int) -> None:
-        super().__init__()
-        self.idx = idx
-
-    def forward(self, *args):
-        return tuple([args[i] for i in self.idx])
-
-
 class PipeLayerWrapper(PipeLayer):
     """Wraps a layer to support pipe parallelism"""
 

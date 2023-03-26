@@ -16,7 +16,6 @@ from typing import Any, Generic, Mapping, TypeVar
 import torch
 from torch import nn
 
-from graph_coder.data import GraphCoderBatch
 from graph_coder.runners.base import GraphCoderRunnerBase
 
 
@@ -43,64 +42,7 @@ class GraphCoderGeneratorRunner(GraphCoderRunnerBase[TMM], Generic[TMM]):
 
     def _calc_loss(self, **kwargs: torch.Tensor) -> torch.Tensor:
         """Calculate loss for the given batch"""
-        batch = GraphCoderBatch.from_dict(kwargs)
-        result = self.model(**kwargs)
+        shift_logits = self.model(**kwargs)
+        shift_labels = kwargs["labels"]
 
-        lm_logits = []
-        target_ids = []
-
-        if batch.has_docstring:
-            target_ids.append(batch.docstring[batch.docstring_attn_mask.bool()])
-            lm_logits.append(result["docstring"][batch.docstring_attn_mask.bool()])
-            # add eos token
-            device = batch.docstring.device
-            target_ids.append(torch.tensor([self.eos_token_id], device=device))
-            lm_logits.append(
-                torch.tensor([self.eos_token_id], device=device).repeat(
-                    1, self.vocab_size
-                )
-            )
-        if batch.has_graph:
-            target_ids.extend(
-                [
-                    batch.node_data[batch.node_data_attn_mask.bool()],
-                    batch.edge_data[batch.edge_data_attn_mask.bool()],
-                ]
-            )
-            lm_logits.append(
-                result["graph"][batch.padded_node_mask][
-                    batch.node_data_attn_mask.bool()
-                ]
-            )
-            lm_logits.append(
-                result["graph"][batch.padded_edge_mask][
-                    batch.edge_data_attn_mask.bool()
-                ]
-            )
-            # add eos token
-            device = batch.node_data.device
-            target_ids.append(torch.tensor([self.eos_token_id], device=device))
-            lm_logits.append(
-                torch.tensor([self.eos_token_id], device=device).repeat(
-                    1, self.vocab_size
-                )
-            )
-        if batch.has_source:
-            target_ids.append(batch.source[batch.source_attn_mask.bool()])
-            lm_logits.append(result["source"][batch.source_attn_mask.bool()])
-            # add eos token
-            device = batch.source.device
-            target_ids.append(torch.tensor([self.eos_token_id], device=device))
-            lm_logits.append(
-                torch.tensor([self.eos_token_id], device=device).repeat(
-                    1, self.vocab_size
-                )
-            )
-
-        target_ids_ = torch.cat(target_ids)
-        lm_logits_ = torch.cat(lm_logits, dim=0)
-
-        shift_logits = lm_logits_[:-1, :].contiguous()
-        shift_labels = target_ids_[1:].contiguous().long()
-
-        return self.criterion(shift_logits, shift_labels.long())
+        return self.criterion(shift_logits, shift_labels)

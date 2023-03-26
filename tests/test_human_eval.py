@@ -86,6 +86,7 @@ def test_human_eval():
         eos_token_id=tokenizer.eos_token_id,
         max_length=8,
         max_seq_length=256,
+        shift=False,
     )
 
     log_folder = Path(__file__).parent / "logs"

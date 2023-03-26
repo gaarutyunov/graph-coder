@@ -23,4 +23,6 @@ model:
   _var_: model
   layers:
     _var_: _model.to_layers
+  loss_fn:
+    _var_: criterion
   num_stages: 2

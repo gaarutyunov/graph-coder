@@ -11,18 +11,6 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-#  Copyright (c) OpenAI (https://openai.com)
-#
-#  Permission is hereby granted, free of charge, to any person obtaining a copy
-#  of this software and associated documentation files (the "Software"), to deal
-#  in the Software without restriction, including without limitation the rights
-#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#  copies of the Software, and to permit persons to whom the Software is
-#  furnished to do so, subject to the following conditions:
-#
-#  The above copyright notice and this permission notice shall be included in
-#  all copies or substantial portions of the Software.
 import json
 from os import PathLike
 from pathlib import Path
@@ -115,7 +103,7 @@ class HumanEvalRunner(GraphCoderGeneratorRunner):
             batch = GraphCoderBatch.from_dict(he_dataset.collate_fn([example]))  # type: ignore[misc]
 
             for j in range(self.num_samples):
-                source = result["source"][j, batch.source.size(1) :]
+                source = result[j, batch.source_size + 1 : -1]
                 decoded_source = self.tokenizer.decode(source)
                 new_df = pd.DataFrame(
                     columns=df.columns, data=[[example.task_id, decoded_source]]

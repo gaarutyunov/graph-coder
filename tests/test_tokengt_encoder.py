@@ -23,7 +23,7 @@ from graph_coder.data import collate_ast
 from graph_coder.datasets import AstDataset
 from graph_coder.modules import TokenEmbedding, TokenGTEncoder, TokenGTEncoderPipe
 
-from graph_coder.pipe import PipeLayerWrapper, PipeLoaderWrapper
+from graph_coder.pipe import PipeLayerWrapper
 
 from torch import nn as nn
 from torch.utils.data import DataLoader
@@ -203,14 +203,12 @@ def test_pipe():
     dataset = AstDataset(
         root=Path(__file__).parent / "./data",
     )
-    loader = PipeLoaderWrapper(
-        DataLoader(
-            dataset,
-            collate_fn=partial(
-                collate_ast, tokenizer=tokenizer, max_length=8, use_dict=False
-            ),
-            batch_size=2,
-        )
+    loader = DataLoader(
+        dataset,
+        collate_fn=partial(
+            collate_ast, tokenizer=tokenizer, max_length=8, use_dict=False
+        ),
+        batch_size=2,
     )
     embedding = TokenEmbedding(
         embedding=nn.Embedding(len(tokenizer.vocab), 16, padding_idx=1),
@@ -236,10 +234,7 @@ def test_pipe():
     for i, batch in enumerate(loader):
         inputs, outputs = batch
         for layer in layers:
-            if i == len(layers) - 1:
-                args = (inputs, outputs)
-            else:
-                args = (inputs,)
+            args = (inputs, outputs)
             inputs = layer(*args)
 
         for arg in inputs:

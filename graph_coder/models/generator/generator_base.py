@@ -11,7 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from typing import Any, Dict, Generic, List, Tuple, TypeVar
+from typing import Dict, Generic, List, Tuple, TypeVar
 
 import torch
 import torch.nn.functional as F
@@ -23,12 +23,24 @@ from graph_coder.data import GraphCoderBatch
 TL = TypeVar("TL", bound=nn.Module)
 
 
+def append_token(
+    batch: GraphCoderBatch, t: torch.Tensor, m: torch.Tensor
+) -> Dict[str, torch.Tensor]:
+    batch.source_ = {
+        "input_ids": torch.cat([batch.source, t], dim=1),
+        "attention_mask": torch.cat([batch.source_attn_mask, m], dim=1),
+    }
+
+    return batch.to_dict()
+
+
 class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
     """Graph-coder model for code generation"""
 
     def __init__(
         self,
         layers: List[TL],
+        lm_layer: TL,
         decoder: TL,
         hidden_size: int,
         vocab_size: int,
@@ -45,48 +57,19 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
         self.max_seq_length = max_seq_length
         self.decoder = decoder
         self.dense = nn.Linear(hidden_size, hidden_size)
-        self.lm_text = nn.Linear(hidden_size, vocab_size, bias=False)
-        self.lm_code = nn.Linear(hidden_size, vocab_size, bias=False)
-        self.lm_graph = nn.Linear(hidden_size, hidden_size * max_length, bias=False)
-        self.lm_graph_vocab = nn.Linear(hidden_size, vocab_size, bias=False)
+        self.lm_layer = lm_layer
 
-    def forward(self, **kwargs: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, **kwargs: torch.Tensor) -> torch.Tensor:
         for layer in self.layers:
             kwargs = layer(**kwargs)
-
-        result: Dict[str, Any] = {}
 
         out = self.decoder(kwargs["tgt"], kwargs["memory"])
         hidden_states = torch.tanh(self.dense(out)).contiguous()
 
         batch = GraphCoderBatch.from_dict(kwargs)
+        args = (*batch.to_tuple(), hidden_states)
 
-        if batch.has_docstring:
-            result["docstring"] = self.lm_text(hidden_states[:, : batch.docstring_size])
-
-        if batch.has_graph:
-            if batch.has_docstring:
-                start = batch.docstring_size + 1
-            else:
-                start = 0
-            if batch.has_source:
-                end = batch.source_size + 1
-            else:
-                end = 0
-            graph_states = hidden_states[:, start : -end - 1]
-            graph = self.lm_graph(graph_states)
-            graph = graph.view(graph.size(0), -1, self.hidden_size)
-            graph = self.lm_graph_vocab(graph)
-            result["graph"] = graph.view(
-                graph.size(0), -1, self.max_length, self.vocab_size
-            )
-
-        if batch.has_source:
-            result["source"] = self.lm_code(
-                hidden_states[:, -batch.source_size - 1 : -1]
-            )
-
-        return result
+        return self.lm_layer(*args)
 
     def generate(
         self,
@@ -96,34 +79,23 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
         top_p: float = 0.0,
         repetition_penalty: float = 1.0,
         **kwargs: torch.Tensor,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> torch.Tensor:
         batch = GraphCoderBatch.from_dict(kwargs)
+
         new_token, attn_mask = self._predict_code_token(
             num_samples, temperature, top_k, top_p, repetition_penalty, **kwargs
         )
 
-        def append_token(t, m):
-            kwargs["source"] = torch.cat([kwargs["source"], t], dim=1)
-            kwargs["source_attn_mask"] = torch.cat(
-                [kwargs["source_attn_mask"], m], dim=1
-            )
-
-        if not batch.has_source:
-            kwargs["source"], kwargs["source_attn_mask"] = new_token, attn_mask
-        else:
-            append_token(new_token, attn_mask)
+        kwargs = append_token(batch, new_token, attn_mask)
 
         for i in range(self.max_seq_length - 1):
             new_token, attn_mask = self._predict_code_token(
                 num_samples, temperature, top_k, top_p, repetition_penalty, **kwargs
             )
 
-            append_token(new_token, attn_mask)
+            kwargs = append_token(batch, new_token, attn_mask)
 
-        return {
-            "source": kwargs["source"],
-            "docstring": kwargs["docstring"],
-        }
+        return kwargs["source"]
 
     def _predict_code_token(
         self,
@@ -139,7 +111,7 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
 
         out = self.decoder(kwargs["tgt"], kwargs["memory"])
         hidden_states = torch.tanh(self.dense(out)).contiguous()
-        logits = self.lm_code(hidden_states[0, -1, :]) / (
+        logits = self.lm_layer.code(hidden_states[0, -1, :]) / (  # type: ignore[operator]
             temperature if temperature > 0 else 1.0
         )
 

@@ -103,6 +103,12 @@ in-place = true
 recursive = true
 imports = ["einops", "performer_pytorch", "torch", "deepspeed", "catalyst", "human_eval", "numpy", "graph_coder"]
 
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore:.*U.*mode is deprecated:DeprecationWarning"
+]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

@@ -13,9 +13,15 @@
 #  limitations under the License.
 from torch import nn
 
-from graph_coder.pipe import Layers, PassThroughLayer, PipeModule
+from graph_coder.pipe import Layers, PassThroughLayer, PipeModule, RemoveArgsLayer
 
 
 class TransformerDecoderPipe(nn.TransformerDecoder, PipeModule):
     def to_layers(self) -> Layers:
-        return [PassThroughLayer(layer, [-2, -1], -2) for layer in self.layers]
+        layers: Layers = [
+            PassThroughLayer(layer, [-2, -1], -2) for layer in self.layers
+        ]
+
+        layers.append(RemoveArgsLayer(-1))
+
+        return layers

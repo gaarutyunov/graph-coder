@@ -26,6 +26,7 @@ model:
     _mode_: call
   eos_token_id: *eos_token_id
   hidden_size: &hidden_size 16
+  max_length: *max_length
   embedding:
     _target_: torch.nn.Embedding
     _var_: embedding

@@ -15,22 +15,9 @@ import random
 
 import torch
 
-from graph_coder.pipe import Layers, pipe_wrap, PipeLoaderWrapper, PipeModule
+from graph_coder.pipe import Layers, pipe_wrap, PipeModule
 from torch import nn
 from torch.utils.data import DataLoader
-
-
-class TestModule(nn.Module):
-    def forward(self, *args):
-        x = args[0]
-
-        return x * 2, *args[1:]
-
-
-class TestModulePipe(PipeModule):
-    @pipe_wrap
-    def to_layers(self) -> Layers:
-        return [TestModule(), TestModule()]
 
 
 def collate_fn(items):
@@ -39,10 +26,21 @@ def collate_fn(items):
     for i in items:
         a.append(i[0].unsqueeze(0))
         b.append(i[1].unsqueeze(0))
-    return tuple([torch.cat(a, dim=1), torch.cat(a, dim=1)])
+    return tuple([torch.cat(a, dim=1), torch.cat(a, dim=1)]), (torch.randn(1, 1),)
 
 
 def test_pipe():
+    class TestModule(nn.Module):
+        def forward(self, *args):
+            x = args[0]
+
+            return x * 2, *args[1:]
+
+    class TestModulePipe(PipeModule):
+        @pipe_wrap
+        def to_layers(self) -> Layers:
+            return [TestModule(), TestModule()]
+
     loader = DataLoader(
         [
             (
@@ -54,7 +52,7 @@ def test_pipe():
         batch_size=2,
         collate_fn=collate_fn,
     )
-    wrapper = PipeLoaderWrapper(loader)
+    wrapper = loader
     layers = TestModulePipe().to_layers()
 
     for i in wrapper:
