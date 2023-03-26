@@ -156,6 +156,7 @@ class LmLayer(nn.Module):
         batch = GraphCoderBatch.from_tuple(args)
         hidden_states = args[-1]
         lm_logits = []
+        docstring, graph, source = None, None, None
 
         if batch.has_docstring:
             docstring = self.text(hidden_states[:, : batch.docstring_size])
@@ -176,16 +177,28 @@ class LmLayer(nn.Module):
             graph = graph.view(graph.size(0), -1, self.hidden_size)
             graph = self.graph_outer(graph)
             graph = graph.view(graph.size(0), -1, self.max_length, self.vocab_size)
-            lm_logits.extend(
-                [
-                    graph[batch.padded_node_mask.bool()][
-                        batch.node_data_attn_mask.bool()
-                    ],
-                    graph[batch.padded_edge_mask.bool()][
-                        batch.edge_data_attn_mask.bool()
-                    ],
-                ]
-            )
+            try:
+                lm_logits.extend(
+                    [
+                        graph[batch.padded_node_mask.bool()][
+                            batch.node_data_attn_mask.bool()
+                        ],
+                        graph[batch.padded_edge_mask.bool()][
+                            batch.edge_data_attn_mask.bool()
+                        ],
+                    ]
+                )
+            except Exception as e:
+                fmt = f"""\
+                idx: {batch.idx.tolist()}
+                hidden_states.shape: {hidden_states.shape}
+                docstring_states.shape: {docstring.shape if docstring is not None else 0}
+                graph_states.shape: {graph.shape}
+                padded_node_mask.shape: {batch.padded_node_mask.shape}
+                padded_edge_mask.shape: {batch.padded_edge_mask.shape}
+                node_attn.shape: {batch.node_data_attn_mask.shape}
+                edge_attn.shape: {batch.edge_data_attn_mask.shape}"""
+                raise Exception(fmt) from e
 
         if batch.has_source:
             source = self.code(hidden_states[:, -batch.source_size - 1 : -1])

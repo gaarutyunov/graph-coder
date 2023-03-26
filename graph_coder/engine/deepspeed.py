@@ -11,12 +11,9 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-import torch.distributed
 
 from catalyst.engines import GPUEngine
 from deepspeed.comm import init_distributed
-
-from graph_coder.utils import print_rank0
 
 
 class DeepspeedEngine(GPUEngine):
@@ -24,5 +21,4 @@ class DeepspeedEngine(GPUEngine):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        print_rank0(f"Torch is initialized: {torch.distributed.is_initialized()}")
         init_distributed("nccl", dist_init_required=True)
