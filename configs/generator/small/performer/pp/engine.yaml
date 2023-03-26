@@ -6,8 +6,7 @@ engine:
     hf_ds_config:
       _target_: accelerate.utils.deepspeed.HfDeepSpeedConfig
       config_file_or_dict:
-        train_batch_size: 64
-        gradient_accumulation_steps: 2
+        gradient_accumulation_steps: 1
         train_micro_batch_size_per_gpu: 16
         zero_optimization:
           stage: 1 # pipeline parallelism is not supported for stages 2 and 3
