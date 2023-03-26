@@ -54,10 +54,7 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
         for layer in self.layers:
             kwargs = layer(**kwargs)
 
-        result: Dict[str, Any] = {
-            "padded_node_mask": kwargs["padded_node_mask"],
-            "padded_edge_mask": kwargs["padded_edge_mask"],
-        }
+        result: Dict[str, Any] = {}
 
         out = self.decoder(kwargs["tgt"], kwargs["memory"])
         hidden_states = torch.tanh(self.dense(out)).contiguous()

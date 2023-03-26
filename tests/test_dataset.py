@@ -24,7 +24,6 @@ from graph_coder.config.functional import (
     filter_is_processed,
     filter_max_nodes,
     filter_max_size,
-    get_dtype,
     get_pretrained_tokenizer,
 )
 
@@ -225,25 +224,6 @@ Splits:
     io = StringIO()
     dataset._print_summary(io)
     assert io.getvalue() == summary
-
-
-def test_dtype():
-    dataset = AstDataset(
-        collate_fn=partial(
-            collate_ast,
-            tokenizer=get_pretrained_tokenizer("EleutherAI/gpt-neox-20b"),
-            dtype=get_dtype("half"),
-        ),
-        root=Path(__file__).parent / "./data",
-    )
-
-    for batch in dataset.loaders["train"]:
-        batch = GraphCoderBatch.from_dict(batch)
-
-        assert batch.node_data.dtype == torch.long
-        assert batch.edge_data.dtype == torch.long
-        assert batch.docstring.dtype == torch.long
-        assert batch.source.dtype == torch.long
 
 
 def test_in_memory():

@@ -68,12 +68,12 @@ class GraphCoderGeneratorRunner(GraphCoderRunnerBase[TMM], Generic[TMM]):
                 ]
             )
             lm_logits.append(
-                result["graph"][result["padded_node_mask"].bool()][
+                result["graph"][batch.padded_node_mask][
                     batch.node_data_attn_mask.bool()
                 ]
             )
             lm_logits.append(
-                result["graph"][result["padded_edge_mask"].bool()][
+                result["graph"][batch.padded_edge_mask][
                     batch.edge_data_attn_mask.bool()
                 ]
             )

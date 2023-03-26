@@ -16,7 +16,6 @@ from typing import Dict, List, Tuple
 import torch
 from transformers import PreTrainedTokenizerFast
 
-from .algos import lap_eig
 from .ast import AstExample
 
 from .batch import GraphCoderBatch
@@ -68,7 +67,7 @@ def get_index_and_mask(
     node_num: torch.Tensor,
     edge_num: torch.Tensor,
 ):
-    seq_len = [n + e for n, e in zip(node_num, edge_num)]
+    seq_len = node_num + edge_num
     b = len(seq_len)
     max_len = max(seq_len)
     max_n = max(node_num)
@@ -117,10 +116,8 @@ def collate_ast(
     tokenizer: PreTrainedTokenizerFast,
     max_length: int = 64,
     max_seq_length: int = 8192,
-    dtype: torch.dtype = torch.float,
     use_dict: bool = True,
     num_samples: int = 1,
-    lap_node_id_k: int = 8,
 ) -> torch.Union[Dict[str, torch.Tensor], Tuple[torch.Tensor, ...]]:
     """Collate a batch of examples into a batch of tensors."""
     if num_samples > 1:
