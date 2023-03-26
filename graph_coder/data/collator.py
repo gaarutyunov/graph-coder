@@ -175,7 +175,7 @@ def collate_ast(
         max_length=max_seq_length,
     ).data
 
-    if len(docstring_["input_ids"]) > 0:
+    if docstring_["input_ids"].size(-1) > 0:
         docstring_ = {
             "input_ids": torch.cat(
                 [docstring_["input_ids"].long(), eos],
@@ -199,7 +199,7 @@ def collate_ast(
         max_length=max_seq_length,
     ).data
 
-    if len(source_["input_ids"]) > 0:
+    if source_["input_ids"].size(-1) > 0:
         source_ = {
             "input_ids": torch.cat(
                 [eos, source_["input_ids"].long(), eos],
