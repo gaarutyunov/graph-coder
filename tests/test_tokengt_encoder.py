@@ -57,14 +57,11 @@ def test_tokengt_encoder():
     for batch in loader:
         encoded = encoder(
             batch["edge_index"],
-            batch["edge_data"],
-            batch["node_data"],
             batch["node_num"],
             batch["edge_num"],
             batch["padded_index"],
             batch["padding_mask"],
-            batch["padded_node_mask"],
-            batch["padded_edge_mask"],
+            batch["padded_feature"],
         )
         assert encoded.size(-1) == 16
 
@@ -99,14 +96,11 @@ def test_sign_flip():
     for batch in loader:
         encoded = encoder(
             batch["edge_index"],
-            batch["edge_data"],
-            batch["node_data"],
             batch["node_num"],
             batch["edge_num"],
             batch["padded_index"],
             batch["padding_mask"],
-            batch["padded_node_mask"],
-            batch["padded_edge_mask"],
+            batch["padded_feature"],
         )
         assert encoded.size(-1) == 16
 
@@ -142,14 +136,11 @@ def test_performer():
     for batch in loader:
         encoded = encoder(
             batch["edge_index"],
-            batch["edge_data"],
-            batch["node_data"],
             batch["node_num"],
             batch["edge_num"],
             batch["padded_index"],
             batch["padding_mask"],
-            batch["padded_node_mask"],
-            batch["padded_edge_mask"],
+            batch["padded_feature"],
         )
         assert encoded.size(-1) == 16
 
@@ -186,14 +177,11 @@ def test_graphormer_init():
     for batch in loader:
         encoded = encoder(
             batch["edge_index"],
-            batch["edge_data"],
-            batch["node_data"],
             batch["node_num"],
             batch["edge_num"],
             batch["padded_index"],
             batch["padding_mask"],
-            batch["padded_node_mask"],
-            batch["padded_edge_mask"],
+            batch["padded_feature"],
         )
         assert encoded.size(-1) == 16
 

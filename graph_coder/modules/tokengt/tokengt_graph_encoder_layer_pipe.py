@@ -14,8 +14,8 @@
 from torch.nn import Identity
 
 from graph_coder.pipe import Layers, PassThroughLayer, PipeModule, RemoveArgsLayer
-from ...data import GraphCoderBatch
 from .tokengt_graph_encoder_layer import TokenGTGraphEncoderLayer
+from graph_coder.data import get_arg_idx
 
 
 class TokenGTGraphEncoderLayerPipe(TokenGTGraphEncoderLayer, PipeModule):
@@ -33,7 +33,7 @@ class TokenGTGraphEncoderLayerPipe(TokenGTGraphEncoderLayer, PipeModule):
                         args[-2],
                         args[-2],
                         None,
-                        args[GraphCoderBatch.get_arg_idx("padding_mask")],
+                        args[get_arg_idx("padding_mask")],
                         self.return_attention,
                         None,
                         False,
@@ -72,7 +72,7 @@ class TokenGTGraphEncoderLayerPipe(TokenGTGraphEncoderLayer, PipeModule):
                         args[-2],
                         args[-2],
                         None,
-                        args[GraphCoderBatch.get_arg_idx("padding_mask")],
+                        args[get_arg_idx("padding_mask")],
                         self.return_attention,
                         None,
                         False,

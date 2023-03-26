@@ -16,7 +16,7 @@ import typing
 import torch
 from torch.nn import Identity
 
-from graph_coder.data import GraphCoderBatch
+from graph_coder.data import GraphCoderBatch, get_arg_idx
 from graph_coder.pipe import (
     ConditionalLayer,
     Layers,
@@ -50,7 +50,7 @@ class TextLayerPipe(TextLayer[PipeModule], PipeModule):
         return [
             ConditionalLayer(
                 PassThroughLayer(
-                    self.embedding, GraphCoderBatch.get_arg_idx("docstring")
+                    self.embedding, get_arg_idx("docstring")
                 ),
                 self.condition,
             ),
@@ -83,13 +83,7 @@ class GraphLayerPipe(GraphLayer[PipeModule], PipeModule):
     def cat_target_and_memory(self, *args):
         batch = GraphCoderBatch.from_tuple(args)
         padded_feature = self.graph_encoder.graph_encoder.graph_feature.process_batch(  # type: ignore[union-attr]
-            batch.node_data,
-            batch.edge_data,
-            batch.edge_index,
-            batch.node_num,
-            batch.edge_num,
-            batch.padded_node_mask,
-            batch.padded_edge_mask,
+            batch.padded_feature,
         )  # type: ignore[operator]
         padded_feature = padded_feature.masked_fill(
             batch.padding_mask.bool()[..., None], float("0")
@@ -103,13 +97,7 @@ class GraphLayerPipe(GraphLayer[PipeModule], PipeModule):
     def add_target_and_memory(self, *args):
         batch = GraphCoderBatch.from_tuple(args)
         padded_feature = self.graph_encoder.graph_encoder.graph_feature.process_batch(  # type: ignore[union-attr]
-            batch.node_data,
-            batch.edge_data,
-            batch.edge_index,
-            batch.node_num,
-            batch.edge_num,
-            batch.padded_node_mask,
-            batch.padded_edge_mask,
+            batch.padded_feature
         )  # type: ignore[operator]
         padded_feature = padded_feature.masked_fill(
             batch.padding_mask.bool()[..., None], float("0")
@@ -138,7 +126,7 @@ class CodeLayerPipe(CodeLayer[PipeModule], PipeModule):
     def to_layers(self) -> Layers:
         return [
             ConditionalLayer(
-                PassThroughLayer(self.embedding, GraphCoderBatch.get_arg_idx("source")),
+                PassThroughLayer(self.embedding, get_arg_idx("source")),
                 self.condition,
             ),
             # args: *batch_args, *, tgt, memory, emb

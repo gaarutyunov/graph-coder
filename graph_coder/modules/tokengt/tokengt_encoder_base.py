@@ -76,25 +76,19 @@ class TokenGTEncoderBase(nn.Module, Generic[TGE]):
     def forward(
         self,
         edge_index,
-        edge_data,
-        node_data,
         node_num,
         edge_num,
         padded_index,
         padding_mask,
-        padded_node_mask,
-        padded_edge_mask,
+        padded_feature,
     ):
         x = self.graph_encoder(
             edge_index,
-            edge_data,
-            node_data,
             node_num,
             edge_num,
             padded_index,
             padding_mask,
-            padded_node_mask,
-            padded_edge_mask,
+            padded_feature
         )
 
         x = self.layer_norm(self.activation_fn(self.lm_head_transform_weight(x)))

@@ -87,7 +87,7 @@ def process_input(
             (
                 input_data.batch_size,
                 input_data.graph_size,
-                input_data.node_data.size(-1),
+                input_data.padded_feature.size(-1),
             ),
             (input_data.batch_size, input_data.source_size),
         ]

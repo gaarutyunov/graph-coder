@@ -17,24 +17,22 @@ from typing import Dict, Tuple, Type
 
 import torch
 
-__ARGS_MAPPING__ = {
-    "idx": 0,
-    "source": 1,
-    "source_attn_mask": 2,
-    "docstring": 3,
-    "docstring_attn_mask": 4,
-    "edge_index": 5,
-    "edge_data": 6,
-    "edge_data_attn_mask": 7,
-    "node_data": 8,
-    "node_data_attn_mask": 9,
-    "node_num": 10,
-    "edge_num": 11,
-    "padded_index": 12,
-    "padding_mask": 13,
-    "padded_node_mask": 14,
-    "padded_edge_mask": 15,
-}
+__PROPS__ = [
+    "idx",
+    "source",
+    "source_attn_mask",
+    "docstring",
+    "docstring_attn_mask",
+    "padded_feature",
+    "padded_feature_attn_mask",
+    "edge_index",
+    "node_num",
+    "edge_num",
+    "padded_index",
+    "padding_mask",
+]
+
+__ARGS_MAPPING__ = dict(zip(__PROPS__, range(len(__PROPS__))))
 
 ARGS_SIZE = len(__ARGS_MAPPING__)
 
@@ -45,14 +43,11 @@ class GraphCoderBatch:
     source_: Dict[str, torch.Tensor]
     docstring_: Dict[str, torch.Tensor]
     edge_index: torch.Tensor
-    edge_data_: Dict[str, torch.Tensor]
-    node_data_: Dict[str, torch.Tensor]
+    padded_feature_: Dict[str, torch.Tensor]
     node_num: torch.Tensor
     edge_num: torch.Tensor
     padded_index: torch.Tensor
     padding_mask: torch.Tensor
-    padded_node_mask: torch.Tensor
-    padded_edge_mask: torch.Tensor
 
     @property
     def batch_size(self) -> int:
@@ -83,32 +78,20 @@ class GraphCoderBatch:
         return self.docstring.size(-1)
 
     @property
-    def edge_data(self):
-        return self.edge_data_["input_ids"]
+    def padded_feature(self):
+        return self.padded_feature_["input_ids"]
 
     @property
-    def edge_data_attn_mask(self):
-        return self.edge_data_["attention_mask"]
+    def padded_feature_attn_mask(self):
+        return self.padded_feature_["attention_mask"]
 
     @property
-    def edge_data_size(self):
-        return self.edge_data.size(-2)
-
-    @property
-    def node_data(self):
-        return self.node_data_["input_ids"]
-
-    @property
-    def node_data_attn_mask(self):
-        return self.node_data_["attention_mask"]
-
-    @property
-    def node_data_size(self):
-        return self.node_data.size(-2)
+    def padded_feature_size(self):
+        return self.padded_feature.size(-2)
 
     @property
     def graph_size(self) -> int:
-        return self.node_data_size + self.edge_data_size
+        return self.padded_feature_size
 
     @property
     def has_source(self) -> bool:
@@ -120,7 +103,7 @@ class GraphCoderBatch:
 
     @property
     def has_graph(self) -> bool:
-        return self.node_data is not None and self.node_data.size(-2) > 0
+        return self.padded_feature is not None and self.padded_feature.size(-2) > 0
 
     def to_dict(self) -> Dict[str, torch.Tensor]:
         return {
@@ -130,16 +113,12 @@ class GraphCoderBatch:
             "docstring": self.docstring,
             "docstring_attn_mask": self.docstring_attn_mask,
             "edge_index": self.edge_index,
-            "edge_data": self.edge_data,
-            "edge_data_attn_mask": self.edge_data_attn_mask,
-            "node_data": self.node_data,
-            "node_data_attn_mask": self.node_data_attn_mask,
+            "padded_feature": self.padded_feature,
+            "padded_feature_attn_mask": self.padded_feature_attn_mask,
             "node_num": self.node_num,
             "edge_num": self.edge_num,
             "padded_index": self.padded_index,
             "padding_mask": self.padding_mask,
-            "padded_node_mask": self.padded_node_mask,
-            "padded_edge_mask": self.padded_edge_mask,
         }
 
     def to_tuple(self) -> Tuple[torch.Tensor, ...]:
@@ -149,17 +128,13 @@ class GraphCoderBatch:
             self.source_attn_mask,
             self.docstring,
             self.docstring_attn_mask,
+            self.padded_feature,
+            self.padded_feature_attn_mask,
             self.edge_index,
-            self.edge_data,
-            self.edge_data_attn_mask,
-            self.node_data,
-            self.node_data_attn_mask,
             self.node_num,
             self.edge_num,
             self.padded_index,
             self.padding_mask,
-            self.padded_node_mask,
-            self.padded_edge_mask,
         )
 
     @classmethod
@@ -177,20 +152,14 @@ class GraphCoderBatch:
                 "attention_mask": obj["docstring_attn_mask"],
             },
             edge_index=obj["edge_index"],
-            edge_data_={
-                "input_ids": obj["edge_data"],
-                "attention_mask": obj["edge_data_attn_mask"],
-            },
-            node_data_={
-                "input_ids": obj["node_data"],
-                "attention_mask": obj["node_data_attn_mask"],
+            padded_feature_={
+                "input_ids": obj["padded_feature"],
+                "attention_mask": obj["padded_feature_attn_mask"]
             },
             node_num=obj["node_num"],
             edge_num=obj["edge_num"],
             padded_index=obj["padded_index"],
             padding_mask=obj["padding_mask"],
-            padded_node_mask=obj["padded_node_mask"],
-            padded_edge_mask=obj["padded_edge_mask"],
         )
 
     @classmethod
@@ -201,38 +170,32 @@ class GraphCoderBatch:
             len(obj) >= ARGS_SIZE
         ), f"Expected len to be at least {ARGS_SIZE}, got: {len(obj)}\n{obj}"
         return cls(
-            idx=obj[0],
+            idx=get_arg("idx", obj),
             source_={
-                "input_ids": obj[1],
-                "attention_mask": obj[2],
+                "input_ids": get_arg("source", obj),
+                "attention_mask": get_arg("source_attn_mask", obj),
             },
             docstring_={
-                "input_ids": obj[3],
-                "attention_mask": obj[4],
+                "input_ids": get_arg("docstring", obj),
+                "attention_mask": get_arg("docstring_attn_mask", obj),
             },
-            edge_index=obj[5],
-            edge_data_={
-                "input_ids": obj[6],
-                "attention_mask": obj[7],
+            edge_index=get_arg("edge_index", obj),
+            padded_feature_={
+                "input_ids": get_arg("padded_feature", obj),
+                "attention_mask": get_arg("padded_feature_attn_mask", obj),
             },
-            node_data_={
-                "input_ids": obj[8],
-                "attention_mask": obj[9],
-            },
-            node_num=obj[10],
-            edge_num=obj[11],
-            padded_index=obj[12],
-            padding_mask=obj[13],
-            padded_node_mask=obj[14],
-            padded_edge_mask=obj[15],
+            node_num=get_arg("node_num", obj),
+            edge_num=get_arg("edge_num", obj),
+            padded_index=get_arg("padded_index", obj),
+            padding_mask=get_arg("padding_mask", obj),
         )
 
-    @classmethod
-    def get_arg_idx(cls: Type["GraphCoderBatch"], name: str) -> int:
-        return __ARGS_MAPPING__[name]
 
-    @classmethod
-    def get_arg(
-        cls: Type["GraphCoderBatch"], name: str, obj: Tuple[torch.Tensor, ...]
-    ) -> torch.Tensor:
-        return obj[cls.get_arg_idx(name)]
+def get_arg(
+    name: str, obj: Tuple[torch.Tensor, ...]
+) -> torch.Tensor:
+    return obj[get_arg_idx(name)]
+
+
+def get_arg_idx(name: str) -> int:
+    return __ARGS_MAPPING__[name]

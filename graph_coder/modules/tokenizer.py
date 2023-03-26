@@ -131,34 +131,9 @@ class GraphFeatureTokenizer(nn.Module):
 
     def process_batch(
         self,
-        node_data,
-        edge_data,
-        edge_index,
-        node_num,
-        edge_num,
-        padded_node_mask,
-        padded_edge_mask,
+        padded_feature
     ) -> torch.Tensor:
-        node_feature = self.embedding(node_data)  # [sum(node_num), T, 1]
-        assert node_feature.size(-1) == 1, "Use embedding with output dim equal to 1"
-        node_feature = node_feature.squeeze(-1)  # [sum(node_num), T]
-
-        edge_feature = self.embedding(edge_data)  # [sum(edge_num), T, 1]
-        edge_feature = edge_feature.squeeze(-1)  # [sum(edge_num), T]
-
-        seq_len = [n + e for n, e in zip(node_num, edge_num)]
-        b = len(seq_len)
-        d = node_feature.size(-1)
-        max_len = max(seq_len)
-        device = edge_index.device
-
-        padded_feature = torch.zeros(
-            b, max_len, d, device=device, dtype=node_feature.dtype
-        )  # [B, T, D]
-        padded_feature[padded_node_mask.bool(), :] = node_feature
-        padded_feature[padded_edge_mask.bool(), :] = edge_feature
-
-        return padded_feature
+        return self.embedding(padded_feature).squeeze(-1)
 
     def get_type_embed(self, padded_index):
         """
@@ -224,23 +199,14 @@ class GraphFeatureTokenizer(nn.Module):
     def forward(
         self,
         edge_index,
-        edge_data,
-        node_data,
         node_num,
         edge_num,
         padded_index,
         padding_mask,
-        padded_node_mask,
-        padded_edge_mask,
+        padded_feature,
     ):
         padded_feature = self.process_batch(
-            node_data,
-            edge_data,
-            edge_index,
-            node_num,
-            edge_num,
-            padded_node_mask,
-            padded_edge_mask,
+            padded_feature,
         )
 
         if self.lap_node_id:

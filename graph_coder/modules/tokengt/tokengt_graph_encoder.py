@@ -298,28 +298,22 @@ class TokenGTGraphEncoder(nn.Module):
     def forward(
         self,
         edge_index,
-        edge_data,
-        node_data,
         node_num,
         edge_num,
         padded_index,
         padding_mask,
-        padded_node_mask,
-        padded_edge_mask,
+        padded_feature,
     ):
         if self.performer and self.performer_auto_check_redraw:
             self.performer_proj_updater.redraw_projections()
 
         x = self.graph_feature(
             edge_index,
-            edge_data,
-            node_data,
             node_num,
             edge_num,
             padded_index,
             padding_mask,
-            padded_node_mask,
-            padded_edge_mask,
+            padded_feature
         )
 
         # x: B x T x C

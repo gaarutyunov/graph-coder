@@ -16,7 +16,7 @@ from typing import List
 from torch.nn import Identity
 
 from graph_coder.pipe import Layers, PassThroughLayer, PipeLayer, PipeModule
-from ...data import GraphCoderBatch
+from graph_coder.data import get_arg_idx
 
 from .tokengt_graph_encoder import TokenGTGraphEncoder
 from .tokengt_graph_encoder_layer_pipe import TokenGTGraphEncoderLayerPipe
@@ -79,17 +79,14 @@ class TokenGTGraphEncoderPipe(TokenGTGraphEncoder, PipeModule):
             PassThroughLayer(
                 self.graph_feature,
                 [
-                    GraphCoderBatch.get_arg_idx(name)
+                    get_arg_idx(name)
                     for name in [
                         "edge_index",
-                        "edge_data",
-                        "node_data",
                         "node_num",
                         "edge_num",
                         "padded_index",
                         "padding_mask",
-                        "padded_node_mask",
-                        "padded_edge_mask",
+                        "padded_feature"
                     ]
                 ],
             ),

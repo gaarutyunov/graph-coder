@@ -63,6 +63,8 @@ def pad(
 
 
 def get_index_and_mask(
+    node_data: torch.Tensor,
+    edge_data: torch.Tensor,
     edge_index: torch.Tensor,
     node_num: torch.Tensor,
     edge_num: torch.Tensor,
@@ -102,11 +104,20 @@ def get_index_and_mask(
 
     padding_mask = torch.greater_equal(token_pos, seq_len_)  # [B, T]
 
+    d = node_data.size(-1)
+
+    padded_feature = torch.zeros(
+        b, max_len, d, device=device, dtype=node_data.dtype
+    )  # [B, T, D]
+    padded_feature[padded_node_mask.bool(), :] = node_data
+    padded_feature[padded_edge_mask.bool(), :] = edge_data
+
     return (
         padded_index,
         padding_mask.long(),
         padded_node_mask.long(),
         padded_edge_mask.long(),
+        padded_feature,
     )
 
 
@@ -172,7 +183,7 @@ def collate_ast(
         return_tensors="pt",
         return_attention_mask=True,
         truncation=True,
-        max_length=max_seq_length
+        max_length=max_seq_length,
     ).data
     docstring_ = {k: v.long() for k, v in docstring_.items()}
 
@@ -223,9 +234,21 @@ def collate_ast(
 
     edge_index_ = torch.cat(edge_index, dim=1)
 
-    padded_index, padding_mask, padded_node_mask, padded_edge_mask = get_index_and_mask(
-        edge_index_, node_num_, edge_num_
+    (
+        padded_index,
+        padding_mask,
+        padded_node_mask,
+        padded_edge_mask,
+        padded_feature,
+    ) = get_index_and_mask(
+        node_data_["input_ids"],
+        edge_data_["input_ids"],
+        edge_index_,
+        node_num_,
+        edge_num_,
     )
+
+    padded_feature_attn_mask = (padded_feature != tokenizer.pad_token_id).long()
 
     res = GraphCoderBatch(
         idx=torch.tensor(idx, dtype=torch.long),
@@ -234,19 +257,18 @@ def collate_ast(
         edge_num=edge_num_,
         source_=source_,
         docstring_=docstring_,
-        node_data_=node_data_,
-        edge_data_=edge_data_,
+        padded_feature_={
+            "input_ids": padded_feature,
+            "attention_mask": padded_feature_attn_mask,
+        },
         padded_index=padded_index,
         padding_mask=padding_mask,
-        padded_node_mask=padded_node_mask,
-        padded_edge_mask=padded_edge_mask,
     )
 
     labels = torch.cat(
         [
             res.docstring[res.docstring_attn_mask.bool()],
-            res.node_data[res.node_data_attn_mask.bool()],
-            res.edge_data[res.edge_data_attn_mask.bool()],
+            res.padded_feature[res.padded_feature_attn_mask.bool()],
             res.source[res.source_attn_mask.bool()],
         ],
     )

@@ -67,10 +67,7 @@ def test_collator():
         batch = GraphCoderBatch.from_dict(batch)
         assert batch.edge_index.size(0) == 2
         assert (
-            batch.edge_data.size(1) == (batch.edge_data != -100).sum(dim=1).max().item()
-        )
-        assert (
-            batch.node_data.size(1) == (batch.node_data != -100).sum(dim=1).max().item()
+            batch.padded_feature.size(1) == (batch.padded_feature != -100).sum(dim=1).max().item()
         )
 
 
@@ -258,8 +255,7 @@ def test_in_memory():
     for loader in dataset.loaders.values():
         for batch in loader:
             batch = GraphCoderBatch.from_dict(batch)
-            assert batch.node_data.dtype == torch.long
-            assert batch.edge_data.dtype == torch.long
+            assert batch.padded_feature.dtype == torch.long
             assert batch.docstring.dtype == torch.long
             assert batch.source.dtype == torch.long
 
