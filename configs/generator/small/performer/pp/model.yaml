@@ -15,8 +15,6 @@ _model:
     _var_: graph_encoder
   decoder:
     _var_: decoder
-  criterion:
-    _var_: criterion
 
 model:
   _target_: deepspeed.pipe.PipelineModule
