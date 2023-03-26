@@ -201,8 +201,11 @@ class LmLayer(nn.Module):
                 node_data.shape: {batch.node_data.shape}
                 edge_data.shape: {batch.edge_data.shape}
                 batch.source_size: {batch.source_size}"""
+                t = list(batch.to_tuple())
+                for i, t in enumerate(t):
+                    t[i] = t.to(torch.device("cpu"))
                 with open("batch.pkl", mode="wb") as f:
-                    pickle.dump(batch, f)
+                    pickle.dump(GraphCoderBatch.from_tuple(t), f)
                 raise Exception(fmt) from e
 
         if batch.has_source:
