@@ -31,4 +31,4 @@ chmod +x ./scripts/prepare.sh
 source ./scripts/prepare.sh
 
 # Train model
-NCCL_P2P_DISABLE=1 NCCL_DEBUG=info ACCELERATE_LOG_LEVEL=DEBUG deepspeed --module --no_local_rank graph_coder.run --spawn --root "$1" "${@:2}"
+NCCL_DEBUG=info ACCELERATE_LOG_LEVEL=DEBUG deepspeed --module --no_local_rank graph_coder.run --spawn --root "$1" "${@:2}"
