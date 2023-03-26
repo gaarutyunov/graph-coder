@@ -120,7 +120,7 @@ def collate_ast(
     num_samples: int = 1,
     shift: bool = True,
 ) -> torch.Union[
-    Dict[str, torch.Tensor], Tuple[Tuple[torch.Tensor, ...], Tuple[torch.Tensor, ...]]
+    Dict[str, torch.Tensor], Tuple[Tuple[torch.Tensor, ...], torch.Tensor]
 ]:
     """Collate a batch of examples into a batch of tensors."""
     if num_samples > 1:
@@ -253,4 +253,4 @@ def collate_ast(
     if use_dict:
         return {**res.to_dict(), "labels": labels}
 
-    return res.to_tuple(), (labels,)
+    return res.to_tuple(), labels

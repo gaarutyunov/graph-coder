@@ -26,7 +26,7 @@ def collate_fn(items):
     for i in items:
         a.append(i[0].unsqueeze(0))
         b.append(i[1].unsqueeze(0))
-    return tuple([torch.cat(a, dim=1), torch.cat(a, dim=1)]), (torch.randn(1, 1),)
+    return tuple([torch.cat(a, dim=1), torch.cat(a, dim=1)]), torch.randn(1, 1)
 
 
 def test_pipe():

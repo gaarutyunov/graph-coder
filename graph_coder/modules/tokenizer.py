@@ -256,6 +256,8 @@ class GraphFeatureTokenizer(nn.Module):
         if self.type_id:
             padded_feature = padded_feature + self.get_type_embed(padded_index)
 
-        padded_feature = padded_feature.masked_fill(padding_mask.bool()[..., None], float("0"))
+        padded_feature = padded_feature.masked_fill(
+            padding_mask.bool()[..., None], float("0")
+        )
 
         return padded_feature  # [B, T, D]
