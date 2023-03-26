@@ -172,8 +172,9 @@ def collate_ast(
         return_tensors="pt",
         return_attention_mask=True,
         truncation=True,
-        max_length=max_seq_length,
+        max_length=max_seq_length
     ).data
+    docstring_ = {k: v.long() for k, v in docstring_.items()}
 
     if docstring_["input_ids"].size(-1) > 0:
         docstring_ = {
@@ -198,6 +199,7 @@ def collate_ast(
         truncation=True,
         max_length=max_seq_length,
     ).data
+    source_ = {k: v.long() for k, v in source_.items()}
 
     if source_["input_ids"].size(-1) > 0:
         source_ = {
