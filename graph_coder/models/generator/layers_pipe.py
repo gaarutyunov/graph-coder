@@ -43,33 +43,11 @@ def cat_arg(key: int, other: typing.Union[int, torch.Tensor]):
 
 
 class TextLayerPipe(TextLayer[PipeModule], PipeModule):
-    def add_eos(self, *args):
-        batch = GraphCoderBatch.from_tuple(args)
-
-        eos = torch.empty(
-            (batch.batch_size, 1),
-            device=batch.docstring.device,
-            dtype=batch.docstring.dtype,
-        ).fill_(self.eos_token_id)
-
-        idx = GraphCoderBatch.get_arg_idx("docstring")
-        idx_attn_mask = GraphCoderBatch.get_arg_idx("docstring_attn_mask")
-
-        largs = list(args)
-
-        largs[idx] = torch.cat([batch.docstring, eos], dim=1)
-        largs[idx_attn_mask] = torch.cat(
-            [batch.docstring_attn_mask, torch.ones_like(eos)], dim=1
-        )
-
-        return tuple(largs)
-
     def condition(self, *args):
         return GraphCoderBatch.from_tuple(args).has_docstring
 
     def to_layers(self) -> Layers:
         return [
-            ConditionalLayer(self.add_eos, self.condition),
             ConditionalLayer(
                 PassThroughLayer(
                     self.embedding, GraphCoderBatch.get_arg_idx("docstring")
@@ -154,34 +132,11 @@ class GraphLayerPipe(GraphLayer[PipeModule], PipeModule):
 
 
 class CodeLayerPipe(CodeLayer[PipeModule], PipeModule):
-    def add_eos(self, *args):
-        batch = GraphCoderBatch.from_tuple(args)
-
-        eos = torch.empty(
-            (batch.batch_size, 1),
-            device=batch.source.device,
-            dtype=batch.source.dtype,
-        ).fill_(self.eos_token_id)
-
-        idx = GraphCoderBatch.get_arg_idx("source")
-        idx_attn_mask = GraphCoderBatch.get_arg_idx("source_attn_mask")
-
-        largs = list(args)
-
-        largs[idx] = torch.cat([eos, batch.source, eos.clone().detach()], dim=1)
-        largs[idx_attn_mask] = torch.cat(
-            [torch.ones_like(eos), batch.source_attn_mask, torch.ones_like(eos)],
-            dim=1,
-        )
-
-        return tuple(largs)
-
     def condition(self, *args):
         return GraphCoderBatch.from_tuple(args).has_source
 
     def to_layers(self) -> Layers:
         return [
-            ConditionalLayer(self.add_eos, self.condition),
             ConditionalLayer(
                 PassThroughLayer(self.embedding, GraphCoderBatch.get_arg_idx("source")),
                 self.condition,

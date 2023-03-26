@@ -175,6 +175,21 @@ def collate_ast(
         max_length=max_seq_length,
     ).data
 
+    if len(docstring_) > 0:
+        docstring_ = {
+            "input_ids": torch.cat(
+                [docstring_["input_ids"].long(), eos],
+                dim=1,
+            ),
+            "attention_mask": torch.cat(
+                [
+                    docstring_["attention_mask"].long(),
+                    eos_attn,
+                ],
+                dim=1,
+            ),
+        }
+
     source_ = tokenizer(
         sources,
         padding=True,
@@ -183,6 +198,22 @@ def collate_ast(
         truncation=True,
         max_length=max_seq_length,
     ).data
+
+    if len(source_) > 0:
+        source_ = {
+            "input_ids": torch.cat(
+                [eos, source_["input_ids"].long(), eos],
+                dim=1,
+            ),
+            "attention_mask": torch.cat(
+                [
+                    eos_attn,
+                    source_["attention_mask"].long(),
+                    eos_attn,
+                ],
+                dim=1,
+            ),
+        }
 
     node_num_, edge_num_ = torch.tensor(node_num, dtype=torch.long), torch.tensor(
         edge_num, dtype=torch.long
