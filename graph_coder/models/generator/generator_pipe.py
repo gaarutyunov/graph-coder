@@ -60,7 +60,7 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
         batch = GraphCoderBatch.from_tuple(args)
 
         hidden_states = args[-1]
-        largs = list(args)
+        largs = []
         if batch.has_docstring:
             largs.append(hidden_states[:, : batch.docstring_size])
 
@@ -78,7 +78,7 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
         if batch.has_source:
             largs.append(hidden_states[:, -batch.source_size :])
 
-        return tuple(largs)
+        return *args, *largs
 
     def has_source(self, *args):
         return GraphCoderBatch.from_tuple(args).has_source
