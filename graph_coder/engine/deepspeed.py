@@ -13,7 +13,6 @@
 #  limitations under the License.
 
 from catalyst.engines import GPUEngine
-from deepspeed.comm import init_distributed
 
 
 class DeepspeedEngine(GPUEngine):
@@ -21,4 +20,3 @@ class DeepspeedEngine(GPUEngine):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        init_distributed("nccl", dist_init_required=True)
