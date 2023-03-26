@@ -24,3 +24,4 @@ model:
   loss_fn:
     _var_: criterion
   num_stages: 2
+  activation_checkpoint_interval: 0
