@@ -126,7 +126,7 @@ class GraphLayer(nn.Module, typing.Generic[TE]):
             batch.padded_edge_mask,
         )  # type: ignore[operator]
         padded_feature = padded_feature.masked_fill(
-            kwargs["padding_mask"][..., None], float("0")
+            batch.padding_mask.bool()[..., None], float("0")
         )
         if "tgt" in kwargs:
             kwargs["tgt"] = torch.cat([kwargs["tgt"], padded_feature], dim=1)

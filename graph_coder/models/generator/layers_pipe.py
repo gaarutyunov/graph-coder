@@ -114,7 +114,7 @@ class GraphLayerPipe(GraphLayer[PipeModule], PipeModule):
             batch.padded_edge_mask,
         )  # type: ignore[operator]
         padded_feature = padded_feature.masked_fill(
-            batch.padding_mask[..., None], float("0")
+            batch.padding_mask.bool()[..., None], float("0")
         )
 
         memory = torch.cat([args[-2], args[-1]], dim=1)
@@ -134,7 +134,7 @@ class GraphLayerPipe(GraphLayer[PipeModule], PipeModule):
             batch.padded_edge_mask,
         )  # type: ignore[operator]
         padded_feature = padded_feature.masked_fill(
-            batch.padding_mask[..., None], float("0")
+            batch.padding_mask.bool()[..., None], float("0")
         )
 
         return *batch.to_tuple(), padded_feature, args[-1]
