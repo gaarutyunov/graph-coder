@@ -11,7 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-
+import pickle
 import typing
 
 import torch
@@ -201,6 +201,8 @@ class LmLayer(nn.Module):
                 node_data.shape: {batch.node_data.shape}
                 edge_data.shape: {batch.edge_data.shape}
                 batch.source_size: {batch.source_size}"""
+                with open("batch.pkl", mode="wb") as f:
+                    pickle.dump(batch, f)
                 raise Exception(fmt) from e
 
         if batch.has_source:
