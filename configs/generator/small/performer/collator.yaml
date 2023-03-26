@@ -5,8 +5,3 @@ collator:
   max_seq_length: 512
   tokenizer:
     _var_: tokenizer
-  dtype:
-    _target_: graph_coder.config.F.get_dtype
-    _var_: dtype
-    name: float
-    _mode_: call
