@@ -77,7 +77,7 @@ def get_index_and_mask(
         b, max_len
     )  # [B, T]
 
-    seq_len_ = torch.tensor(seq_len, device=device, dtype=torch.long)[:, None]  # [B, 1]
+    seq_len_ = seq_len[:, None]  # [B, 1]
     node_num = node_num[:, None]  # [B, 1]
     edge_num = edge_num[:, None]  # [B, 1]
 
