@@ -88,7 +88,9 @@ def test_human_eval():
         max_seq_length=256,
     )
 
-    torch.save(generator.state_dict(), "logs/model.best.pth")
+    log_folder = Path(__file__).parent / "logs"
+
+    torch.save(generator.state_dict(), log_folder / "model.best.pth")
 
     np.random.seed(42)
     subset = np.random.randint(0, len(dataset), 2)
@@ -96,8 +98,6 @@ def test_human_eval():
     loader = DataLoader(
         Subset(dataset, subset), collate_fn=collator, batch_size=dataset.batch_size
     )
-
-    log_folder = Path(__file__).parent / "logs"
 
     runner = HumanEvalRunner(
         model=generator,

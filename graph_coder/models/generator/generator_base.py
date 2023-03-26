@@ -45,10 +45,10 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
         self.max_seq_length = max_seq_length
         self.decoder = decoder
         self.dense = nn.Linear(hidden_size, hidden_size)
-        self.lm_head = nn.Linear(hidden_size, vocab_size, bias=False)
-        self.lm_graph_head = nn.Linear(
-            hidden_size, hidden_size * max_length, bias=False
-        )
+        self.lm_text = nn.Linear(hidden_size, vocab_size, bias=False)
+        self.lm_code = nn.Linear(hidden_size, vocab_size, bias=False)
+        self.lm_graph = nn.Linear(hidden_size, hidden_size * max_length, bias=False)
+        self.lm_graph_vocab = nn.Linear(hidden_size, vocab_size, bias=False)
 
     def forward(self, **kwargs: torch.Tensor) -> Dict[str, torch.Tensor]:
         for layer in self.layers:
@@ -65,7 +65,7 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
         batch = GraphCoderBatch.from_dict(kwargs)
 
         if batch.has_docstring:
-            result["docstring"] = self.lm_head(hidden_states[:, : batch.docstring_size])
+            result["docstring"] = self.lm_text(hidden_states[:, : batch.docstring_size])
 
         if batch.has_graph:
             if batch.has_docstring:
@@ -77,15 +77,15 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
             else:
                 end = 0
             graph_states = hidden_states[:, start : -end - 1]
-            graph = self.lm_graph_head(graph_states)
+            graph = self.lm_graph(graph_states)
             graph = graph.view(graph.size(0), -1, self.hidden_size)
-            graph = self.lm_head(graph)
+            graph = self.lm_graph_vocab(graph)
             result["graph"] = graph.view(
-                graph.size(0), graph_states.size(1), -1, self.vocab_size
+                graph.size(0), -1, self.max_length, self.vocab_size
             )
 
         if batch.has_source:
-            result["source"] = self.lm_head(
+            result["source"] = self.lm_code(
                 hidden_states[:, -batch.source_size - 1 : -1]
             )
 
@@ -142,7 +142,7 @@ class GraphCoderGeneratorBase(nn.Module, Generic[TL]):
 
         out = self.decoder(kwargs["tgt"], kwargs["memory"])
         hidden_states = torch.tanh(self.dense(out)).contiguous()
-        logits = self.lm_head(hidden_states[0, -1, :]) / (
+        logits = self.lm_code(hidden_states[0, -1, :]) / (
             temperature if temperature > 0 else 1.0
         )
 

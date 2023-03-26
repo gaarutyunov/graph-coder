@@ -106,14 +106,14 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
                 ]
             )
             lm_logits.append(
-                args[-1][batch.padded_node_mask][batch.node_data_attn_mask.bool()]
+                args[-2][batch.padded_node_mask][batch.node_data_attn_mask.bool()]
             )
             lm_logits.append(
-                args[-1][batch.padded_edge_mask][batch.edge_data_attn_mask.bool()]
+                args[-2][batch.padded_edge_mask][batch.edge_data_attn_mask.bool()]
             )
         if batch.has_source:
             target_ids.append(batch.source[batch.source_attn_mask.bool()])
-            lm_logits.append(args[-2][batch.source_attn_mask.bool()])
+            lm_logits.append(args[-1][batch.source_attn_mask.bool()])
 
         target_ids_ = torch.cat(target_ids)
         lm_logits_ = torch.cat(lm_logits, dim=0)
@@ -146,13 +146,14 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
                 self.get_states,
                 # args: *batch_args, hidden_states, text_states?, graph_states, code_states
                 ConditionalLayer(
-                    PassThroughLayer(self.lm_head, -3, -3),
+                    PassThroughLayer(self.lm_text, -3, -3),
                     self.has_docstring,
                 ),
                 # args: *batch_args, hidden_states, docstring_result?, graph_states, code_states
                 ConditionalLayer(
                     PassThroughLayer(
-                        self.lm_graph_head,
+                        self.lm_graph,
+                        -2,
                         -2,
                         callback=lambda res, *args: res.view(
                             res.size(0), -1, self.hidden_size
@@ -160,29 +161,23 @@ class GraphCoderGeneratorPipe(GraphCoderGeneratorBase[PipeModule], PipeModule):
                     ),
                     self.has_graph,
                 ),
-                # args: *batch_args, hidden_states, docstring_result?, graph_states, code_states, graph_result
-                ConditionalLayer(
-                    PassThroughLayer(self.lm_head, -2, -2),
-                    self.has_source,
-                ),
-                # args: *batch_args, hidden_states, docstring_result?, graph_states, source_result, graph_result
                 ConditionalLayer(
                     PassThroughLayer(
-                        self.lm_head,
-                        -1,
-                        -1,
+                        self.lm_graph_vocab,
+                        -2,
+                        -2,
                         callback=lambda res, *args: res.view(
-                            res.size(0),
-                            args[-3].size(1),
-                            -1,
-                            self.vocab_size,
+                            res.size(0), -1, self.max_length, self.vocab_size
                         ),
                     ),
                     self.has_graph,
                 ),
-                # args: *batch_args, hidden_states, docstring_result?, graph_states, source_result, graph_result
-                RemoveArgsLayer(-3),
-                # args: *batch_args, hidden_states, docstring_result?, source_result, graph_result
+                # args: *batch_args, hidden_states, docstring_result?, graph_result, code_states
+                ConditionalLayer(
+                    PassThroughLayer(self.lm_code, -1, -1),
+                    self.has_source,
+                ),
+                # args: *batch_args, hidden_states, docstring_result?, graph_result, source_result
                 self.calc_loss
                 # torch.Tensor (loss)
             ]
