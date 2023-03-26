@@ -32,4 +32,4 @@ source ./scripts/prepare.sh
 
 # Train model
 #NCCL_P2P_DISABLE=1 NCCL_DEBUG=info NCCL_DEBUG_SUBSYS=GRAPH ACCELERATE_LOG_LEVEL=DEBUG deepspeed --module --no_local_rank graph_coder.run --spawn --root "$1" "${@:2}"
-NCCL_DEBUG=TRACE NCCL_DEBUG_SUBSYS=COLL ACCELERATE_LOG_LEVEL=DEBUG torchrun --standalone --nnodes=1 --nproc_per_node=2 --max_restarts=3 --rdzv_backend=c10d --rdzv_id=$SLURM_JOB_ID --module graph_coder.run --spawn --root "$1" "${@:2}"
+NCCL_DEBUG=TRACE NCCL_DEBUG_SUBSYS=COLL ACCELERATE_LOG_LEVEL=DEBUG torchrun --standalone --nnodes=1 --nproc_per_node=2--rdzv_backend=c10d --rdzv_id=$SLURM_JOB_ID --module graph_coder.run --spawn --root "$1" "${@:2}"
