@@ -197,7 +197,9 @@ class LmLayer(nn.Module):
                 padded_node_mask.shape: {batch.padded_node_mask.shape}
                 padded_edge_mask.shape: {batch.padded_edge_mask.shape}
                 node_attn.shape: {batch.node_data_attn_mask.shape}
-                edge_attn.shape: {batch.edge_data_attn_mask.shape}"""
+                edge_attn.shape: {batch.edge_data_attn_mask.shape}
+                node_data.shape: {batch.node_data.shape}
+                edge_data.shape: {batch.edge_data.shape}"""
                 raise Exception(fmt) from e
 
         if batch.has_source:
