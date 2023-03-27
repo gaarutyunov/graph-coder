@@ -4,7 +4,7 @@ _model:
   vocab_size: 50277
   eos_token_id: 0
   hidden_size: 64
-  max_length: 8
+  max_length: 4
   embedding:
     _var_: embedding
   text_encoder:
@@ -24,4 +24,3 @@ model:
   loss_fn:
     _var_: criterion
   num_stages: 2
-  activation_checkpoint_interval: 0
