@@ -11,17 +11,19 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+from functools import partial
 from pathlib import Path
 
 import networkx as nx
 
 from graph_coder.ast.functional import parse_graph
-from graph_coder.data import AstExample
+from graph_coder.config.functional import filter_has_docstring, get_pretrained_tokenizer
+from graph_coder.data import AstExample, collate_ast
 from graph_coder.datasets import FuncAstDataset
-from graph_coder.visualize.ast import export_code, export_graph, export_tokens
+from graph_coder.export import export_code, export_graph, export_model, export_tokens
 
 
-def test_visualize_ast():
+def test_export_ast():
     dataset = FuncAstDataset(
         root=Path(__file__).parent / "func_data",
     )
@@ -54,3 +56,30 @@ def test_visualize_ast():
     assert source.stat().st_size > 100_000
     assert graph.stat().st_size > 100_000
     assert tokens.stat().st_size > 100_000
+
+
+def test_export_model_onnx():
+    model_path = Path(__file__).parent / "logs" / "model.onnx"
+    tokenizer = get_pretrained_tokenizer("EleutherAI/gpt-neox-20b")
+    collate_fn = partial(
+        collate_ast,
+        tokenizer=tokenizer,
+        max_length=4,
+        max_seq_length=64,
+        use_dict=False,
+    )
+
+    dataset = FuncAstDataset(
+        root=Path(__file__).parent / "func_data",
+        collate_fn=collate_fn,
+        filter_index=[
+            filter_has_docstring,
+        ],
+    )
+
+    dummy_data, _ = collate_fn([dataset[0]])
+
+    with open(model_path, mode="wb") as f:
+        export_model(f, dummy_input=dummy_data)
+
+    assert model_path.stat().st_size > 100_000

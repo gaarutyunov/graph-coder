@@ -11,7 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from io import BytesIO, FileIO
+from io import BytesIO
 from pathlib import Path
 from typing import Tuple
 
@@ -31,7 +31,7 @@ for font_file in font_files:
     font_manager.fontManager.addfont(font_file)
 
 
-def export_graph(graph: nx.Graph, out: FileIO, mode: str = "L"):
+def export_graph(graph: nx.Graph, out: BytesIO, mode: str = "L"):
     """Export graph to image."""
     pos = graphviz_layout(graph, prog="dot")
 
@@ -58,13 +58,14 @@ def export_graph(graph: nx.Graph, out: FileIO, mode: str = "L"):
 
 def export_tokens(
     graph: nx.Graph,
-    out: FileIO,
+    out: BytesIO,
     node_num: int = 5,
     edge_num: int = 3,
-    image_size: Tuple[int, int] = (544, 256),
-    font_size: int = 13,
+    image_size: Tuple[int, int] = (640, 480),
+    font_size: int = 16,
     mode: str = "L",
     color: int = 0,
+    xy: Tuple[int, int] = (24, 112),
 ):
     """Export tokens to image."""
     texts = []
@@ -83,55 +84,54 @@ def export_tokens(
     with Image.new(mode, size=image_size, color="white") as f:
         d = ImageDraw.Draw(f, mode=mode)
 
-        offset = 10
+        x, y = xy
+
         for i, text in enumerate(texts):
             if i == node_num:
-                d.text((10, offset), text="...", font=font, fill=color)
-                offset += font_size + 4
-            d.text((10, offset), text=text, font=font, fill=color)
-            offset += font_size + 4
+                d.text((x, y), text="...", font=font, fill=color)
+                y += font_size + 4
+            d.text((x, y), text=text, font=font, fill=color)
+            y += font_size + 4
             if i == len(texts) - 1:
-                d.text((10, offset), text="...", font=font, fill=color)
-                offset += font_size + 4
+                d.text((x, y), text="...", font=font, fill=color)
+                y += font_size + 4
 
         font_big = ImageFont.truetype(
             str(font_path / "SpaceMono-Regular.ttf"), size=font_size * 2
         )
         g = nx.convert_node_labels_to_integers(graph, first_label=0, ordering="sorted")
 
-        offset_y, offset_x = offset + font_size, 10
-        d.text((offset_x, offset_y - 2), text="(", font=font_big, fill=color)
-        offset_x += font_size + 8
+        d.text((x, y - 2), text="(", font=font_big, fill=color)
+        x += font_size + 8
         for i, (u, v) in enumerate(g.edges):
             if i == edge_num * 2:
                 break
             if i == edge_num:
-                d.text((offset_x - 4, offset_y), text="...", font=font, fill=color)
+                d.text((x - 4, y), text="...", font=font, fill=color)
                 d.text(
-                    (offset_x - 4, offset_y + font_size + 4),
+                    (x - 4, y + font_size + 4),
                     text="...",
                     font=font,
                     fill=color,
                 )
-                offset_x += font_size * 2 + 4
-            d.text((offset_x, offset_y), text=str(u), font=font, fill=color)
-            d.text(
-                (offset_x, offset_y + font_size + 4), text=str(v), font=font, fill=color
-            )
-            offset_x += font_size * 2
-        d.text((offset_x, offset_y - 2), text=")", font=font_big, fill=color)
+                x += font_size * 2 + 4
+            d.text((x, y), text=str(u), font=font, fill=color)
+            d.text((x, y + font_size + 4), text=str(v), font=font, fill=color)
+            x += font_size * 2
+        d.text((x, y - 2), text=")", font=font_big, fill=color)
 
         f.save(out, format="TIFF")
 
 
 def export_code(
     code: str,
-    out: FileIO,
-    image_size: Tuple[int, int] = (480, 352),
+    out: BytesIO,
+    image_size: Tuple[int, int] = (640, 480),
     font_size: int = 16,
-    xy: Tuple[int, int] = (10, 10),
-    line_length: int = 25,
+    xy: Tuple[int, int] = (80, 96),
+    line_length: int = 50,
     mode: str = "L",
+    format: str = "TIFF",
 ):
     """Export code to image."""
     code = black.format_str(code, mode=Mode(line_length=line_length))
@@ -141,4 +141,4 @@ def export_code(
         d = ImageDraw.Draw(f, mode=mode)
         d.text(xy, text=code, font=font, fill=0)
 
-        f.save(out, format="TIFF")
+        f.save(out, format=format)

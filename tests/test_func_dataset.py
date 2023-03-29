@@ -67,7 +67,7 @@ Summary for FuncAstDataset:
 - Avg. number of edges: 22
 - Number of documented graphs: 2
 - Number of processed graphs: 9
-- Dataset size: 12.8 kB
+- Dataset size: 11.7 kB
 
 Splits:
 - train: 6 batches

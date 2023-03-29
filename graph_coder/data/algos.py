@@ -29,7 +29,8 @@ def lap_eig(
     dense_adj[edge_index[0, :], edge_index[1, :]] = True
     in_degree = dense_adj.float().sum(dim=1).view(-1)
     A = dense_adj.float()
-    D = torch.diag(in_degree.clip(1).pow(-0.5))
+    d = in_degree.clip(1).pow(-0.5)
+    D = torch.eye(d.size(0)) * d
     L = torch.eye(num_nodes, dtype=dtype, device=device) - D @ A @ D
 
     lap_eigval, lap_eigvec = eigh(L)

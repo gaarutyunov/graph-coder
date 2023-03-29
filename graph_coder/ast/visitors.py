@@ -35,14 +35,14 @@ class GraphNodeVisitor(ast.NodeVisitor):
     def _node(self, node):
         fields_labels = []
         if self.compact:
-            return "ast.{0}".format(node.__class__.__name__)
+            return "{0}".format(node.__class__.__name__)
 
         for field, value in ast.iter_fields(node):
             if not isinstance(value, list):
                 value_label = self._node_value_label(value)
                 if value_label:
                     fields_labels.append("{0}={1}".format(field, value_label))
-        return "ast.{0}({1})".format(node.__class__.__name__, ", ".join(fields_labels))
+        return "{0}({1})".format(node.__class__.__name__, ", ".join(fields_labels))
 
     def _node_value_label(self, value):
         if not isinstance(value, ast.AST):
