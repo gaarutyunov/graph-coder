@@ -67,7 +67,8 @@ def test_collator():
         batch = GraphCoderBatch.from_dict(batch)
         assert batch.edge_index.size(0) == 2
         assert (
-            batch.padded_feature.size(1) == (batch.padded_feature != -100).sum(dim=1).max().item()
+            batch.padded_feature.size(1)
+            == (batch.padded_feature != -100).sum(dim=1).max().item()
         )
 
 

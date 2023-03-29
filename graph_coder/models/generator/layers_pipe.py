@@ -16,7 +16,7 @@ import typing
 import torch
 from torch.nn import Identity
 
-from graph_coder.data import GraphCoderBatch, get_arg_idx
+from graph_coder.data import get_arg_idx, GraphCoderBatch
 from graph_coder.pipe import (
     ConditionalLayer,
     Layers,
@@ -49,9 +49,7 @@ class TextLayerPipe(TextLayer[PipeModule], PipeModule):
     def to_layers(self) -> Layers:
         return [
             ConditionalLayer(
-                PassThroughLayer(
-                    self.embedding, get_arg_idx("docstring")
-                ),
+                PassThroughLayer(self.embedding, get_arg_idx("docstring")),
                 self.condition,
             ),
             # args: *batch_args, tgt

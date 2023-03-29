@@ -129,10 +129,7 @@ class GraphFeatureTokenizer(nn.Module):
 
         self.apply(lambda module: init_params(module, n_layers=n_layers))
 
-    def process_batch(
-        self,
-        padded_feature
-    ) -> torch.Tensor:
+    def process_batch(self, padded_feature) -> torch.Tensor:
         return self.embedding(padded_feature).squeeze(-1)
 
     def get_type_embed(self, padded_index):

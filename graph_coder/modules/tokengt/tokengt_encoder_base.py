@@ -83,12 +83,7 @@ class TokenGTEncoderBase(nn.Module, Generic[TGE]):
         padded_feature,
     ):
         x = self.graph_encoder(
-            edge_index,
-            node_num,
-            edge_num,
-            padded_index,
-            padding_mask,
-            padded_feature
+            edge_index, node_num, edge_num, padded_index, padding_mask, padded_feature
         )
 
         x = self.layer_norm(self.activation_fn(self.lm_head_transform_weight(x)))

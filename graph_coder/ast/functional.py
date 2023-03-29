@@ -51,16 +51,18 @@ def get_docstring(node: ast.AST) -> str:
         return ""
 
 
-def node_to_graph(node: ast.AST) -> Tuple[ast.AST, nx.Graph]:
+def node_to_graph(node: ast.AST, compact: bool = False) -> Tuple[ast.AST, nx.Graph]:
     node = ast_transformers.ParentChildNodeTransformer().visit(node)
-    visitor = GraphNodeVisitor()
+    visitor = GraphNodeVisitor(compact)
     visitor.visit(node)
 
     return node, visitor.graph
 
 
-def parse_graph(source: str, name: str) -> Tuple[ast.AST, nx.Graph]:
+def parse_graph(
+    source: str, name: str, compact: bool = False
+) -> Tuple[ast.AST, nx.Graph]:
     mod = ast.parse(source, filename=name, feature_version=9)
     node = mod.body[0]
 
-    return node_to_graph(node)
+    return node_to_graph(node, compact)

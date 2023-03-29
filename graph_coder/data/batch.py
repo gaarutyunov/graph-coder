@@ -154,7 +154,7 @@ class GraphCoderBatch:
             edge_index=obj["edge_index"],
             padded_feature_={
                 "input_ids": obj["padded_feature"],
-                "attention_mask": obj["padded_feature_attn_mask"]
+                "attention_mask": obj["padded_feature_attn_mask"],
             },
             node_num=obj["node_num"],
             edge_num=obj["edge_num"],
@@ -191,9 +191,7 @@ class GraphCoderBatch:
         )
 
 
-def get_arg(
-    name: str, obj: Tuple[torch.Tensor, ...]
-) -> torch.Tensor:
+def get_arg(name: str, obj: Tuple[torch.Tensor, ...]) -> torch.Tensor:
     return obj[get_arg_idx(name)]
 
 

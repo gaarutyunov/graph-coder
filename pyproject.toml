@@ -32,7 +32,9 @@ performer-pytorch = {git = "https://github.com/gaarutyunov/performer-pytorch.git
 human-eval = {git = "https://github.com/gaarutyunov/human-eval.git", rev = "master"}
 accelerate = {git = "https://github.com/gaarutyunov/accelerate.git", rev = "main"}
 deepspeed = {git = "https://github.com/gaarutyunov/DeepSpeed.git", rev = "master"}
-wrapt = {version = "^1.15.0"}
+wrapt = "^1.15.0"
+matplotlib = "^3.7.1"
+pygraphviz = "^1.10"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
@@ -67,6 +69,8 @@ pytorch-fast-transformers = { channel = "pip" }
 black = { channel = "conda-forge" }
 nest-asyncio = { channel = "conda-forge" }
 wrapt = { channel = "pip" }
+pygraphviz = { channel = "conda-forge" }
+matplotlib = { channel = "conda-forge" }
 
 [tool.poetry2conda.condaonly]
 pytorch-cuda = { channel = "pytorch", version = "11.7" }

@@ -308,12 +308,7 @@ class TokenGTGraphEncoder(nn.Module):
             self.performer_proj_updater.redraw_projections()
 
         x = self.graph_feature(
-            edge_index,
-            node_num,
-            edge_num,
-            padded_index,
-            padding_mask,
-            padded_feature
+            edge_index, node_num, edge_num, padded_index, padding_mask, padded_feature
         )
 
         # x: B x T x C

@@ -20,8 +20,9 @@ import networkx as nx
 class GraphNodeVisitor(ast.NodeVisitor):
     """Visitor that creates a networkx graph from an AST."""
 
-    def __init__(self):
+    def __init__(self, compact: bool = False):
         self.graph = nx.Graph()
+        self.compact = compact
 
     def visit(self, node):
         if len(node.parents) <= 1:
@@ -33,6 +34,9 @@ class GraphNodeVisitor(ast.NodeVisitor):
 
     def _node(self, node):
         fields_labels = []
+        if self.compact:
+            return "ast.{0}".format(node.__class__.__name__)
+
         for field, value in ast.iter_fields(node):
             if not isinstance(value, list):
                 value_label = self._node_value_label(value)

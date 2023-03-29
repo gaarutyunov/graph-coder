@@ -1,0 +1,253 @@
+\documentclass[sigplan,screen,anonymous,natbib=false]{acmart}
+\usepackage[style=ACM-Reference-Format,backend=bibtex,sorting=none]{biblatex}
+\usepackage{amsfonts}
+\usepackage{epstopdf}
+\usepackage{subfig}
+
+\epstopdfDeclareGraphicsRule{.tiff}{png}{.png}{convert #1 \OutputFile}
+\AppendGraphicsExtensions{.tiff}
+
+\addbibresource{paper.bib}
+
+\begin{document}
+
+\author{G.A. Arutyunov}
+\orcid{00000-0003-4537-4332}
+\email{gaarutyunov@edu.hse.ru}
+\affiliation{%
+    \institution{HSE University}
+    \streetaddress{20, Myasnitskaya st., Moscow}
+    \city{Moscow}
+    \state{Russia}
+    \postcode{101000}}
+\author{S.M. Avdoshin}
+\orcid{0000-0001-8473-8077}
+\email{savdoshin@hse.ru}
+\affiliation{%
+    \institution{HSE University}
+    \streetaddress{20, Myasnitskaya st., Moscow}
+    \city{Moscow}
+    \state{Russia}
+    \postcode{101000}}
+
+\title[GraphCoder]{GraphCoder: Transformer Pre-trained on Code Represented as Graph}
+
+\begin{abstract}
+    Although software development is mostly a creative process, there are many scrutiny tasks. 
+    As in other industries there is a trend for automation of routine work. 
+    In many cases machine learning and neural networks have become a useful assistant in that matter. 
+    Programming is not an exception – GitHub has stated that Copilot is already used to write up to 30\% code in the company.
+    Copilot is based on Codex, a Transformer model trained on code as sequence. 
+    However, sequence is not a perfect representation for programming languages. 
+    In this work we claim and demonstrate that by combining the advantages of Transformers 
+    and graph representations of code it is possible to achieve very good results even with comparably small models.
+\end{abstract}
+
+\keywords{neural networks, Transformers, graphs, abstract syntax tree, data flow graph}
+
+\maketitle
+
+\section{Introduction}\label{sec:introduction}
+
+Application of Transformers yet again has managed to break the deadlock — this time in the task of code generation~\cite{hendrycks_measuring_2021,chen_evaluating_2021,li_competition-level_nodate,nijkamp_conversational_2022}.
+Nevertheless, the versatile Transformer architecture has displayed good results on several benchmarks,
+in the recent work~\cite{xu_systematic_2022} it was shown that increasing the size of the model doesn’t result in a better performance.
+Moreover, it is evident that context matters a lot to produce a working code. 
+However, it is not feasible to relentlessly increase the length of context sequence in a Transformer. 
+Therefore, a different approach is needed to boost the efficiency in the task of code synthesis~\cite{arutyunov_big_2022}.
+
+First of all, an expressive code representation has to be selected. 
+Several ways including token-based, structured and graph-based approaches have been reviewed~\cite{sm_avdoshin_code_2022}.
+For instance, graph representation using abstract syntax tree (AST), data-flow graph (DFG) and control-flow graph (CFG) 
+yield good results in such tasks as variable misuse detection and correction~\cite{allamanis_learning_2017}.
+Such graph representation can capture an extensive amount of information about the program’s code.
+
+Secondly, a versatile model architecture that supports learning on graphs must be used. 
+Multiple models such as RNN~\cite{white_deep_2016}, LSTM~\cite{wei_supervised_2017} and CNN~\cite{mou_convolutional_2016} with flattened graphs have been used.
+However, graph-aware model architecture is more suitable for the graph representation of code. 
+For this reason, Graph Neural Networks (GNN) are a more reasonable choice of architecture, 
+namely message-passing neural networks~\cite{allamanis_learning_2017}.
+
+Nonetheless, in this work we aim to make the most from both: the advantages of Transformer architecture and graph representation of code. 
+For instance, we will use Transformer training parallelization and different types of code representation like AST and tokenizer source code.
+To make this possible we will use Pure Transformers~\cite{kim_pure_2022} instead of models that have some architectural alterations to support graph structure~\cite{kreuzer_rethinking_2021,dwivedi_generalization_2021,ying_transformers_2021}.
+
+Our main contributions:
+\begin{enumerate}
+    \item Source code representation with AST with node and edges textual features embeddings
+    \item Transformer model that can be directly trained on graph structure data and applied for different tasks including code and documentation generation
+    \item Model pretrained on Python source code represented as graph inspired by generative pretrained models~\cite{radford_language_2019,brown_language_2020}
+\end{enumerate}
+
+\section{Problem Statement}\label{sec:problem-statement}
+
+In this work we test the ability of Pure Transformers to generate functionally correct Python code based on its graph structure. 
+Since it is a relatively new field we do not expect from GraphCoder to generate a competition-level code. 
+Therefore, we use a human-curated dataset with real-life code applications~\cite{chen_evaluating_2021}.
+We compare the results with the models from previous work in Table 1~\cite{hendrycks_measuring_2021,chen_evaluating_2021,li_competition-level_nodate,nijkamp_conversational_2022}.
+
+\subsection{HumanEval Dataset}\label{subsec:humaneval-dataset}
+
+To assess the quality of the proposed solution we use an evaluation set of handwritten 164 problems proposed by OpenAI in their research of the Codex model~\cite{chen_evaluating_2021}.
+Each problem from the dataset contains in average 7.7 tests. 
+These tasks assess language comprehension, reasoning, algorithms and simple mathematics.
+
+\subsection{Metrics}\label{subsec:metrics}
+
+To measure the quality of the generated code we use the same metric as in the original work~\cite{chen_evaluating_2021}:
+
+\[ pass@k = \mathop{\mathbb{E}} \left[1 - \frac{\begin{pmatrix} n-c \\ k \end{pmatrix}}{\begin{pmatrix} n \\ k \end{pmatrix}}\right] \]
+
+\begin{itemize}
+    \item $n \geq k$ - number of generated samples per task (200 in this work)
+    \item $c$ - number of correct samples per task.
+\end{itemize}
+
+So, we generate 1000 samples per each problem and calculate how much of them pass all unit tests.
+As shown in previous works, using typical metrics such as BLEU is not applicable for the task of code generation since a high BLEU can be calculated for a not working code~\cite{hendrycks_measuring_2021,chen_evaluating_2021}.
+
+\section{Previous Work}\label{sec:previous-work}
+
+In this section we review both: the works about text-to-code generation task and research on graph transformers application. 
+This is done with a goal of pinpointing the most important characteristic of text-to-code generation models based on graphs.
+
+\subsection{Text-to-Code Generation}\label{subsec:text-to-code-generation}
+
+\begin{table}
+    \centering
+    \begin{tabular}{llll}
+        \toprule
+        \textbf{Name} & \textbf{pass@1} & \textbf{pass@10} & \textbf{pass@100} \\
+        \midrule
+        GraphCoder &  &  &  \\
+        GPT-Neo 2.7B & 6.41\% & 11.27\% & 21.37\% \\
+        GPT-J 6B & 11.62\% & 15.74\% & 27.74\% \\
+        AlphaCode 1.1B & 17.1\% & 28.2\% & 45.3\% \\
+        Codex 12B & 28.81\% & 46.81\% & 72.31\% \\
+        CodeGen-Mono 16.1B & 29.28\% & 49.86\% & 75.00\% \\
+        \bottomrule
+    \end{tabular}
+    \caption{HumanEval results comparison of GPT-Neo, GPT-J, Codex~\cite{chen_evaluating_2021}, AlphaCode~\cite{li_competition-level_nodate}, CodeGen~\cite{nijkamp_conversational_2022} and GraphCoder}
+    \label{tab:human-eval-results}
+\end{table}
+
+For the task of text-to-code generation Transformers have mostly been used in the past articles~\cite{hendrycks_measuring_2021,chen_evaluating_2021,li_competition-level_nodate,nijkamp_conversational_2022}.
+In these works the task is solved in a sequence-to-sequence way. 
+The code is tokenized and processed by the Transformer as if it was a normal text written in natural language. 
+Results of the models from this domain are displayed in Table 1~\ref{tab:human-eval-results}.
+As we can see these Transformers yield inspiring results on HumanEval dataset.
+
+Although Transformers by their architecture and usage of multi-headed attention are well known for their ability to learn long-lasting relationships,
+we argue in this work that these results can be increased by using Graph Transformers that can be directly operated on code represented as graphs.
+
+\subsection{Graph Transformers}\label{subsec:graph-transformers}
+
+Graph Transformers is a novel architecture that has been developing in the past few years. 
+They have been applied for several tasks, mostly in the field of molecule generation, node classification and node feature regression~\cite{kim_pure_2022,kreuzer_rethinking_2021,dwivedi_generalization_2021,ying_transformers_2021}.
+
+AST and DFG have already been used with Transformers in the code generation and summarization tasks~\cite{wang_unified_2022,tang_ast-transformer_2021,sun_treegen_2020}.
+However, the models in these works are tested only using BLEU scores which are not a good choice of metric for code generation task~\cite{hendrycks_measuring_2021,chen_evaluating_2021}.
+Apart from it, they do some alterations to the Transformer architecture that blocks the future use of some of the advances in the field of Transformers~\cite{kim_pure_2022}.
+
+\section{Proposed Solution}\label{sec:proposed-solution}
+
+\subsection{Pretraining Dataset}\label{subsec:pretraining-dataset}
+
+For model pretraining we collected a dataset of 150 thousand Python scripts from 5 thousand GitHub repositories.
+The code was then preprocessed and filtered with lib2to3 module which allows to transform the code written in Python 2 into the third version code and check for syntax errors.
+
+\begin{figure*}[!ht]
+    \centering
+    \begin{minipage}[l]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{assets/source.tiff}
+    \end{minipage}
+    \hspace*{\fill}
+    \begin{minipage}[l]{0.35\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{assets/graph.tiff}
+    \end{minipage}
+    \hspace*{\fill}
+    \begin{minipage}[l]{0.35\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{assets/tokens.tiff}
+    \end{minipage}
+    \caption{Source code preprocessing steps: source code, AST graph and textual representation of the nodes and edges with edge list (from left to right).}
+    \label{fig:preprocessing-steps}
+\end{figure*}
+
+After preprocessing and filtering the code is transformed into AST with ast python module.
+To avoid having to process huge graphs we extract only function definitions.
+This way it is easier to connect each graph with its docstring and source code.
+Apart from the AST we extract the docstring using the ast python module.
+Then, textual representation of the nodes and edges are created from the AST graph.
+The preprocessing steps are depicted in the Figure 1~\ref{fig:preprocessing-steps}.
+
+Finally, the textual representations, docstring and source code are tokenized using pretrained tokenizer used in previous works~\cite{black_gpt-neox-20b_2022,arutyunov_big_2022}.
+and are fed into the model with some additional information concerning graph structure.
+The graph structure is represented by edge list which is then used to calculate Laplacian eigenvectors and eigenvalues~\cite{kim_pure_2022}.
+
+\subsection{Model Architecture}\label{subsec:model-architecture}
+
+We base our model architecture on TokenGT~\cite{kim_pure_2022} and StructCoder~\cite{tipirneni_structcoder_2022} with some modifications.
+The main difference is due to the need to include node and edge features apart from the node identifiers and type identifiers.
+Moreover, in the original work the model was used for regression and classification tasks, while our task consists in creating a neural network that generates code.
+
+The original model has three types of tokens: node (edge) identifiers, type identifiers and a graph token that serves as en embedding for the whole graph. 
+Instead of node identifiers we use node feature embeddings.
+We don't use the graph token, since we train the model in a casual language model way: we predict a graph and compare with shifted true tokens.
+
+The model itself is split into four parts: three encoders, for docstring, AST, source code and a decoder.
+This architecture is inspired by StructCoder~\cite{tipirneni_structcoder_2022}
+The docstring and source code encoders are based on Performer~\cite{choromanski_rethinking_2020}.
+Moreover, the AST encoder uses multi-headed attention based on FastAttention from the same work.
+Finally, the decoder has the same architecture as in the original Transformer paper~\cite{vaswani_attention_2017}.
+The complete architecture of the model is displayed in Figure 2.
+
+\section{Experiment Results and Ablation}\label{sec:experiment-results-and-ablation}
+
+This section will be filled after experiments are finalised.
+
+\subsection{Results and Insights}\label{subsec:results-and-insights}
+
+\begin{enumerate}
+    \item Does using AST boost the quality of the generated code?
+    \item Do laplacian eigenvalues increase the expressiveness of the model?
+    \item How effective is the parallelization?
+    \item How does the model perform on other tasks after fine-tuning?
+\end{enumerate}
+
+\subsection{Comparison with Other Models}\label{subsec:comparison-with-other-models}
+
+In Table 1~\ref{tab:human-eval-results} we can see the results of the experiments compared with the models from previous works: GPT-Neo, GPT-J, Codex~\cite{chen_evaluating_2021}, AlphaCode~\cite{li_competition-level_nodate}, CodeGen~\cite{nijkamp_conversational_2022}.
+The pass@k rates are computed with 1000 samples~\cite{chen_evaluating_2021}.
+For each row, column pair we only report the best nucleus sampling result from the temperatures 0.0, 0.2, 0.4, 0.6 and 0.8.
+
+Table 1~\ref{tab:human-eval-results} will be filled after experiments are finalised.
+
+\section{Future Work}\label{sec:future-work}
+
+In this work we explored the application of Graph Transformers for code generation. 
+The versatile architecture of the proposed solution lets us explore other tasks.
+
+First, if a universal version of ast parsing is used the can train the first model for multiple programming languages~\cite{wang_unified_2022}.
+The second one can be modified to detect and translate the generated graph into several languages as well. 
+Second, we can use masked training and fine-tune the model to infer types in programming languages with dynamic typing~\cite{mir_type4py_2021,hellendoorn_deep_2018,malik_nl2type_2019,schrouff_inferring_2019,wei_lambdanet_2020}.
+Third, our model can be used to generate code summarization or docstring generation~\cite{barone_parallel_2017,liu_haconvgnn_2021}.
+Another useful task is to detect errors and generate fixes~\cite{bhatia_automated_2016,fujimoto_addressing_2018,marginean_sapfix_2019}.
+Finally, we can extend our model with information about changes to analyse them and propose refactoring possibilities~\cite{cabrera_lozoya_commit2vec_2021}.
+
+\section{Conclusion}\label{sec:conclusion}
+
+As for the conclusion, we were able to create a universal model based on TokenGT~\cite{kim_pure_2022} and StructCoder~\cite{tipirneni_structcoder_2022} and code represented as graphs.
+One of the most important advantages of this model is that the code graph is used directly by the model. 
+Secondly, the model can be modified to fit other tasks, such as code summarization, docstring generation, types inference, refactoring and many more. 
+The code graph can also be extended by different features and node types, since the representation does not differ depending on graph structure.
+
+\section{Acknowledgments}\label{sec:acknowledgments}
+
+This research was supported in part through computational resources of HPC facilities at HSE University~\cite{kostenetskiy_hpc_2021}.
+
+\printbibliography
+
+\end{document}
