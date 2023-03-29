@@ -15,19 +15,18 @@ jobs:
         uses: xu-cheng/latex-action@v2
         with:
           root_file: paper.tex
-          working_dir: research
+          working_directory: research
       - name: bibtex paper
         uses: xu-cheng/latex-action@v2
         with:
           root_file: paper.aux
           compiler: bibtex
-          working_dir: research
-          args:
+          working_directory: research
       - name: pdflatex paper
         uses: xu-cheng/latex-action@v2
         with:
           root_file: paper.tex
-          working_dir: research
+          working_directory: research
       - name: Upload PDF file
         uses: ncipollo/release-action@v1
         with:
