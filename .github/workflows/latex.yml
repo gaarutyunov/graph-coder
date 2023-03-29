@@ -11,6 +11,12 @@ jobs:
     steps:
       - name: Set up Git repository
         uses: actions/checkout@v2
+      - name: Setup TeX Live
+        uses: teatimeguest/setup-texlive-action@v2
+        with:
+          packages: >-
+            scheme-basic
+            acmart
       - name: pdflatex paper
         uses: xu-cheng/latex-action@v2
         with:
