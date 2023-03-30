@@ -30,3 +30,12 @@ poetry install
 conda env create -f environment.yml
 conda activate graph-coder
 ```
+
+## Citation
+
+```bibtex
+@software{graph-coder,
+  title = {{GraphCoder: Transformer Pretrained on Code as Graphs}},
+  author = {German Arutyunov, Sergey Avdoshin},
+  url = {https://www.github.com/gaarutyunov/graph-coder},
+}
