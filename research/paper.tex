@@ -69,7 +69,7 @@ For this reason, Graph Neural Networks (GNN) are a more reasonable choice of arc
 namely message-passing neural networks~\cite{allamanis_learning_2017}.
 
 Nonetheless, in this work we aim to make the most from both: the advantages of Transformer architecture and graph representation of code. 
-For instance, we will use Transformer training parallelization and different types of code representation like AST and tokenizer source code.
+For instance, we will use Transformer training parallelization and different types of code representation like AST and tokenized source code.
 To make this possible we will use Pure Transformers~\cite{kim_pure_2022} instead of models that have some architectural alterations to support graph structure~\cite{kreuzer_rethinking_2021,dwivedi_generalization_2021,ying_transformers_2021}.
 
 Our main contributions:
@@ -163,7 +163,7 @@ The code was then preprocessed and filtered with lib2to3 module which allows to 
         \includegraphics[width=\linewidth]{assets/source.tiff}
     \end{minipage}
     \hspace*{\fill}
-    \begin{minipage}[l]{0.35\textwidth}
+    \begin{minipage}[l]{0.3\textwidth}
         \centering
         \includegraphics[width=\linewidth]{assets/graph.tiff}
     \end{minipage}
