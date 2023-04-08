@@ -1,0 +1,3 @@
+engine:
+  _target_: catalyst.engines.torch.GPUEngine
+  _var_: engine
