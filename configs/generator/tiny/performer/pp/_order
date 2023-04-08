@@ -1,3 +1,4 @@
+log_path
 tokenizer
 collator
 criterion
@@ -11,5 +12,4 @@ decoder
 engine
 model
 runner
-log_path
 run

@@ -1,13 +1,13 @@
 engine:
-  _target_: catalyst.engines.torch.GPUEngine
+  _target_: graph_coder.engine.DeepspeedEngine
   _var_: engine
   deepspeed_plugin:
     _target_: accelerate.utils.dataclasses.DeepSpeedPlugin
     hf_ds_config:
       _target_: accelerate.utils.deepspeed.HfDeepSpeedConfig
       config_file_or_dict:
-        train_micro_batch_size_per_gpu: 4
-        gradient_accumulation_steps: 1
+        gradient_accumulation_steps: 2
+        train_micro_batch_size_per_gpu: 8
         zero_optimization:
           stage: 1 # pipeline parallelism is not supported for stages 2 and 3
           offload_optimizer:
@@ -18,8 +18,8 @@ engine:
           overlap_comm: true
           reduce_scatter: true
           round_robin_gradients: true
-          allgather_bucket_size: 256 # TODO: try to use smaller values for these
-          reduce_bucket_size: 256
+          allgather_bucket_size: 1e6 # TODO: try to use smaller values for these
+          reduce_bucket_size: 1e6
         fp16:
           enabled: false # fast-transformers do not support fp16
         activation_checkpointing:
@@ -41,3 +41,8 @@ engine:
             warmup_min_lr: 0
             warmup_max_lr: 0.02
             warmup_num_steps: 10000
+        comms_logger:
+          enabled: true
+          verbose: true
+          prof_all: true
+          debug: true

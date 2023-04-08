@@ -1,7 +1,7 @@
 runner:
   _target_: graph_coder.runners.HumanEvalRunner
   model:
-    _var_: model
+    _var_: _model
   tokenizer:
     _var_: tokenizer
   log_path:

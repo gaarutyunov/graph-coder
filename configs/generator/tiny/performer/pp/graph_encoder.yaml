@@ -6,11 +6,11 @@ graph_encoder:
   lap_node_id: true
   lap_node_id_sign_flip: true
   type_id: true
-  encoder_embed_dim: 16
-  encoder_ffn_embed_dim: 32
+  encoder_embed_dim: 32
+  encoder_ffn_embed_dim: 128
   causal: true
-  encoder_layers: 2
-  encoder_attention_heads: 2
+  encoder_layers: 4
+  encoder_attention_heads: 8
   performer: true
   attention_dropout: 0 # mandatory for performer
   apply_graphormer_init: true

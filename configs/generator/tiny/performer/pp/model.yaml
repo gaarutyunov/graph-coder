@@ -3,7 +3,7 @@ _model:
   _var_: _model
   vocab_size: 50277
   eos_token_id: 0
-  hidden_size: 16
+  hidden_size: 32
   max_length: 4
   embedding:
     _var_: embedding
@@ -15,12 +15,12 @@ _model:
     _var_: graph_encoder
   decoder:
     _var_: decoder
-  criterion:
-    _var_: criterion
 
 model:
   _target_: deepspeed.pipe.PipelineModule
   _var_: model
   layers:
     _var_: _model.to_layers
+  loss_fn:
+    _var_: criterion
   num_stages: 2
