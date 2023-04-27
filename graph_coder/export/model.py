@@ -213,12 +213,14 @@ def _export_onnx(
 
 
 def _export_hl(
-    out: Union[str, os.PathLike],
+    out: Union[str, BytesIO, os.PathLike],
     dummy_input: Tuple[torch.Tensor, ...],
     model: nn.Module = GraphCoder(),
     **kwargs,
 ):
     """Export model with HiddenLayer"""
+    assert not isinstance(out, BytesIO), "`out` only supports string path in `hl` format"
+
     build_graph_kwargs = kwargs.get("build_graph", {})
     save_kwargs = kwargs.get("save", {})
 
