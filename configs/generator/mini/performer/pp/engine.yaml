@@ -7,7 +7,7 @@ engine:
       _target_: accelerate.utils.deepspeed.HfDeepSpeedConfig
       config_file_or_dict:
         gradient_accumulation_steps: 2
-        train_micro_batch_size_per_gpu: 8
+        train_micro_batch_size_per_gpu: 4
         zero_optimization:
           stage: 1 # pipeline parallelism is not supported for stages 2 and 3
           offload_optimizer:
