@@ -1,0 +1,13 @@
+embedding:
+  _target_: graph_coder.modules.TokenEmbedding
+  _var_: token_embedding
+  embedding:
+    _target_: torch.nn.Embedding
+    _var_: embedding
+    num_embeddings: 50277
+    embedding_dim: 16
+    padding_idx: 1
+  ff:
+    _target_: torch.nn.Linear
+    in_features: 4
+    out_features: 1
