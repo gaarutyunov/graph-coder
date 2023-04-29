@@ -1,13 +1,8 @@
 collator:
   _target_: graph_coder.data.collate_ast
   _var_: collator
-  max_length: 8
-  max_seq_length: 512
+  max_length: 4
+  max_seq_length: 256
   use_dict: false
   tokenizer:
     _var_: tokenizer
-  dtype:
-    _target_: graph_coder.config.F.get_dtype
-    _var_: dtype
-    name: half
-    _mode_: call
