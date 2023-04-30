@@ -28,10 +28,10 @@ run:
       _var_: loggers
 
     callbacks:
-      - _target_: graph_coder.callbacks.DeepSpeedCheckpointCallback
+      - _target_: catalyst.callbacks.checkpoint.CheckpointCallback
+        topk: 2
         logdir:
           _var_: log_path
         loader_key: *loader_key
         metric_key: *metric_key
         minimize: *minimize
-        save_last: true

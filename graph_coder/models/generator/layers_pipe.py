@@ -72,11 +72,11 @@ class GraphLayerPipe(GraphLayer[PipeModule], PipeModule):
 
     def condition_only_graph(self, *args):
         batch = GraphCoderBatch.from_tuple(args)
-        return batch.has_graph and not batch.has_docstring
+        return not self.has_docstring or batch.has_graph and not batch.has_docstring
 
     def condition_docstring(self, *args):
         batch = GraphCoderBatch.from_tuple(args)
-        return batch.has_graph and batch.has_docstring
+        return self.has_docstring and batch.has_graph and batch.has_docstring
 
     def cat_target_and_memory(self, *args):
         batch = GraphCoderBatch.from_tuple(args)

@@ -130,6 +130,9 @@ def collate_ast(
     use_dict: bool = True,
     num_samples: int = 1,
     shift: bool = True,
+    has_docstring: bool = True,
+    has_graph: bool = True,
+    has_source: bool = True,
 ) -> torch.Union[
     Dict[str, torch.Tensor], Tuple[Tuple[torch.Tensor, ...], torch.Tensor]
 ]:
@@ -265,13 +268,16 @@ def collate_ast(
         padding_mask=padding_mask,
     )
 
-    labels = torch.cat(
-        [
-            res.docstring[res.docstring_attn_mask.bool()],
-            res.padded_feature[res.padded_feature_attn_mask.bool()],
-            res.source[res.source_attn_mask.bool()],
-        ],
-    )
+    labels_ = []
+
+    if has_docstring:
+        labels_.append(res.docstring[res.docstring_attn_mask.bool()])
+    if has_graph:
+        labels_.append(res.padded_feature[res.padded_feature_attn_mask.bool()])
+    if has_source:
+        labels_.append(res.source[res.source_attn_mask.bool()])
+
+    labels = torch.cat(labels_)
 
     if shift:
         labels = labels[1:].contiguous()

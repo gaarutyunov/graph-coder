@@ -219,7 +219,9 @@ def _export_hl(
     **kwargs,
 ):
     """Export model with HiddenLayer"""
-    assert not isinstance(out, BytesIO), "`out` only supports string path in `hl` format"
+    assert not isinstance(
+        out, BytesIO
+    ), "`out` only supports string path in `hl` format"
 
     build_graph_kwargs = kwargs.get("build_graph", {})
     save_kwargs = kwargs.get("save", {})

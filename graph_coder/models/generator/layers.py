@@ -85,9 +85,10 @@ class CodeLayer(nn.Module, typing.Generic[TE]):
 
 
 class GraphLayer(nn.Module, typing.Generic[TE]):
-    def __init__(self, graph_encoder: TE):
+    def __init__(self, graph_encoder: TE, has_docstring: bool = True):
         super().__init__()
         self.graph_encoder = graph_encoder
+        self.has_docstring = has_docstring
 
     def forward(
         self,
@@ -130,38 +131,58 @@ class LmLayer(nn.Module):
     """Layer that calculates logits"""
 
     def __init__(
-        self, vocab_size: int, max_length: int, hidden_size: int, shift: bool = True
+        self,
+        vocab_size: int,
+        max_length: int,
+        hidden_size: int,
+        shift: bool = True,
+        has_docstring: bool = True,
+        has_graph: bool = True,
+        has_source: bool = True,
     ) -> None:
         super().__init__()
         self.hidden_size = hidden_size
         self.max_length = max_length
         self.vocab_size = vocab_size
         self.shift = shift
-        self.text = nn.Linear(hidden_size, vocab_size, bias=False)
-        self.graph_inner = nn.Linear(hidden_size, hidden_size * max_length, bias=False)
-        self.graph_outer = nn.Linear(hidden_size, vocab_size, bias=False)
-        self.code = nn.Linear(hidden_size, vocab_size, bias=False)
+        self.has_docstring = has_docstring
+        self.has_graph = has_graph
+        self.has_source = has_source
+
+        if has_docstring:
+            self.text = nn.Linear(hidden_size, vocab_size, bias=False)
+        if has_graph:
+            self.graph_inner = nn.Linear(
+                hidden_size, hidden_size * max_length, bias=False
+            )
+            self.graph_outer = nn.Linear(hidden_size, vocab_size, bias=False)
+        if has_source:
+            self.code = nn.Linear(hidden_size, vocab_size, bias=False)
 
     def forward(self, *args: torch.Tensor):
         batch = GraphCoderBatch.from_tuple(args)
         hidden_states = args[-1]
         lm_logits = []
 
-        if batch.has_docstring:
+        if self.has_docstring and batch.has_docstring:
             docstring = self.text(hidden_states[:, : batch.docstring_size])
             lm_logits.append(docstring[batch.docstring_attn_mask.bool()])
 
-        if batch.has_graph:
-            if batch.has_docstring:
-                start = batch.docstring_size
+        if self.has_graph and batch.has_graph:
+            if not self.has_source and not self.has_docstring:
+                graph_states = hidden_states
             else:
-                start = 0
-            if batch.has_source:
-                end = batch.source_size
-            else:
-                end = 1
+                if batch.has_docstring:
+                    start = batch.docstring_size
+                else:
+                    start = 0
+                if batch.has_source:
+                    end = batch.source_size
+                else:
+                    end = 1
 
-            graph_states = hidden_states[:, start:-end]
+                graph_states = hidden_states[:, start:-end]
+
             graph = self.graph_inner(graph_states)
             graph = graph.view(graph.size(0), -1, self.hidden_size)
             graph = self.graph_outer(graph)
@@ -172,7 +193,7 @@ class LmLayer(nn.Module):
                 ]
             )
 
-        if batch.has_source:
+        if self.has_source and batch.has_source:
             source = self.code(hidden_states[:, -batch.source_size - 1 : -1])
             lm_logits.append(source[batch.source_attn_mask.bool()])
 

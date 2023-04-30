@@ -15,6 +15,7 @@ from functools import partial
 from pathlib import Path
 
 import networkx as nx
+import pytest
 
 from graph_coder.ast.functional import parse_graph
 from graph_coder.config.functional import filter_has_docstring, get_pretrained_tokenizer
