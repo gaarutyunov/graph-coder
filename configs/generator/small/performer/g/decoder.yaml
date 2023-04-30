@@ -1,5 +1,5 @@
 decoder:
-  _target_: graph_coder.modules.TransformerDecoder
+  _target_: torch.nn.TransformerDecoder
   _var_: decoder
   decoder_layer:
     _target_: torch.nn.TransformerDecoderLayer
