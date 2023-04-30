@@ -2,4 +2,4 @@ log_path:
   _target_: graph_coder.config.F.get_log_path
   _var_: log_path
   _mode_: call
-  root: logs/generator/small/performer/pp
+  root: logs/generator/small/performer/g
